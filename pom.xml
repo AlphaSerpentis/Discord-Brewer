@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>dev.alphaserpentis.bots</groupId>
+    <artifactId>Brewer</artifactId>
+    <version>1.0.0</version>
+    <name>Discord Brewer</name>
+    <description>A Discord bot for automatically configuring a new Discord server using ChatGPT</description>
+
+    <developers>
+        <developer>
+            <id>AlphaSerpentis</id>
+            <name>Amethyst C</name>
+            <email>amethyst@alphaserpentis.dev</email>
+        </developer>
+    </developers>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>dev.alphaserpentis</groupId>
+            <artifactId>CoffeeCore</artifactId>
+            <version>0.3.0-alpha-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.theokanning.openai-gpt3-java</groupId>
+            <artifactId>service</artifactId>
+            <version>0.12.0</version>
+        </dependency>
+    </dependencies>
+</project>
