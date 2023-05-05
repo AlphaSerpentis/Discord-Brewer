@@ -167,7 +167,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                 new BotCommandOptions(
                         "brew",
                         "Setup your Discord server with a prompt!",
-                        300,
+                        180,
                         0,
                         true,
                         false,
@@ -322,7 +322,11 @@ public class Brew extends ButtonCommand<MessageEmbed> {
     @Override
     @NonNull
     public Collection<ItemComponent> addButtonsToMessage(@NonNull GenericCommandInteractionEvent event) {
-        if(event.getName().equals(getName()) && userSessions.get(event.getUser().getIdLong()).interactionToken.equals(event.getToken())) {
+        final UserSession userSession = userSessions.get(event.getUser().getIdLong());
+
+        if(userSession == null)
+            return new ArrayList<>();
+        else if(event.getName().equals(getName()) && userSession.interactionToken.equals(event.getToken())) {
             return new ArrayList<>() {{
                 add(getButton("brew"));
                 add(getButton("confirm"));
