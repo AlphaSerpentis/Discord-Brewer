@@ -78,7 +78,7 @@ However, due to the nature of ChatGPT, results and accuracy may vary. We are con
 ### FAQ
 
 #### How often can I run `/brew`?
-You can run `/brew` every 10 minutes (globally). Additionally, if you generated a brew, you can retry up to 3 times in that session.
+You can run `/brew` every 3 minutes (globally). Additionally, if you generated a brew, you can retry up to 3 times in that session.
 
 #### I got error messages after brewing!
 Please send them my way by either going to our [Discord server](https://discord.alphaserpentis.dev) or by opening an issue [here](https://github.com/AlphaSerpentis/Discord-Brewer/issues/new).
