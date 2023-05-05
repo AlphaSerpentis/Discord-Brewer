@@ -224,6 +224,8 @@ public class OpenAIHandler {
                         },
                         "prompt": "Example prompt"
                     }
+                    
+                    The user's prompt is:
                     """
     );
 

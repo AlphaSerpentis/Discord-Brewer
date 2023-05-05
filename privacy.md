@@ -9,6 +9,7 @@ When you use our app, we may collect, but not limited to, the following informat
 - User ID
 - Server ID
 - Settings you choose for your server
+- Pre-existing server roles, categories, and channels
 
 We do not collect any analytical data. However, we may or may not collect error logs to help us improve the app.
 
@@ -20,7 +21,7 @@ We use the information we collect in various ways, including to:
 ## How do we store, share and disclose your information?
 Information stored on our servers are protected by using industry standard practices. Some information may be stored in cache for faster access.
 
-Information is not disclosed to any third party except for Discord to be able to provide the application to you.
+Information is not disclosed or shared to any third party except for Discord to be able to provide the application to you.
 
 ## How is information deleted?
 Information stored on our servers will automatically be deleted if you remove the bot from your server(s).

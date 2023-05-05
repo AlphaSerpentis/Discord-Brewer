@@ -1,54 +1,99 @@
-[![forthebadge](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNjMuMjQiIGhlaWdodD0iMzUiIHZpZXdCb3g9IjAgMCAyNjMuMjQgMzUiPjxyZWN0IGNsYXNzPSJzdmdfX3JlY3QiIHg9IjAiIHk9IjAiIHdpZHRoPSIxMTUuMzEiIGhlaWdodD0iMzUiIGZpbGw9IiNEMzVCMDkiLz48cmVjdCBjbGFzcz0ic3ZnX19yZWN0IiB4PSIxMTMuMzEiIHk9IjAiIHdpZHRoPSIxNDkuOTMiIGhlaWdodD0iMzUiIGZpbGw9IiNGRkE1NEYiLz48cGF0aCBjbGFzcz0ic3ZnX190ZXh0IiBkPSJNMTUuNjkgMjJMMTQuMjIgMjJMMTQuMjIgMTMuNDdMMTYuMTQgMTMuNDdMMTguNjAgMjAuMDFMMjEuMDYgMTMuNDdMMjIuOTcgMTMuNDdMMjIuOTcgMjJMMjEuNDkgMjJMMjEuNDkgMTkuMTlMMjEuNjQgMTUuNDNMMTkuMTIgMjJMMTguMDYgMjJMMTUuNTUgMTUuNDNMMTUuNjkgMTkuMTlMMTUuNjkgMjJaTTI4LjQ5IDIyTDI2Ljk1IDIyTDMwLjE3IDEzLjQ3TDMxLjUwIDEzLjQ3TDM0LjczIDIyTDMzLjE4IDIyTDMyLjQ5IDIwLjAxTDI5LjE4IDIwLjAxTDI4LjQ5IDIyWk0zMC44MyAxNS4yOEwyOS42MCAxOC44MkwzMi4wNyAxOC44MkwzMC44MyAxNS4yOFpNNDEuMTQgMjJMMzguNjkgMjJMMzguNjkgMTMuNDdMNDEuMjEgMTMuNDdRNDIuMzQgMTMuNDcgNDMuMjEgMTMuOTdRNDQuMDkgMTQuNDggNDQuNTcgMTUuNDBRNDUuMDUgMTYuMzMgNDUuMDUgMTcuNTJMNDUuMDUgMTcuNTJMNDUuMDUgMTcuOTVRNDUuMDUgMTkuMTYgNDQuNTcgMjAuMDhRNDQuMDggMjEuMDAgNDMuMTkgMjEuNTBRNDIuMzAgMjIgNDEuMTQgMjJMNDEuMTQgMjJaTTQwLjE3IDE0LjY2TDQwLjE3IDIwLjgyTDQxLjE0IDIwLjgyUTQyLjMwIDIwLjgyIDQyLjkzIDIwLjA5UTQzLjU1IDE5LjM2IDQzLjU2IDE3Ljk5TDQzLjU2IDE3Ljk5TDQzLjU2IDE3LjUyUTQzLjU2IDE2LjEzIDQyLjk2IDE1LjQwUTQyLjM1IDE0LjY2IDQxLjIxIDE0LjY2TDQxLjIxIDE0LjY2TDQwLjE3IDE0LjY2Wk01NS4wOSAyMkw0OS41MSAyMkw0OS41MSAxMy40N0w1NS4wNSAxMy40N0w1NS4wNSAxNC42Nkw1MS4wMCAxNC42Nkw1MS4wMCAxNy4wMkw1NC41MCAxNy4wMkw1NC41MCAxOC4xOUw1MS4wMCAxOC4xOUw1MS4wMCAyMC44Mkw1NS4wOSAyMC44Mkw1NS4wOSAyMlpNNjYuNjUgMjJMNjQuNjggMTMuNDdMNjYuMTUgMTMuNDdMNjcuNDcgMTkuODhMNjkuMTAgMTMuNDdMNzAuMzQgMTMuNDdMNzEuOTYgMTkuODlMNzMuMjcgMTMuNDdMNzQuNzQgMTMuNDdMNzIuNzcgMjJMNzEuMzUgMjJMNjkuNzMgMTUuNzdMNjguMDcgMjJMNjYuNjUgMjJaTTgwLjM4IDIyTDc4LjkwIDIyTDc4LjkwIDEzLjQ3TDgwLjM4IDEzLjQ3TDgwLjM4IDIyWk04Ni44NyAxNC42Nkw4NC4yMyAxNC42Nkw4NC4yMyAxMy40N0w5MS4wMCAxMy40N0w5MS4wMCAxNC42Nkw4OC4zNCAxNC42Nkw4OC4zNCAyMkw4Ni44NyAyMkw4Ni44NyAxNC42NlpNOTYuMjQgMjJMOTQuNzUgMjJMOTQuNzUgMTMuNDdMOTYuMjQgMTMuNDdMOTYuMjQgMTcuMDJMMTAwLjA1IDE3LjAyTDEwMC4wNSAxMy40N0wxMDEuNTMgMTMuNDdMMTAxLjUzIDIyTDEwMC4wNSAyMkwxMDAuMDUgMTguMjFMOTYuMjQgMTguMjFMOTYuMjQgMjJaIiBmaWxsPSIjRkZGRkZGIi8+PHBhdGggY2xhc3M9InN2Z19fdGV4dCIgZD0iTTEyNy4wNyAxNy44MEwxMjcuMDcgMTcuODBRMTI3LjA3IDE2LjU0IDEyNy42NyAxNS41NFExMjguMjcgMTQuNTUgMTI5LjMyIDEzLjk5UTEzMC4zNyAxMy40MyAxMzEuNjkgMTMuNDNMMTMxLjY5IDEzLjQzUTEzMi44NCAxMy40MyAxMzMuNzYgMTMuODRRMTM0LjY5IDE0LjI1IDEzNS4zMCAxNS4wMkwxMzUuMzAgMTUuMDJMMTMzLjc5IDE2LjM5UTEzMi45OCAxNS40MCAxMzEuODEgMTUuNDBMMTMxLjgxIDE1LjQwUTEzMS4xMiAxNS40MCAxMzAuNTkgMTUuNzBRMTMwLjA2IDE2IDEyOS43NiAxNi41NFExMjkuNDcgMTcuMDkgMTI5LjQ3IDE3LjgwTDEyOS40NyAxNy44MFExMjkuNDcgMTguNTEgMTI5Ljc2IDE5LjA1UTEzMC4wNiAxOS42MCAxMzAuNTkgMTkuOTBRMTMxLjEyIDIwLjIwIDEzMS44MSAyMC4yMEwxMzEuODEgMjAuMjBRMTMyLjk4IDIwLjIwIDEzMy43OSAxOS4yMkwxMzMuNzkgMTkuMjJMMTM1LjMwIDIwLjU4UTEzNC42OSAyMS4zNSAxMzMuNzcgMjEuNzZRMTMyLjg0IDIyLjE3IDEzMS42OSAyMi4xN0wxMzEuNjkgMjIuMTdRMTMwLjM3IDIyLjE3IDEyOS4zMiAyMS42MVExMjguMjcgMjEuMDUgMTI3LjY3IDIwLjA1UTEyNy4wNyAxOS4wNiAxMjcuMDcgMTcuODBaTTEzOS40MSAxNy44MEwxMzkuNDEgMTcuODBRMTM5LjQxIDE2LjU1IDE0MC4wMSAxNS41NVExNDAuNjIgMTQuNTYgMTQxLjY4IDE0LjAwUTE0Mi43NCAxMy40MyAxNDQuMDcgMTMuNDNMMTQ0LjA3IDEzLjQzUTE0NS40MCAxMy40MyAxNDYuNDcgMTQuMDBRMTQ3LjUzIDE0LjU2IDE0OC4xNCAxNS41NVExNDguNzQgMTYuNTUgMTQ4Ljc0IDE3LjgwTDE0OC43NCAxNy44MFExNDguNzQgMTkuMDUgMTQ4LjE0IDIwLjA0UTE0Ny41MyAyMS4wNCAxNDYuNDcgMjEuNjBRMTQ1LjQxIDIyLjE3IDE0NC4wNyAyMi4xN0wxNDQuMDcgMjIuMTdRMTQyLjc0IDIyLjE3IDE0MS42OCAyMS42MFExNDAuNjIgMjEuMDQgMTQwLjAxIDIwLjA0UTEzOS40MSAxOS4wNSAxMzkuNDEgMTcuODBaTTE0MS44MSAxNy44MEwxNDEuODEgMTcuODBRMTQxLjgxIDE4LjUxIDE0Mi4xMSAxOS4wNVExNDIuNDEgMTkuNjAgMTQyLjkzIDE5LjkwUTE0My40NCAyMC4yMCAxNDQuMDcgMjAuMjBMMTQ0LjA3IDIwLjIwUTE0NC43MSAyMC4yMCAxNDUuMjMgMTkuOTBRMTQ1Ljc0IDE5LjYwIDE0Ni4wNCAxOS4wNVExNDYuMzQgMTguNTEgMTQ2LjM0IDE3LjgwTDE0Ni4zNCAxNy44MFExNDYuMzQgMTcuMDkgMTQ2LjA0IDE2LjU0UTE0NS43NCAxNiAxNDUuMjMgMTUuNzBRMTQ0LjcxIDE1LjQwIDE0NC4wNyAxNS40MEwxNDQuMDcgMTUuNDBRMTQzLjQ0IDE1LjQwIDE0Mi45MiAxNS43MFExNDIuNDEgMTYgMTQyLjExIDE2LjU0UTE0MS44MSAxNy4wOSAxNDEuODEgMTcuODBaTTE1NS44NSAyMkwxNTMuNDcgMjJMMTUzLjQ3IDEzLjYwTDE2MC4wNiAxMy42MEwxNjAuMDYgMTUuNDRMMTU1Ljg1IDE1LjQ0TDE1NS44NSAxNy4yOEwxNTkuNTYgMTcuMjhMMTU5LjU2IDE5LjEyTDE1NS44NSAxOS4xMkwxNTUuODUgMjJaTTE2Ny4wNCAyMkwxNjQuNjYgMjJMMTY0LjY2IDEzLjYwTDE3MS4yNSAxMy42MEwxNzEuMjUgMTUuNDRMMTY3LjA0IDE1LjQ0TDE2Ny4wNCAxNy4yOEwxNzAuNzUgMTcuMjhMMTcwLjc1IDE5LjEyTDE2Ny4wNCAxOS4xMkwxNjcuMDQgMjJaTTE4Mi41OSAyMkwxNzUuODQgMjJMMTc1Ljg0IDEzLjYwTDE4Mi40NCAxMy42MEwxODIuNDQgMTUuNDRMMTc4LjIwIDE1LjQ0TDE3OC4yMCAxNi44NUwxODEuOTMgMTYuODVMMTgxLjkzIDE4LjYzTDE3OC4yMCAxOC42M0wxNzguMjAgMjAuMTdMMTgyLjU5IDIwLjE3TDE4Mi41OSAyMlpNMTk0LjE0IDIyTDE4Ny4zOSAyMkwxODcuMzkgMTMuNjBMMTkzLjk4IDEzLjYwTDE5My45OCAxNS40NEwxODkuNzUgMTUuNDRMMTg5Ljc1IDE2Ljg1TDE5My40OCAxNi44NUwxOTMuNDggMTguNjNMMTg5Ljc1IDE4LjYzTDE4OS43NSAyMC4xN0wxOTQuMTQgMjAuMTdMMTk0LjE0IDIyWk0yMDUuNDkgMTcuODBMMjA1LjQ5IDE3LjgwUTIwNS40OSAxNi41NCAyMDYuMDggMTUuNTRRMjA2LjY4IDE0LjU1IDIwNy43MyAxMy45OVEyMDguNzggMTMuNDMgMjEwLjEwIDEzLjQzTDIxMC4xMCAxMy40M1EyMTEuMjYgMTMuNDMgMjEyLjE4IDEzLjg0UTIxMy4xMCAxNC4yNSAyMTMuNzIgMTUuMDJMMjEzLjcyIDE1LjAyTDIxMi4yMSAxNi4zOVEyMTEuMzkgMTUuNDAgMjEwLjIzIDE1LjQwTDIxMC4yMyAxNS40MFEyMDkuNTQgMTUuNDAgMjA5LjAxIDE1LjcwUTIwOC40NyAxNiAyMDguMTggMTYuNTRRMjA3Ljg4IDE3LjA5IDIwNy44OCAxNy44MEwyMDcuODggMTcuODBRMjA3Ljg4IDE4LjUxIDIwOC4xOCAxOS4wNVEyMDguNDcgMTkuNjAgMjA5LjAxIDE5LjkwUTIwOS41NCAyMC4yMCAyMTAuMjMgMjAuMjBMMjEwLjIzIDIwLjIwUTIxMS4zOSAyMC4yMCAyMTIuMjEgMTkuMjJMMjEyLjIxIDE5LjIyTDIxMy43MiAyMC41OFEyMTMuMTEgMjEuMzUgMjEyLjE4IDIxLjc2UTIxMS4yNiAyMi4xNyAyMTAuMTAgMjIuMTdMMjEwLjEwIDIyLjE3UTIwOC43OCAyMi4xNyAyMDcuNzMgMjEuNjFRMjA2LjY4IDIxLjA1IDIwNi4wOCAyMC4wNVEyMDUuNDkgMTkuMDYgMjA1LjQ5IDE3LjgwWk0yMTcuODMgMTcuODBMMjE3LjgzIDE3LjgwUTIxNy44MyAxNi41NSAyMTguNDMgMTUuNTVRMjE5LjAzIDE0LjU2IDIyMC4xMCAxNC4wMFEyMjEuMTYgMTMuNDMgMjIyLjQ5IDEzLjQzTDIyMi40OSAxMy40M1EyMjMuODIgMTMuNDMgMjI0Ljg4IDE0LjAwUTIyNS45NSAxNC41NiAyMjYuNTUgMTUuNTVRMjI3LjE2IDE2LjU1IDIyNy4xNiAxNy44MEwyMjcuMTYgMTcuODBRMjI3LjE2IDE5LjA1IDIyNi41NSAyMC4wNFEyMjUuOTUgMjEuMDQgMjI0Ljg5IDIxLjYwUTIyMy44MyAyMi4xNyAyMjIuNDkgMjIuMTdMMjIyLjQ5IDIyLjE3UTIyMS4xNiAyMi4xNyAyMjAuMTAgMjEuNjBRMjE5LjAzIDIxLjA0IDIxOC40MyAyMC4wNFEyMTcuODMgMTkuMDUgMjE3LjgzIDE3LjgwWk0yMjAuMjIgMTcuODBMMjIwLjIyIDE3LjgwUTIyMC4yMiAxOC41MSAyMjAuNTIgMTkuMDVRMjIwLjgzIDE5LjYwIDIyMS4zNCAxOS45MFEyMjEuODYgMjAuMjAgMjIyLjQ5IDIwLjIwTDIyMi40OSAyMC4yMFEyMjMuMTMgMjAuMjAgMjIzLjY0IDE5LjkwUTIyNC4xNiAxOS42MCAyMjQuNDYgMTkuMDVRMjI0Ljc2IDE4LjUxIDIyNC43NiAxNy44MEwyMjQuNzYgMTcuODBRMjI0Ljc2IDE3LjA5IDIyNC40NiAxNi41NFEyMjQuMTYgMTYgMjIzLjY0IDE1LjcwUTIyMy4xMyAxNS40MCAyMjIuNDkgMTUuNDBMMjIyLjQ5IDE1LjQwUTIyMS44NSAxNS40MCAyMjEuMzQgMTUuNzBRMjIwLjgzIDE2IDIyMC41MiAxNi41NFEyMjAuMjIgMTcuMDkgMjIwLjIyIDE3LjgwWk0yMzQuMjcgMjJMMjMxLjg5IDIyTDIzMS44OSAxMy42MEwyMzUuNzMgMTMuNjBRMjM2Ljg3IDEzLjYwIDIzNy43MSAxMy45OFEyMzguNTUgMTQuMzUgMjM5LjAxIDE1LjA2UTIzOS40NiAxNS43NiAyMzkuNDYgMTYuNzFMMjM5LjQ2IDE2LjcxUTIzOS40NiAxNy42MiAyMzkuMDQgMTguMzBRMjM4LjYxIDE4Ljk4IDIzNy44MiAxOS4zNkwyMzcuODIgMTkuMzZMMjM5LjYzIDIyTDIzNy4wOSAyMkwyMzUuNTYgMTkuNzdMMjM0LjI3IDE5Ljc3TDIzNC4yNyAyMlpNMjM0LjI3IDE1LjQ3TDIzNC4yNyAxNy45M0wyMzUuNTkgMTcuOTNRMjM2LjMyIDE3LjkzIDIzNi42OSAxNy42MVEyMzcuMDYgMTcuMjkgMjM3LjA2IDE2LjcxTDIzNy4wNiAxNi43MVEyMzcuMDYgMTYuMTIgMjM2LjY5IDE1Ljc5UTIzNi4zMiAxNS40NyAyMzUuNTkgMTUuNDdMMjM1LjU5IDE1LjQ3TDIzNC4yNyAxNS40N1pNMjUxLjAwIDIyTDI0NC4yNSAyMkwyNDQuMjUgMTMuNjBMMjUwLjg0IDEzLjYwTDI1MC44NCAxNS40NEwyNDYuNjEgMTUuNDRMMjQ2LjYxIDE2Ljg1TDI1MC4zNCAxNi44NUwyNTAuMzQgMTguNjNMMjQ2LjYxIDE4LjYzTDI0Ni42MSAyMC4xN0wyNTEuMDAgMjAuMTdMMjUxLjAwIDIyWiIgZmlsbD0iI0ZGRkZGRiIgeD0iMTI2LjMxIi8+PC9zdmc+)](https://github.com/AlphaSerpentis/CoffeeCore)
+# Discord Brewer ☕️
 
-# Discord Brewer
-
-## About
-Discord Brewer is a Discord bot that uses OpenAI's ChatGPT to generate roles, categories, and channels for your Discord server.
+---
+## About Brewer ☕️
+Brewer is a Discord bot that uses OpenAI's ChatGPT to generate new roles, categories, and channels for your Discord server!
 
 By default, the bot uses ChatGPT 3.5-turbo, but may change in the future.
 
+**Brewer built using [Coffee Core](https://github.com/AlphaSerpentis/CoffeeCore)!**
+
 ## Features
 - Generate new roles, categories, and channels with permissions based on a prompt
-- (Not Ready) Rename pre-existing roles, categories, and channels based on a prompt
+- (Soon) Rename pre-existing roles, categories, and channels based on a prompt
 - Revert any recent changes if you don't like them
-
-# How To Use
 
 ## Inviting the Bot
 
 **Notice**: You accept all responsibility for any changes made to your server by the bot.
+
+**We do not recommend granting the `Administrator` permission to Brewer, but if you absolutely need it, we recommend you to revoke it after the bot is done brewing!**
 
 **Required Permissions**:
 - Manage Roles
 - Manage Channels
 - Manage Permissions
 
-## Running it Yourself
+[**Invite Brewer ☕️ to your server!**](https://discord.com/api/oauth2/authorize?client_id=1097362340468502548&permissions=268504080&scope=bot)
+
+## Discord Server
+![Discord Banner 1](https://discordapp.com/api/guilds/590215639785013298/widget.png?style=banner1)
+
+## Terms of Service & Privacy Policy
+### [View our Privacy Policy](https://github.com/AlphaSerpentis/Discord-Brewer/blob/master/privacy.md)
+### [View our Terms of Service](https://github.com/AlphaSerpentis/Discord-Brewer/blob/master/terms_of_service.md)
+
+---
+
+## Running it Yourself (Self-Hosting)
 
 ### Requirements
 - Discord API Key
 - OpenAI API Key
 - Java 17+
+- A computer I guess
 
-# Support
+### Create a `[file name].json` File for Storage
+In order to run the bot, you need to create a JSON file to store the bot's data. The file name can be anything you want, but it must be a JSON file.
 
-## FAQ
+### `.env` File
+Copy the `.env.example` file and rename it to `.env`.
 
-### How often can I run `/brew`?
+Using the `.json` file you created earlier, attach the file path to the `SERVER_DATA_PATH` variable.
+
+Fill in the other values with your own as specified.
+
+### Running the Bot
+#### TODO: Finish this section
+
+## How To Use
+
+### `/brew server [prompt]`
+
+This is the primary command of Brewer and will generate new roles, categories, and channels based on the prompt you provide.
+
+For the prompt, you provide the bot what you desire. For example:
+- You ask it to create categories containing the names of "General", "Voice", and "Text" and it will do so.
+- Stylize your server with a theme (e.g., medieval, futuristic, etc.)
+- Generate a server based on a topic (e.g., gaming, anime, etc.)
+
+Being specific can help generate a more desirable result!
+
+However, due to the nature of ChatGPT, results and accuracy may vary. We are constantly working on ways to improve the results.
+
+---
+
+## Support
+
+### FAQ
+
+#### How often can I run `/brew`?
 You can run `/brew` every 10 minutes (globally). Additionally, if you generated a brew, you can retry up to 3 times in that session.
 
-### I got error messages after brewing!
-Please send them my way by either going to our [Discord server]() or by opening an issue [here](https://github.com/AlphaSerpentis/Discord-Brewer/issues/new).
+#### I got error messages after brewing!
+Please send them my way by either going to our [Discord server](https://discord.alphaserpentis.dev) or by opening an issue [here](https://github.com/AlphaSerpentis/Discord-Brewer/issues/new).
 
-### I don't like the changes it did to my server! Help!
+#### I don't like the changes Brewer did to my server! Help!
 If you ran the command recently, click on the **Revert** button that appears on the last message sent by the bot. This will revert all changes made by the bot.
 
-### The permissions are wrong/don't make sense!
+#### The permissions are wrong/don't make sense!
 Brewer might skip the permissions creation process if it is unable to add them (e.g., insufficient permissions). If it does add them, it might not be up-to-date with current available permissions. Due to the nature of ChatGPT 3.5 Turbo (the model Brewer will use by default), it may not generate accurate permissions. This is a known issue and will be tweaked over time.
 
-### It didn't rename my NSFW channels?
-Brewer by default will not rename NSFW channels due to OpenAI's restrictions. However, this can be toggled to try it anyway. There is no guarantee it'll run if OpenAI's filters come back with a flag.
+#### Brewer didn't rename my NSFW channels?
+Brewer by default will not rename NSFW channels due to OpenAI's restrictions.
 
-# Dependencies
+An option will be available to try to rename NSFW channels in the future.
+
+## Dependencies
 - Coffee Core (0.3.0-alpha-SNAPSHOT)
 - OpenAI-Java Service (0.12.0)
