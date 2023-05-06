@@ -18,7 +18,13 @@ public class Launcher {
                                 Long.parseLong(dotenv.get("BOT_OWNER_ID")),
                                 dotenv.get("SERVER_DATA_PATH"),
                                 Boolean.parseBoolean(dotenv.get("UPDATE_COMMANDS_AT_LAUNCH")),
-                                Boolean.parseBoolean(dotenv.get("REGISTER_DEFAULT_COMMANDS"))
+                                Boolean.parseBoolean(dotenv.get("REGISTER_DEFAULT_COMMANDS")),
+                                """
+                                        Brewer is an open-source bot that uses OpenAI's ChatGPT to generate new roles/categories/channels with the touch of a prompt!
+                                        
+                                        **GitHub**: https://github.com/AlphaSerpentis/Discord-Brewer
+                                        **Discord Server**: https://discord.alphaserpentis.dev
+                                        """
                         )
                 )
                 .enableSharding(true);

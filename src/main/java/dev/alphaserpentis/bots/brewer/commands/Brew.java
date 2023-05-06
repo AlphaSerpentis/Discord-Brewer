@@ -241,7 +241,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
             }
             case "confirm" -> {
-                Message msg = hook.editOriginalComponents().setEmbeds(BREWING_UP).complete();
+                hook.editOriginalComponents().setEmbeds(BREWING_UP).complete();
 
                 Interpreter.InterpreterResult result = Interpreter.interpretAndExecute(
                         userSession.actionsToExecute,
@@ -252,7 +252,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
                 try {
                     if(result.completeSuccess()) {
-                        msg.editMessageEmbeds(
+                        hook.editOriginalEmbeds(
                                 POST_EXECUTION_NO_ERROR
                         ).setActionRow(
                                 getButton("revert")
@@ -270,7 +270,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                                 )
                                 .build();
 
-                        msg.editMessageEmbeds(
+                        hook.editOriginalEmbeds(
                                 errorEmbed
                         ).setActionRow(
                                 getButton("revert")
@@ -285,7 +285,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                 userSessions.remove(event.getUser().getIdLong());
             }
             case "revert" -> {
-                Message msg = hook.editOriginalComponents().setEmbeds(REVERTING).complete();
+                hook.editOriginalComponents().setEmbeds(REVERTING).complete();
 
                 try {
                     Interpreter.deleteAllChanges(
@@ -296,7 +296,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                     e.printStackTrace();
                     EmbedBuilder eb = new EmbedBuilder(REVERTED_ERROR);
 
-                    msg.editMessageEmbeds(
+                    hook.editOriginalEmbeds(
                             eb
                                     .setDescription(
                                             String.format(
@@ -312,7 +312,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                     userSessions.remove(event.getUser().getIdLong());
                 }
 
-                msg.editMessageEmbeds(
+                hook.editOriginalEmbeds(
                         REVERTED_NO_ERROR
                 ).queue();
             }
