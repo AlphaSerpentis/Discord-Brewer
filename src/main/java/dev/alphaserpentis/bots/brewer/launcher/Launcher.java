@@ -23,7 +23,7 @@ public class Launcher {
                                         Brewer is an open-source bot that uses OpenAI's ChatGPT to generate new roles/categories/channels with the touch of a prompt!
                                         
                                         **GitHub**: https://github.com/AlphaSerpentis/Discord-Brewer
-                                        **Discord Server**: https://discord.alphaserpentis.dev
+                                        **Discord Server**: https://asrp.dev/discord
                                         """
                         )
                 )

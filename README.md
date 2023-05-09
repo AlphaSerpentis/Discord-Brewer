@@ -54,7 +54,12 @@ Using the `.json` file you created earlier, attach the file path to the `SERVER_
 Fill in the other values with your own as specified.
 
 ### Running the Bot
-#### TODO: Finish this section
+Run the bot using the following command:
+```shell
+java -jar Brewer_X.X.X.jar
+```
+
+The file name of the jar will be different depending on the version you are running.
 
 ## How To Use
 
