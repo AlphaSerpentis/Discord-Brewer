@@ -512,6 +512,9 @@ public class Brew extends ButtonCommand<MessageEmbed> {
     }
 
     private void previewChangesPage(@NonNull EmbedBuilder eb, @NonNull ArrayList<ParseActions.ExecutableAction> actions) {
+        final String TOO_LONG = "... (too long to show)";
+        String categoriesVal, channelsVal, rolesVal;
+
         eb.setTitle("Preview Changes");
         eb.setDescription("""
                 Here is a preview of the changes that will be made to your server. Please confirm that you want to make these changes.
@@ -523,126 +526,108 @@ public class Brew extends ButtonCommand<MessageEmbed> {
         eb.setColor(Color.GREEN);
 
         // Categories
+        categoriesVal = actions.stream().filter(
+                action -> action.target() == ParseActions.ValidTarget.CATEGORY
+        ).map(
+                action -> {
+                    StringBuilder readableData = new StringBuilder();
+
+                    for(Map.Entry<String, Object> entry : action.data().entrySet()) {
+                        if(entry.getKey().equals("name") || entry.getKey().equals("perms"))
+                            continue;
+
+                        readableData.append(String.format(
+                                "└ **%s**: %s\n",
+                                entry.getKey(),
+                                entry.getValue()
+                        ));
+                    }
+
+                    return String.format(
+                            "%s %s\n%s",
+                            action.action().readable,
+                            action.data().get("name"),
+                            readableData
+                    );
+                }
+        ).reduce(
+                (a, b) -> String.format("%s\n%s", a, b)
+        ).orElse("No changes");
+
         eb.addField(
                 "Categories",
-                actions.stream().filter(
-                        action -> action.target() == ParseActions.ValidTarget.CATEGORY
-                ).map(
-                        action -> {
-                            StringBuilder readableData = new StringBuilder();
-
-                            for(Map.Entry<String, Object> entry : action.data().entrySet()) {
-                                if(entry.getKey().equals("name") || entry.getKey().equals("perms"))
-                                    continue;
-
-                                readableData.append(String.format(
-                                        "└ **%s**: %s\n",
-                                        entry.getKey(),
-                                        entry.getValue()
-                                ));
-                            }
-
-                            if(readableData.length() > 1024) {
-                                readableData.replace(
-                                        1002,
-                                        readableData.length(),
-                                        "... (too long to show)"
-                                );
-                            }
-
-                            return String.format(
-                                    "%s %s\n%s",
-                                    action.action().readable,
-                                    action.data().get("name"),
-                                    readableData
-                            );
-                        }
-                ).reduce(
-                        (a, b) -> String.format("%s\n%s", a, b)
-                ).orElse("No changes"),
+                categoriesVal.length() > 1024 ? categoriesVal.substring(0, 1024 - TOO_LONG.length()) + TOO_LONG : categoriesVal,
                 false
         );
 
         // Channels
+        channelsVal = actions.stream().filter(
+                action -> (action.target() == ParseActions.ValidTarget.TEXT_CHANNEL)
+                        || (action.target() == ParseActions.ValidTarget.VOICE_CHANNEL)
+        ).map(
+                action -> {
+                    StringBuilder readableData = new StringBuilder();
+
+                    for(Map.Entry<String, Object> entry : action.data().entrySet()) {
+                        if(entry.getKey().equals("name") || entry.getKey().equals("perms"))
+                            continue;
+
+                        readableData.append(String.format(
+                                "└ **%s**: %s\n",
+                                entry.getKey(),
+                                entry.getValue()
+                        ));
+                    }
+
+                    return String.format(
+                            "%s %s\n%s",
+                            action.action().readable,
+                            action.data().get("name"),
+                            readableData
+                    );
+                }
+        ).reduce(
+                (a, b) -> String.format("%s\n%s", a, b)
+        ).orElse("No changes");
+
         eb.addField(
                 "Channels",
-                actions.stream().filter(
-                        action -> (action.target() == ParseActions.ValidTarget.TEXT_CHANNEL)
-                                || (action.target() == ParseActions.ValidTarget.VOICE_CHANNEL)
-                ).map(
-                        action -> {
-                            StringBuilder readableData = new StringBuilder();
-
-                            for(Map.Entry<String, Object> entry : action.data().entrySet()) {
-                                if(entry.getKey().equals("name") || entry.getKey().equals("perms"))
-                                    continue;
-
-                                readableData.append(String.format(
-                                        "└ **%s**: %s\n",
-                                        entry.getKey(),
-                                        entry.getValue()
-                                ));
-                            }
-
-                            if(readableData.length() > 1024) {
-                                readableData.replace(
-                                        1002,
-                                        readableData.length(),
-                                        "... (too long to show)"
-                                );
-                            }
-
-                            return String.format(
-                                    "%s %s\n%s",
-                                    action.action().readable,
-                                    action.data().get("name"),
-                                    readableData
-                            );
-                        }
-                ).reduce(
-                        (a, b) -> String.format("%s\n%s", a, b)
-                ).orElse("No changes"),
+                channelsVal.length() > 1024 ? channelsVal.substring(0, 1024 - TOO_LONG.length()) + TOO_LONG : channelsVal,
                 false
         );
 
         // Roles
+        rolesVal = actions.stream().filter(
+                action -> action.target() == ParseActions.ValidTarget.ROLE
+        ).map(
+                action -> {
+                    StringBuilder readableData = new StringBuilder();
+
+                    for(Map.Entry<String, Object> entry : action.data().entrySet()) {
+                        if(entry.getKey().equals("name") || entry.getKey().equals("perms"))
+                            continue;
+
+                        readableData.append(String.format(
+                                "└ **%s**: %s\n",
+                                entry.getKey(),
+                                entry.getValue()
+                        ));
+                    }
+
+                    return String.format(
+                            "%s %s\n%s",
+                            action.action().readable,
+                            action.data().get("name"),
+                            readableData
+                    );
+                }
+        ).reduce(
+                (a, b) -> String.format("%s\n%s", a, b)
+        ).orElse("No changes");
+
         eb.addField(
                 "Roles",
-                actions.stream().filter(
-                        action -> action.target() == ParseActions.ValidTarget.ROLE
-                ).map(
-                        action -> {
-                            StringBuilder readableData = new StringBuilder();
-
-                            for(Map.Entry<String, Object> entry : action.data().entrySet()) {
-                                if(entry.getKey().equals("name") || entry.getKey().equals("perms"))
-                                    continue;
-
-                                readableData.append(String.format(
-                                        "└ **%s**: %s\n",
-                                        entry.getKey(),
-                                        entry.getValue()
-                                ));
-                            }
-
-                            if(readableData.length() > 1024) {
-                                readableData.replace(
-                                        1002,
-                                        readableData.length(),
-                                        "... (too long to show)"
-                                );
-                            }
-
-                            return String.format(
-                                    "%s %s\n%s",
-                                    action.action().readable,
-                                    action.data().get("name"),
-                                    readableData
-                            );
-                        }
-                ).reduce(
-                        (a, b) -> String.format("%s\n%s", a, b)
-                ).orElse("No changes"),
+                rolesVal,
                 false
         );
 
