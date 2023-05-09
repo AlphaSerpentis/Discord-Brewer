@@ -16,7 +16,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -90,20 +89,18 @@ public class Brew extends ButtonCommand<MessageEmbed> {
     }
 
     private final HashMap<Long, UserSession> userSessions = new HashMap<>();
-    private static final MessageEmbed DMS_NOT_SUPPORTED = new EmbedBuilder()
+    private static final EmbedBuilder DMS_NOT_SUPPORTED = new EmbedBuilder()
             .setTitle("DMs Not Supported")
             .setDescription("This command does not support DMs.")
-            .setColor(Color.RED)
-            .build();
-    private static final MessageEmbed NO_PERMISSIONS = new EmbedBuilder()
+            .setColor(Color.RED);
+    private static final EmbedBuilder NO_PERMISSIONS = new EmbedBuilder()
             .setTitle("No Permissions")
             .setDescription("""
                     You do not have the required permissions to run this command.
 
                     Must be the server owner or have `Administrator` permissions.""")
-            .setColor(Color.RED)
-            .build();
-    private static final MessageEmbed PROMPT_REJECTED = new EmbedBuilder()
+            .setColor(Color.RED);
+    private static final EmbedBuilder PROMPT_REJECTED = new EmbedBuilder()
             .setTitle("Prompt Rejected")
             .setDescription(
                     """
@@ -111,28 +108,27 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
                     You can read more about the usage policies of OpenAI here: https://openai.com/policies/usage-policies"""
             )
-            .setColor(Color.RED)
-            .build();
-    private static final MessageEmbed BREWING_UP = new EmbedBuilder()
+            .setColor(Color.RED);
+    private static final EmbedBuilder BREWING_UP = new EmbedBuilder()
             .setTitle("Brewing Up")
             .setDescription("Brewing up your server...")
-            .setColor(Color.ORANGE)
-            .build();
-    private static final MessageEmbed CANCELLED = new EmbedBuilder()
+            .setColor(Color.ORANGE);
+    private static final EmbedBuilder GENERATING_NEW_BREW = new EmbedBuilder()
+            .setTitle("Generating New Brew")
+            .setDescription("Generating a new brew...")
+            .setColor(Color.ORANGE);
+    private static final EmbedBuilder CANCELLED = new EmbedBuilder()
             .setTitle("Cancelled")
             .setDescription("Cancelled the current session.")
-            .setColor(Color.RED)
-            .build();
-    private static final MessageEmbed REVERTING = new EmbedBuilder()
+            .setColor(Color.RED);
+    private static final EmbedBuilder REVERTING = new EmbedBuilder()
             .setTitle("Reverting")
             .setDescription("Reverting the changes made to the server...")
-            .setColor(Color.ORANGE)
-            .build();
-    private static final MessageEmbed POST_EXECUTION_NO_ERROR = new EmbedBuilder()
+            .setColor(Color.ORANGE);
+    private static final EmbedBuilder POST_EXECUTION_NO_ERROR = new EmbedBuilder()
             .setTitle("Server Brewed Up!")
             .setDescription("The server has been successfully brewed up!")
-            .setColor(Color.GREEN)
-            .build();
+            .setColor(Color.GREEN);
     private static final EmbedBuilder POST_EXECUTION_ERROR = new EmbedBuilder()
             .setTitle("Server Brewed Up!")
             .setDescription("""
@@ -140,27 +136,34 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                     
                     You can revert this change by pressing the "Revert" button below.
                     
+                    Report this over at https://asrp.dev/discord
+                    
                     Error Message: %s""")
             .setColor(Color.ORANGE);
-    private static final MessageEmbed REVERTED_NO_ERROR = new EmbedBuilder()
+    private static final EmbedBuilder REVERTED_NO_ERROR = new EmbedBuilder()
             .setTitle("Reverted")
             .setDescription("Reverted the changes made to the server.")
-            .setColor(Color.GREEN)
-            .build();
+            .setColor(Color.GREEN);
 
     private static final EmbedBuilder REVERTED_ERROR = new EmbedBuilder()
             .setTitle("Reverted?")
             .setDescription("""
                     Reverted the changes made to the server (maybe), but there were some errors.
                     
+                    Report this over at https://asrp.dev/discord
+                    
                     Error Message: %s""")
             .setColor(Color.ORANGE);
 
-    private final MessageEmbed USER_SESSION_NOT_FOUND = new EmbedBuilder()
+    private final EmbedBuilder USER_SESSION_NOT_FOUND = new EmbedBuilder()
             .setTitle("User Session Not Found")
             .setDescription("You do not have an active session. Run </brew server:" + getCommandId() + "> or </brew rename:" + getCommandId() + "> to start a new session.")
-            .setColor(Color.RED)
-            .build();
+            .setColor(Color.RED);
+
+    private final String SUGGESTION = """
+    If you're enjoying this bot, consider supporting Brewer by voting for us!
+    
+    Run </vote:%s> to vote for us!""";
 
     public Brew() {
         super(
@@ -192,7 +195,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
         InteractionHook hook = event.deferEdit().complete();
 
         if(userSession == null) {
-            hook.editOriginalComponents().setEmbeds(USER_SESSION_NOT_FOUND).queue();
+            hook.editOriginalComponents().setEmbeds(USER_SESSION_NOT_FOUND.build()).queue();
             return;
         }
 
@@ -208,7 +211,9 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                 }
 
                 hook.editOriginalComponents()
-                        .setEmbeds(BREWING_UP)
+                        .setEmbeds(
+                                GENERATING_NEW_BREW.build()
+                        )
                         .queue();
 
                 userSession.actionsToExecute = generateActions(
@@ -232,16 +237,16 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                             .editOriginalComponents()
                             .setEmbeds(eb.build())
                             .setActionRow(
+                                    getButton("brew"),
                                     getButton("confirm"),
-                                    getButton("cancel"),
-                                    getButton("brew")
+                                    getButton("cancel")
                             )
                             .queue();
                 }
 
             }
             case "confirm" -> {
-                hook.editOriginalComponents().setEmbeds(BREWING_UP).complete();
+                hook.editOriginalComponents().setEmbeds(BREWING_UP.build()).complete();
 
                 Interpreter.InterpreterResult result = Interpreter.interpretAndExecute(
                         userSession.actionsToExecute,
@@ -253,7 +258,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                 try {
                     if(result.completeSuccess()) {
                         hook.editOriginalEmbeds(
-                                POST_EXECUTION_NO_ERROR
+                                POST_EXECUTION_NO_ERROR.build()
                         ).setActionRow(
                                 getButton("revert")
                         ).queue();
@@ -281,11 +286,11 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                 }
             }
             case "cancel" -> {
-                hook.editOriginalComponents().setEmbeds(CANCELLED).queue();
+                hook.editOriginalComponents().setEmbeds(CANCELLED.build()).queue();
                 userSessions.remove(event.getUser().getIdLong());
             }
             case "revert" -> {
-                hook.editOriginalComponents().setEmbeds(REVERTING).complete();
+                hook.editOriginalComponents().setEmbeds(REVERTING.build()).complete();
 
                 try {
                     Interpreter.deleteAllChanges(
@@ -313,7 +318,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                 }
 
                 hook.editOriginalEmbeds(
-                        REVERTED_NO_ERROR
+                        REVERTED_NO_ERROR.build()
                 ).queue();
             }
         }
@@ -353,17 +358,17 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
         // Check if the command was ran in the DMs
         if(!event.isFromGuild())
-            return new CommandResponse<>(DMS_NOT_SUPPORTED, isOnlyEphemeral());
+            return new CommandResponse<>(DMS_NOT_SUPPORTED.build(), isOnlyEphemeral());
 
         // Check if the user is allowed to run the command
         if(!isUserAllowedToRunCommand(event.getMember()))
-            return new CommandResponse<>(NO_PERMISSIONS, isOnlyEphemeral());
+            return new CommandResponse<>(NO_PERMISSIONS.build(), isOnlyEphemeral());
 
         // Check if the prompt doesn't get flagged by OpenAI
         prompt = String.valueOf(event.getOption("prompt"));
 
         if(!OpenAIHandler.isPromptSafeToUse(prompt))
-            return new CommandResponse<>(PROMPT_REJECTED, isOnlyEphemeral());
+            return new CommandResponse<>(PROMPT_REJECTED.build(), isOnlyEphemeral());
 
         switch(event.getSubcommandName()) {
             case "server" -> runServerPrompt(eb, prompt, event);
@@ -537,6 +542,14 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                                 ));
                             }
 
+                            if(readableData.length() > 1024) {
+                                readableData.replace(
+                                        1002,
+                                        readableData.length(),
+                                        "... (too long to show)"
+                                );
+                            }
+
                             return String.format(
                                     "%s %s\n%s",
                                     action.action().readable,
@@ -571,6 +584,14 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                                 ));
                             }
 
+                            if(readableData.length() > 1024) {
+                                readableData.replace(
+                                        1002,
+                                        readableData.length(),
+                                        "... (too long to show)"
+                                );
+                            }
+
                             return String.format(
                                     "%s %s\n%s",
                                     action.action().readable,
@@ -602,6 +623,14 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                                         entry.getKey(),
                                         entry.getValue()
                                 ));
+                            }
+
+                            if(readableData.length() > 1024) {
+                                readableData.replace(
+                                        1002,
+                                        readableData.length(),
+                                        "... (too long to show)"
+                                );
                             }
 
                             return String.format(
