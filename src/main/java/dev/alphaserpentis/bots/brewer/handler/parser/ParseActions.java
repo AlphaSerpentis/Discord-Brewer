@@ -10,17 +10,16 @@ import java.util.Objects;
 public class ParseActions {
 
     public record ExecutableAction(
-            @NonNull ValidTarget target,
+            @NonNull ValidTarget targetType,
+            @NonNull String target,
             @NonNull ValidAction action,
-            @NonNull Map<String, Object> data
+            @NonNull Map<ValidDataNames, Object> data
     ) {
         @Override
         public String toString() {
             return String.format(
-                    "\nAction: %s %s\nData: %s",
-                    action.readable,
-                    target.readable,
-                    data.toString()
+                    "Target: %s\nAction: %s\nData: %s",
+                    target, action.readable, data
             );
         }
     }
@@ -41,26 +40,26 @@ public class ParseActions {
     }
 
     public enum ValidAction {
-        CREATE ("create", "Create"),
-        EDIT ("edit", "Edit");
+        CREATE ("create", "Create", "Create **%s**"),
+        EDIT ("edit", "Edit", "Edit **%s** to **%s**");
 
         public final String role;
         public final String readable;
+        public final String editableText;
 
-        ValidAction(String role, String readable) {
+        ValidAction(String role, String readable, String editableText) {
             this.role = role;
             this.readable = readable;
+            this.editableText = editableText;
         }
     }
 
     public enum ValidDataNames {
         NAME ("name", "Name"),
-        DESCRIPTION ("desc", "Description"),
+        DESCRIPTION ("desc", "Desc."),
         CATEGORY ("cat", "Category"),
-        PERMISSIONS ("perms", "Permissions"),
-        COLOR ("color", "Color"),
-        VALUE ("value", "Value");
-
+        PERMISSIONS ("perms", "Perms."),
+        COLOR ("color", "Color");
         public final String role;
         public final String readable;
 
@@ -70,20 +69,8 @@ public class ParseActions {
         }
     }
 
-    public enum ValidPermissions {
-        ROLE ("role"),
-        ALLOW ("allow"),
-        DENY ("deny");
-
-        public final String role;
-
-        ValidPermissions(String role) {
-            this.role = role;
-        }
-    }
-
     @NonNull
-    public static ArrayList<ExecutableAction> parseActions(@NonNull DiscordConfig config) {
+    public static ArrayList<ExecutableAction> parseActions(@NonNull DiscordConfig config, @NonNull ValidAction action) {
         ArrayList<ExecutableAction> actions = new ArrayList<>();
 
         for (Map.Entry<String, DiscordConfig.ConfigItem> entry : config.roles().entrySet()) {
@@ -91,21 +78,23 @@ public class ParseActions {
 
             actions.add(new ExecutableAction(
                     ValidTarget.ROLE,
-                    ValidAction.CREATE,
+                    action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
+                    action,
                     Map.of(
-                            ValidDataNames.NAME.role, Objects.requireNonNullElse(roleName, ""),
-                            ValidDataNames.COLOR.role, Objects.requireNonNullElse(entry.getValue().color(), ""),
-                            ValidDataNames.PERMISSIONS.role, Objects.requireNonNullElse(entry.getValue().perms(), "")
+                            ValidDataNames.NAME, Objects.requireNonNullElse(roleName, ""),
+                            ValidDataNames.COLOR, Objects.requireNonNullElse(entry.getValue().color(), ""),
+                            ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
                     )
             ));
         }
         for (Map.Entry<String, DiscordConfig.ConfigItem> entry : config.categories().entrySet()) {
             actions.add(new ExecutableAction(
                     ValidTarget.CATEGORY,
-                    ValidAction.CREATE,
+                    action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
+                    action,
                     Map.of(
-                            ValidDataNames.NAME.role, Objects.requireNonNullElse(entry.getValue().name(), ""),
-                            ValidDataNames.PERMISSIONS.role, Objects.requireNonNullElse(entry.getValue().perms(), "")
+                            ValidDataNames.NAME, Objects.requireNonNullElse(entry.getValue().name(), ""),
+                            ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
                     )
             ));
         }
@@ -121,12 +110,13 @@ public class ParseActions {
 
             actions.add(new ExecutableAction(
                     ValidTarget.TEXT_CHANNEL,
-                    ValidAction.CREATE,
+                    action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
+                    action,
                     Map.of(
-                            ValidDataNames.NAME.role, Objects.requireNonNullElse(entry.getValue().name(), ""),
-                            ValidDataNames.DESCRIPTION.role, Objects.requireNonNullElse(entry.getValue().desc(), ""),
-                            ValidDataNames.CATEGORY.role, Objects.requireNonNullElse(catName, ""),
-                            ValidDataNames.PERMISSIONS.role, Objects.requireNonNullElse(entry.getValue().perms(), "")
+                            ValidDataNames.NAME, Objects.requireNonNullElse(entry.getValue().name(), ""),
+                            ValidDataNames.DESCRIPTION, Objects.requireNonNullElse(entry.getValue().desc(), ""),
+                            ValidDataNames.CATEGORY, Objects.requireNonNullElse(catName, ""),
+                            ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
                     )
             ));
         }

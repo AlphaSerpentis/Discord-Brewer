@@ -5,7 +5,7 @@
 
     <groupId>dev.alphaserpentis.bots</groupId>
     <artifactId>Brewer</artifactId>
-    <version>1.0.3a</version>
+    <version>1.1.0-RC1</version>
     <name>Discord Brewer</name>
     <description>A Discord bot for automatically configuring a new Discord server using ChatGPT</description>
 
@@ -28,7 +28,13 @@
         <dependency>
             <groupId>dev.alphaserpentis</groupId>
             <artifactId>CoffeeCore</artifactId>
-            <version>0.3.0-alpha</version>
+            <version>0.4.0-alpha</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>club.minnced</groupId>
+                    <artifactId>opus-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.theokanning.openai-gpt3-java</groupId>
@@ -43,7 +49,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.4.2</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <id>make-assembly</id>

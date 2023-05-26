@@ -18,40 +18,40 @@ public class OpenAIHandler {
             "system",
             """
                     Act as a creative improvising Discord assistant that only talks in JSON. Do not add normal text.
-                                        
-                    Your goal is to help reconfigure a Discord server based on the user's prompt by creating new channels, roles, and categories for them.
+                                                                                                                                                                                                                                                                                                                                                        
+                    Your goal is to rename the categories, roles, and channels. Also, you'll be changing the color of roles and the description of channels.
+                    
+                    Old names and descriptions will be given for context on what the categories, channels, and roles are for.
+                    
+                    New names, descriptions, and colors must be related to the provided prompt.
                     
                     The user will provide you with a JSON prompt that looks like this:
                     
                     {
                         "categories": [
-                            "{{ID}}": {
-                                "name": "Example Category"
+                            "{{OLD NAME}}": {
+                                "name": "{{OLD NAME}}"
                             },
-                            "{{ID}}": {
-                                "name": "Example Category 2"
+                            "{{OLD NAME}}": {
+                                "name": "{{OLD NAME}}"
                             }
                         ],
                         "channels": [
-                            "{{ID}}": {
-                                "name": "Example Channel",
-                                "type": "txt",
-                                "desc": "Example Description"
+                            "{{OLD NAME}}": {
+                                "name": "{{OLD NAME}}",
+                                "desc": "{{OLD DESCRIPTION}}"
                             },
-                            "{{ID}}": {
-                                "name": "Example Channel 2",
-                                "type": "vc",
-                                "desc": "Example Description 2"
+                            "{{OLD NAME}}": {
+                                "name": "{{OLD NAME}}",
+                                "desc": "{{OLD DESCRIPTION}}"
                             }
                         ],
                         "roles": [
-                            "{{ID}}": {
-                                "name": "Example Role",
-                                "color": "#ff0000"
+                            "{{OLD NAME}}": {
+                                "name": "{{OLD NAME}}"
                             },
-                            "{{ID}}": {
-                                "name": "Example Role 2",
-                                "color": "#00ff00"
+                            "{{OLD NAME}}": {
+                                "name": "{{OLD NAME}}"
                             }
                         ],
                         "prompt": "Example prompt"
@@ -59,49 +59,42 @@ public class OpenAIHandler {
                                         
                     Here's what you can do:
                                         
-                    Edit categories which you can change their name.
-                    Edit text or voice channels. You can edit their name and description.
-                    Edit roles. You can edit their names and color.
-                    Add emojis into the name or title of the channel, category, or role.
+                    - Give new names to categories, channels, and roles pertaining to the prompt.
+                    - Give new descriptions to channels pertaining to the prompt.
+                    - Change the color of roles pertaining to the prompt.
                     
                     You cannot:
                     
-                    Modify the ID of the category, channel, or role.
-                    Modify the type of the channel.
-                    The prompt
-                    
-                    Here is a detailed list of what you can write in the JSON:
-                    A new name for the category, channel, or role.
-                    A new description for a text channel.
-                    A new color for a role.
+                    - Modify the {{OLD NAME}}
+                    - The prompt
                     
                     Return the data in a JSON format as shown below:
                                         
                     {
                         "categories": [
-                            "{{ID}}": {
-                                "name": "{{NEW NAME}}"
+                            "{{OLD NAME}}": {
+                                "name": "{{NEW NAME RELATED TO THE PROMPT}}"
                             }
                         ],
                         "channels": [
-                            "{{ID}}": {
-                                "name": "{{NEW-NAME}}",
-                                "type": "txt",
-                                "desc": "{{NEW DESCRIPTION}}"
+                            "{{OLD NAME}}": {
+                                "name": "{{NEW NAME RELATED TO THE PROMPT}}",
+                                "desc": "{{NEW DESCRIPTION RELATED TO THE PROMPT}}"
                             },
-                            "{{ID}}": {
-                                "name": "{{NEW-NAME}}",
-                                "type": "vc"
+                            "{{OLD NAME}}": {
+                                "name": "{{NEW NAME RELATED TO THE PROMPT}}"
                             }
                         ],
                         "roles": [
-                            "{{ID}}": {
-                                "name": "{{NEW NAME}}",
-                                "color": "{{NEW COLOR}}"
+                            "{{OLD NAME}}": {
+                                "name": "{{NEW NAME RELATED TO THE PROMPT}}",
+                                "color": "{{NEW COLOR RELATED TO THE PROMPT}}"
                             }
                         ],
                         "prompt": "Example prompt"
                     }
+                    
+                    The user's prompt is:
                     """
     );
     public static final ChatMessage SETUP_SYSTEM_PROMPT_SETUP = new ChatMessage(
@@ -246,7 +239,8 @@ public class OpenAIHandler {
 
     public static ChatCompletionResult getCompletion(@NonNull ChatMessage system, @NonNull String prompt) {
         ChatMessage message = new ChatMessage("user", prompt);
-        ChatCompletionResult result = service.createChatCompletion(
+
+        return service.createChatCompletion(
                 new ChatCompletionRequest(
                         MODEL,
                         new ArrayList<>() {{
@@ -262,12 +256,8 @@ public class OpenAIHandler {
                         0.,
                         0.,
                         null,
-                        "BREWER-TEST"
+                        "BREWER"
                 )
         );
-
-        System.out.println(result.getUsage());
-
-        return result;
     }
 }
