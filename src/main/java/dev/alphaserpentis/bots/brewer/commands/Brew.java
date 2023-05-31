@@ -137,7 +137,10 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             .setColor(Color.RED);
     private static final EmbedBuilder BREWING_UP = new EmbedBuilder()
             .setTitle("Brewing Up")
-            .setDescription("Brewing up your server...")
+            .setDescription("""
+            Brewing up your server...
+            
+            **This may take a while due to rate limits.**""")
             .setColor(Color.ORANGE);
     private static final EmbedBuilder GENERATING_NEW_BREW = new EmbedBuilder()
             .setTitle("Generating New Brew")
@@ -160,7 +163,10 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             .setColor(Color.RED);
     private static final EmbedBuilder REVERTING = new EmbedBuilder()
             .setTitle("Reverting")
-            .setDescription("Reverting the changes made to the server...")
+            .setDescription("""
+            Reverting the changes made to the server...
+            
+            **This may take a while due to rate limits.**""")
             .setColor(Color.ORANGE);
     private static final EmbedBuilder POST_EXECUTION_NO_ERROR = new EmbedBuilder()
             .setTitle("Server Brewed Up!")
@@ -196,11 +202,6 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             .setTitle("User Session Not Found")
             .setDescription("You do not have an active session. Run </brew server:" + getCommandId() + "> or </brew rename:" + getCommandId() + "> to start a new session.")
             .setColor(Color.RED);
-
-    private final String SUGGESTION = """
-    If you're enjoying this bot, consider supporting Brewer by voting for us!
-    
-    Run </vote:%s> to vote for us!""";
 
     public Brew() {
         super(
@@ -675,5 +676,14 @@ public class Brew extends ButtonCommand<MessageEmbed> {
         } else {
             throw new IllegalStateException("Unexpected value: " + action.action());
         }
+    }
+
+    @NonNull
+    private String addSuggestion() {
+        final String SUGGESTION = """
+                If you're enjoying this bot, consider supporting Brewer by voting for us!
+                    
+                Run </vote:%s> to vote for us!""";
+        return String.format(SUGGESTION, core.getCommandsHandler().mappingOfCommands.get("vote").getCommandId());
     }
 }
