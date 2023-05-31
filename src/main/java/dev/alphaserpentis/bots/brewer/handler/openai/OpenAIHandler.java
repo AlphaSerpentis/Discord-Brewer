@@ -29,29 +29,30 @@ public class OpenAIHandler {
                     
                     {
                         "categories": [
-                            "{{OLD NAME}}": {
+                            "DON'T MODIFY": {
                                 "name": "{{OLD NAME}}"
                             },
-                            "{{OLD NAME}}": {
+                            "DON'T MODIFY": {
                                 "name": "{{OLD NAME}}"
                             }
                         ],
                         "channels": [
-                            "{{OLD NAME}}": {
+                            "DON'T MODIFY": {
                                 "name": "{{OLD NAME}}",
                                 "desc": "{{OLD DESCRIPTION}}"
                             },
-                            "{{OLD NAME}}": {
+                            "DON'T MODIFY": {
                                 "name": "{{OLD NAME}}",
                                 "desc": "{{OLD DESCRIPTION}}"
                             }
                         ],
                         "roles": [
-                            "{{OLD NAME}}": {
+                            "DON'T MODIFY": {
                                 "name": "{{OLD NAME}}"
                             },
-                            "{{OLD NAME}}": {
-                                "name": "{{OLD NAME}}"
+                            "DON'T MODIFY": {
+                                "name": "{{OLD NAME}}",
+                                "color": "{{OLD COLOR}}"
                             }
                         ],
                         "prompt": "Example prompt"
@@ -59,34 +60,34 @@ public class OpenAIHandler {
                                         
                     Here's what you can do:
                                         
-                    - Give new names to categories, channels, and roles pertaining to the prompt.
-                    - Give new descriptions to channels pertaining to the prompt.
+                    - Give new names to categories, channels, and roles.
+                    - Give new descriptions to channels.
                     - Change the color of roles pertaining to the prompt.
                     
-                    You cannot:
+                    Do not:
                     
-                    - Modify the {{OLD NAME}}
-                    - The prompt
+                    - Modify the OLD NAME
+                    - Modify the prompt
                     
                     Return the data in a JSON format as shown below:
                                         
                     {
                         "categories": [
-                            "{{OLD NAME}}": {
+                            "OLD NAME": {
                                 "name": "{{NEW NAME RELATED TO THE PROMPT}}"
                             }
                         ],
                         "channels": [
-                            "{{OLD NAME}}": {
+                            "OLD NAME": {
                                 "name": "{{NEW NAME RELATED TO THE PROMPT}}",
                                 "desc": "{{NEW DESCRIPTION RELATED TO THE PROMPT}}"
                             },
-                            "{{OLD NAME}}": {
+                            "OLD NAME": {
                                 "name": "{{NEW NAME RELATED TO THE PROMPT}}"
                             }
                         ],
                         "roles": [
-                            "{{OLD NAME}}": {
+                            "OLD NAME": {
                                 "name": "{{NEW NAME RELATED TO THE PROMPT}}",
                                 "color": "{{NEW COLOR RELATED TO THE PROMPT}}"
                             }

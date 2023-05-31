@@ -305,6 +305,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
                 Interpreter.InterpreterResult result = Interpreter.interpretAndExecute(
                         userSession.getActionsToExecute(),
+                        userSession.getAction(),
                         event.getGuild()
                 );
 
@@ -338,6 +339,8 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+
+                    userSessions.remove(event.getUser().getIdLong());
                 }
             }
             case "cancel" -> {
@@ -347,31 +350,31 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             case "revert" -> {
                 hook.editOriginalComponents().setEmbeds(REVERTING.build()).complete();
 
-                try {
-                    Interpreter.deleteAllChanges(userSession);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                Interpreter.InterpreterResult result = Interpreter.deleteAllChanges(userSession);
+
+                if(result.completeSuccess()) {
+                    hook.editOriginalEmbeds(
+                            REVERTED_NO_ERROR.build()
+                    ).queue();
+                } else {
+                    String errorMessages = String.join("\n", result.messages());
                     EmbedBuilder eb = new EmbedBuilder(REVERTED_ERROR);
 
-                    hook.editOriginalEmbeds(
-                            eb
-                                    .setDescription(
-                                            String.format(
-                                                    REVERTED_ERROR.getDescriptionBuilder().toString(),
-                                                    e.getMessage()
-                                            )
+                    MessageEmbed errorEmbed = eb
+                            .setDescription(
+                                    String.format(
+                                            REVERTED_ERROR.getDescriptionBuilder().toString(),
+                                            errorMessages
                                     )
-                                    .build()
-                    ).queue();
+                            )
+                            .build();
 
-                    return;
-                } finally {
-                    userSessions.remove(event.getUser().getIdLong());
+                    hook.editOriginalEmbeds(
+                            errorEmbed
+                    ).queue();
                 }
 
-                hook.editOriginalEmbeds(
-                        REVERTED_NO_ERROR.build()
-                ).queue();
+                userSessions.remove(event.getUser().getIdLong());
             }
         }
     }
@@ -422,9 +425,14 @@ public class Brew extends ButtonCommand<MessageEmbed> {
         if(!OpenAIHandler.isPromptSafeToUse(prompt))
             return new CommandResponse<>(PROMPT_REJECTED.build(), isOnlyEphemeral());
 
-        switch(event.getSubcommandName()) {
-            case "create" -> runCreatePrompt(eb, prompt, event);
-            case "rename" -> runRenamePrompt(eb, prompt, event);
+        try {
+            switch(event.getSubcommandName()) {
+                case "create" -> runCreatePrompt(eb, prompt, event);
+                case "rename" -> runRenamePrompt(eb, prompt, event);
+            }
+        } catch(Exception e) {
+            userSessions.remove(userId);
+            throw e;
         }
 
         return new CommandResponse<>(eb.build(), isOnlyEphemeral());
@@ -461,7 +469,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
         DiscordConfig config;
         ArrayList<ParseActions.ExecutableAction> actions;
 
-        System.out.println(result);
+//        System.out.println(result);
 
         try {
             config = gson.fromJson(result, DiscordConfig.class);
@@ -506,7 +514,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
     private void runRenamePrompt(@NonNull EmbedBuilder eb, @NonNull String prompt, @NonNull SlashCommandInteractionEvent event) {
         ArrayList<ParseActions.ExecutableAction> actions = generateActions(
                 OpenAIHandler.SETUP_SYSTEM_PROMPT_RENAME,
-                new GsonBuilder().setPrettyPrinting().create().toJson(getGuildData(event.getGuild(), "Rename based on " + prompt)),
+                new GsonBuilder().setPrettyPrinting().create().toJson(getGuildData(event.getGuild(), "Rename name, desc, and color based on " + prompt)),
                 ParseActions.ValidAction.EDIT
         );
         UserSession session;

@@ -101,6 +101,12 @@ Brewer by default will not rename NSFW channels due to OpenAI's restrictions.
 
 An option will be available to try to rename NSFW channels in the future.
 
+#### Nothing happened/it partially worked?
+There are two things that could have happened:
+
+1. You hit the rate limit and the action is paused for some time. It should automatically retry after a couple of minutes.
+2. An unhandled error occurred. If you don't believe the first issue is the case, do please report it!
+
 ## Dependencies
 - Coffee Core (0.4.0-alpha)
 - OpenAI-Java Service (0.12.0)

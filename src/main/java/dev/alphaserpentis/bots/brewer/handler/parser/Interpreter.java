@@ -26,18 +26,47 @@ public class Interpreter {
             boolean completeSuccess,
             @Nullable ArrayList<String> messages,
             @Nullable ArrayList<GuildChannel> channels,
-            @Nullable ArrayList<Role> roles
+            @Nullable ArrayList<Role> roles,
+            @Nullable OriginalState originalState
+    ) {}
+
+    /**
+     * Stores the original state of the guild before edits were made
+     * @param originalCategoryData The original data of the categories
+     * @param originalTextChannelData The original data of the text channels
+     * @param originalVoiceChannelData The original data of the voice channels
+     * @param originalRoleData The original data of the roles.
+     */
+    public record OriginalState(
+            @NonNull HashMap<Long, HashMap<String, String>> originalCategoryData,
+            @NonNull HashMap<Long, HashMap<String, String>> originalTextChannelData,
+            @NonNull HashMap<Long, HashMap<String, String>> originalVoiceChannelData,
+            @NonNull HashMap<Long, HashMap<String, String>> originalRoleData
     ) {}
 
     @NonNull
     public static InterpreterResult interpretAndExecute(
             @NonNull ArrayList<ParseActions.ExecutableAction> actions,
+            @NonNull ParseActions.ValidAction validAction,
             @NonNull Guild guild
     ) {
-        final HashMap<String, GuildChannel> channels = new HashMap<>();
-        final HashMap<String, Role> roles = new HashMap<>();
+        ArrayList<GuildChannel> channels = null;
+        ArrayList<Role> roles = null;
+        OriginalState originalState = null;
         final ArrayList<String> messages = new ArrayList<>();
         boolean completeSuccess = true;
+
+        if(validAction == ParseActions.ValidAction.CREATE) {
+            channels = new ArrayList<>();
+            roles = new ArrayList<>();
+        } else if(validAction == ParseActions.ValidAction.EDIT) {
+            originalState = new OriginalState(
+                    new HashMap<>(),
+                    new HashMap<>(),
+                    new HashMap<>(),
+                    new HashMap<>()
+            );
+        }
 
         for (ParseActions.ExecutableAction action : actions) {
             try {
@@ -46,60 +75,60 @@ public class Interpreter {
                         switch (action.action()) {
                             case CREATE -> {
                                 Category category = createCategory(action, guild);
-                                channels.put(category.getName(), category);
+                                channels.add(category);
                             }
-                            case EDIT -> editCategory(
+                            case EDIT -> originalState.originalCategoryData.putAll(editCategory(
                                     action,
                                     guild.getCategoriesByName(
                                             action.target(),
                                             true
                                     ).get(0)
-                            );
+                            ));
                         }
                     }
                     case TEXT_CHANNEL -> {
                         switch (action.action()) {
                             case CREATE -> {
                                 TextChannel channel = createTextChannel(action, guild);
-                                channels.put(channel.getName(), channel);
+                                channels.add(channel);
                             }
-                            case EDIT -> editTextChannel(
+                            case EDIT -> originalState.originalTextChannelData.putAll(editTextChannel(
                                     action,
                                     guild.getTextChannelsByName(
                                             action.target(),
                                             true
                                     ).get(0)
-                            );
+                            ));
                         }
                     }
                     case VOICE_CHANNEL -> {
                         switch (action.action()) {
                             case CREATE -> {
                                 VoiceChannel channel = createVoiceChannel(action, guild);
-                                channels.put(channel.getName(), channel);
+                                channels.add(channel);
                             }
-                            case EDIT -> editVoiceChannel(
+                            case EDIT -> originalState.originalVoiceChannelData.putAll(editVoiceChannel(
                                     action,
                                     guild.getVoiceChannelsByName(
                                             action.target(),
                                             true
                                     ).get(0)
-                            );
+                            ));
                         }
                     }
                     case ROLE -> {
                         switch (action.action()) {
                             case CREATE -> {
                                 Role role = createRole(action, guild);
-                                roles.put(role.getName(), role);
+                                roles.add(role);
                             }
-                            case EDIT -> editRole(
+                            case EDIT -> originalState.originalRoleData.putAll(editRole(
                                     action,
                                     guild.getRolesByName(
                                             action.target(),
                                             true
                                     ).get(0)
-                            );
+                            ));
                         }
                     }
                 }
@@ -112,8 +141,9 @@ public class Interpreter {
         return new InterpreterResult(
                 completeSuccess,
                 messages,
-                new ArrayList<>(channels.values()),
-                new ArrayList<>(roles.values())
+                channels,
+                roles,
+                originalState
         );
     }
 
@@ -144,52 +174,57 @@ public class Interpreter {
                     messages.size() == 0,
                     null,
                     null,
+                    null,
                     null
             );
         } else if(action == ParseActions.ValidAction.EDIT) {
             Guild guild = session.getJDA().getGuildById(session.getGuildId());
+            OriginalState originalState = session.getInterpreterResult().originalState();
 
             if(guild == null) {
                 return new InterpreterResult(
                         false,
                         new ArrayList<>(List.of("Guild not found. Guild ID: " + session.getGuildId())),
                         null,
+                        null,
                         null
                 );
             }
 
-            for(ParseActions.ExecutableAction executedAction: session.getActionsToExecute()) {
+            for(long categoryId: originalState.originalCategoryData().keySet()) {
                 try {
-                    switch (executedAction.targetType()) {
-                        case CATEGORY -> {
-                            Category category = guild.getCategoriesByName(
-                                    executedAction.target(),
-                                    true
-                            ).get(0);
-                            category.getManager().setName(executedAction.target()).completeAfter(1, TimeUnit.SECONDS);
-                        }
-                        case TEXT_CHANNEL -> {
-                            TextChannel channel = guild.getTextChannelsByName(
-                                    executedAction.target(),
-                                    true
-                            ).get(0);
-                            channel.getManager().setName(executedAction.target()).completeAfter(1, TimeUnit.SECONDS);
-                        }
-                        case VOICE_CHANNEL -> {
-                            VoiceChannel channel = guild.getVoiceChannelsByName(
-                                    executedAction.target(),
-                                    true
-                            ).get(0);
-                            channel.getManager().setName(executedAction.target()).completeAfter(1, TimeUnit.SECONDS);
-                        }
-                        case ROLE -> {
-                            Role role = guild.getRolesByName(
-                                    executedAction.target(),
-                                    true
-                            ).get(0);
-                            role.getManager().setName(executedAction.target()).completeAfter(1, TimeUnit.SECONDS);
-                        }
-                    }
+                    Category category = guild.getCategoryById(categoryId);
+                    if(category == null) throw new Exception("Category not found. Category ID: " + categoryId);
+                    category.getManager().setName(originalState.originalCategoryData().get(categoryId).get("name")).completeAfter(1, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    messages.add(e.getMessage());
+                }
+            }
+            for(long textChannelId: originalState.originalTextChannelData().keySet()) {
+                try {
+                    TextChannel channel = guild.getTextChannelById(textChannelId);
+                    if(channel == null) throw new Exception("Text channel not found. Text channel ID: " + textChannelId);
+                    channel.getManager().setName(originalState.originalTextChannelData().get(textChannelId).get("name")).completeAfter(1, TimeUnit.SECONDS);
+                    channel.getManager().setTopic(originalState.originalTextChannelData().get(textChannelId).get("desc")).completeAfter(1, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    messages.add(e.getMessage());
+                }
+            }
+            for(long voiceChannelId: originalState.originalVoiceChannelData().keySet()) {
+                try {
+                    VoiceChannel channel = guild.getVoiceChannelById(voiceChannelId);
+                    if(channel == null) throw new Exception("Voice channel not found. Voice channel ID: " + voiceChannelId);
+                    channel.getManager().setName(originalState.originalVoiceChannelData().get(voiceChannelId).get("name")).completeAfter(1, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    messages.add(e.getMessage());
+                }
+            }
+            for(long roleId: originalState.originalRoleData().keySet()) {
+                try {
+                    Role role = guild.getRoleById(roleId);
+                    if(role == null) throw new Exception("Role not found. Role ID: " + roleId);
+                    role.getManager().setName(originalState.originalRoleData().get(roleId).get("name")).completeAfter(1, TimeUnit.SECONDS);
+                    role.getManager().setColor(Color.decode(originalState.originalRoleData().get(roleId).get("color"))).completeAfter(1, TimeUnit.SECONDS);
                 } catch (Exception e) {
                     messages.add(e.getMessage());
                 }
@@ -198,6 +233,7 @@ public class Interpreter {
             return new InterpreterResult(
                     messages.size() == 0,
                     messages,
+                    null,
                     null,
                     null
             );
@@ -409,16 +445,35 @@ public class Interpreter {
         return role;
     }
 
-    private static void editCategory(@NonNull ParseActions.ExecutableAction action, @NonNull Category category) {
+    private static HashMap<Long, HashMap<String, String>> editCategory(@NonNull ParseActions.ExecutableAction action, @NonNull Category category) {
+        final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+        result.put(
+                category.getIdLong(),
+                new HashMap<>() {{
+                    put("name", category.getName());
+                }}
+        );
+
         // Set new name if not null or empty
         if(action.data().containsKey(NAME)) {
             if(!action.data().get(NAME).equals("") || action.data().get(NAME) != null) {
                 category.getManager().setName(action.data().get(NAME).toString()).completeAfter(1, TimeUnit.SECONDS);
             }
         }
+
+        return result;
     }
 
-    private static void editTextChannel(@NonNull ParseActions.ExecutableAction action, @NonNull TextChannel channel) {
+    private static HashMap<Long, HashMap<String, String>> editTextChannel(@NonNull ParseActions.ExecutableAction action, @NonNull TextChannel channel) {
+        final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+        result.put(
+                channel.getIdLong(),
+                new HashMap<>() {{
+                    put("name", channel.getName());
+                    put("desc", channel.getTopic());
+                }}
+        );
+
         // Set new name if not null or empty
         if(action.data().containsKey(NAME)) {
             if(!action.data().get(NAME).equals("") || action.data().get(NAME) != null) {
@@ -432,18 +487,40 @@ public class Interpreter {
                 channel.getManager().setTopic(action.data().get(DESCRIPTION).toString()).completeAfter(1, TimeUnit.SECONDS);
             }
         }
+
+        return result;
     }
 
-    private static void editVoiceChannel(@NonNull ParseActions.ExecutableAction action, @NonNull VoiceChannel channel) {
+    private static HashMap<Long, HashMap<String, String>> editVoiceChannel(@NonNull ParseActions.ExecutableAction action, @NonNull VoiceChannel channel) {
+        final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+        result.put(
+                channel.getIdLong(),
+                new HashMap<>() {{
+                    put("name", channel.getName());
+                }}
+        );
+
         // Set new name if not null or empty
         if(action.data().containsKey(NAME)) {
             if(!action.data().get(NAME).equals("") || action.data().get(NAME) != null) {
                 channel.getManager().setName(action.data().get(NAME).toString()).completeAfter(1, TimeUnit.SECONDS);
             }
         }
+
+        return result;
     }
 
-    private static void editRole(@NonNull ParseActions.ExecutableAction action, @NonNull Role role) {
+    private static HashMap<Long, HashMap<String, String>> editRole(@NonNull ParseActions.ExecutableAction action, @NonNull Role role) {
+        final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+        final Color color = role.getColor();
+        result.put(
+                role.getIdLong(),
+                new HashMap<>() {{
+                    put("name", role.getName());
+                    put("color", color == null ? null : String.valueOf(color.getRGB()));
+                }}
+        );
+
         // Set new name if not null or empty
         if(action.data().containsKey(NAME)) {
             if(!action.data().get(NAME).equals("") || action.data().get(NAME) != null) {
@@ -457,5 +534,7 @@ public class Interpreter {
                 role.getManager().setColor(Color.decode(action.data().get(COLOR).toString())).completeAfter(1, TimeUnit.SECONDS);
             }
         }
+
+        return result;
     }
 }
