@@ -1,3 +1,5 @@
+[discord-invite]: https://asrp.dev/discord
+
 # Discord Brewer ☕️
 
 ---
@@ -6,11 +8,11 @@ Brewer is a Discord bot that uses OpenAI's ChatGPT to generate new roles, catego
 
 By default, the bot uses ChatGPT 3.5-turbo, but may change in the future.
 
-**Brewer built using [Coffee Core](https://github.com/AlphaSerpentis/CoffeeCore)!**
+**Brewer built using [Coffee Core](https://github.com/AlphaSerpentis/CoffeeCore), a Java Discord bot framework!**
 
 ## Features
 - Generate new roles, categories, and channels with permissions based on a prompt
-- (Soon) Rename pre-existing roles, categories, and channels based on a prompt
+- Rename pre-existing roles, categories, and channels based on a prompt
 - Revert any recent changes if you don't like them
 
 ## Inviting the Bot
@@ -27,7 +29,7 @@ By default, the bot uses ChatGPT 3.5-turbo, but may change in the future.
 [**Invite Brewer ☕️ to your server!**](https://discord.com/api/oauth2/authorize?client_id=1097362340468502548&permissions=268504080&scope=bot)
 
 ## Discord Server
-![Discord Banner 1](https://discordapp.com/api/guilds/590215639785013298/widget.png?style=banner1)
+[ ![Discord Banner 4](https://discordapp.com/api/guilds/590215639785013298/widget.png?style=banner4)][discord-invite]
 
 ## Terms of Service & Privacy Policy
 ### [View our Privacy Policy](https://github.com/AlphaSerpentis/Discord-Brewer/blob/master/privacy.md)
@@ -86,7 +88,7 @@ However, due to the nature of ChatGPT, results and accuracy may vary. We are con
 You can run `/brew` every 3 minutes (globally). Additionally, if you generated a brew, you can retry up to 3 times in that session.
 
 #### I got error messages after brewing!
-Please send them my way by either going to our [Discord server](https://discord.alphaserpentis.dev) or by opening an issue [here](https://github.com/AlphaSerpentis/Discord-Brewer/issues/new).
+Please send them my way by either going to our [Discord server][discord-invite] or by opening an issue [here](https://github.com/AlphaSerpentis/Discord-Brewer/issues/new).
 
 #### I don't like the changes Brewer did to my server! Help!
 If you ran the command recently, click on the **Revert** button that appears on the last message sent by the bot. This will revert all changes made by the bot.
@@ -99,6 +101,12 @@ Brewer by default will not rename NSFW channels due to OpenAI's restrictions.
 
 An option will be available to try to rename NSFW channels in the future.
 
+#### Nothing happened/it partially worked?
+There are two things that could have happened:
+
+1. You hit the rate limit and the action is paused for some time. It should automatically retry after a couple of minutes.
+2. An unhandled error occurred. If you don't believe the first issue is the case, do please report it!
+
 ## Dependencies
-- Coffee Core (0.3.0-alpha-SNAPSHOT)
+- Coffee Core (0.4.0-alpha)
 - OpenAI-Java Service (0.12.0)

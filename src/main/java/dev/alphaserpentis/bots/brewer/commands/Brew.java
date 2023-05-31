@@ -17,7 +17,6 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -27,6 +26,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import net.dv8tion.jda.internal.entities.channel.concrete.CategoryImpl;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -41,22 +41,27 @@ public class Brew extends ButtonCommand<MessageEmbed> {
         RENAME
     }
 
-    public class UserSession {
+    public static class UserSession {
         private final String prompt;
         private final UserSessionType type;
+        private final ParseActions.ValidAction action;
+        private JDA jda;
         private ArrayList<ParseActions.ExecutableAction> actionsToExecute;
         private Interpreter.InterpreterResult interpreterResult;
         private short brewCount;
         private String interactionToken = "";
+        private long guildId;
 
         public UserSession(
                 @NonNull String prompt,
                 @NonNull UserSessionType type,
+                @NonNull ParseActions.ValidAction action,
                 @NonNull ArrayList<ParseActions.ExecutableAction> actionsToExecute,
                 short brewCount
         ) {
             this.prompt = prompt;
             this.type = type;
+            this.action = action;
             this.actionsToExecute = actionsToExecute;
             this.brewCount = brewCount;
         }
@@ -67,8 +72,17 @@ public class Brew extends ButtonCommand<MessageEmbed> {
         public UserSessionType getType() {
             return type;
         }
+        public ParseActions.ValidAction getAction() {
+            return action;
+        }
+        public JDA getJDA() {
+            return jda;
+        }
         public ArrayList<ParseActions.ExecutableAction> getActionsToExecute() {
             return actionsToExecute;
+        }
+        public Interpreter.InterpreterResult getInterpreterResult() {
+            return interpreterResult;
         }
         public short getBrewCount() {
             return brewCount;
@@ -76,15 +90,27 @@ public class Brew extends ButtonCommand<MessageEmbed> {
         public String getInteractionToken() {
             return interactionToken;
         }
+        public long getGuildId() {
+            return guildId;
+        }
 
         public void setActionsToExecute(ArrayList<ParseActions.ExecutableAction> actionsToExecute) {
             this.actionsToExecute = actionsToExecute;
         }
+        public void setJDA(JDA jda) {
+            this.jda = jda;
+        }
         public void setInterpreterResult(@NonNull Interpreter.InterpreterResult interpreterResult) {
             this.interpreterResult = interpreterResult;
         }
+        public void setBrewCount(short brewCount) {
+            this.brewCount = brewCount;
+        }
         public void setInteractionToken(String interactionToken) {
             this.interactionToken = interactionToken;
+        }
+        public void setGuildId(long guildId) {
+            this.guildId = guildId;
         }
     }
 
@@ -117,6 +143,17 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             .setTitle("Generating New Brew")
             .setDescription("Generating a new brew...")
             .setColor(Color.ORANGE);
+    private static final EmbedBuilder GENERATING_ERROR = new EmbedBuilder()
+            .setTitle("Error Generating Brew")
+            .setDescription("""
+                    An error occurred while generating a brew.
+                    
+                    You can try again by pressing the "Try Again" button below.
+                    
+                    Report this over at https://asrp.dev/discord
+                    
+                    Error Message: %s""")
+            .setColor(Color.RED);
     private static final EmbedBuilder CANCELLED = new EmbedBuilder()
             .setTitle("Cancelled")
             .setDescription("Cancelled the current session.")
@@ -130,11 +167,11 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             .setDescription("The server has been successfully brewed up!")
             .setColor(Color.GREEN);
     private static final EmbedBuilder POST_EXECUTION_ERROR = new EmbedBuilder()
-            .setTitle("Server Brewed Up!")
+            .setTitle("Server Brew Attempted")
             .setDescription("""
-                    The server has been successfully brewed up, but there were some errors.
+                    A brew was attempted, but there were errors.
                     
-                    You can revert this change by pressing the "Revert" button below.
+                    You can revert any changes made by pressing the "Revert" button below.
                     
                     Report this over at https://asrp.dev/discord
                     
@@ -148,7 +185,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
     private static final EmbedBuilder REVERTED_ERROR = new EmbedBuilder()
             .setTitle("Reverted?")
             .setDescription("""
-                    Reverted the changes made to the server (maybe), but there were some errors.
+                    Reverted the changes made to the server (maybe), but there were errors.
                     
                     Report this over at https://asrp.dev/discord
                     
@@ -204,7 +241,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                 ChatMessage chatMessage;
                 EmbedBuilder eb = new EmbedBuilder();
 
-                if(userSession.type == UserSessionType.NEW_BREW) {
+                if(userSession.getType() == UserSessionType.NEW_BREW) {
                     chatMessage = OpenAIHandler.SETUP_SYSTEM_PROMPT_SETUP;
                 } else {
                     chatMessage = OpenAIHandler.SETUP_SYSTEM_PROMPT_RENAME;
@@ -216,14 +253,32 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                         )
                         .queue();
 
-                userSession.actionsToExecute = generateActions(
-                        chatMessage,
-                        userSession.getPrompt()
-                );
+                try {
+                    userSession.setActionsToExecute(
+                            generateActions(
+                                    chatMessage,
+                                    userSession.getPrompt(),
+                                    userSession.getAction()
+                            )
+                    );
+                } catch(JsonSyntaxException e) {
+                    eb = new EmbedBuilder(GENERATING_ERROR);
+                    eb.setDescription(String.format(GENERATING_ERROR.getDescriptionBuilder().toString(), e.getMessage()));
 
-                previewChangesPage(eb, userSession.actionsToExecute);
+                    hook
+                            .editOriginalComponents()
+                            .setEmbeds(eb.build())
+                            .setActionRow(
+                                    getButton("brew")
+                            )
+                            .queue();
+                }
 
-                if(userSession.brewCount++ == 3) {
+                previewChangesPage(eb, userSession.getActionsToExecute());
+
+                if(userSession.getBrewCount() == 3) {
+                    userSession.setBrewCount((short) (userSession.getBrewCount() + 1));
+
                     hook
                             .editOriginalComponents()
                             .setEmbeds(eb.build())
@@ -249,7 +304,8 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                 hook.editOriginalComponents().setEmbeds(BREWING_UP.build()).complete();
 
                 Interpreter.InterpreterResult result = Interpreter.interpretAndExecute(
-                        userSession.actionsToExecute,
+                        userSession.getActionsToExecute(),
+                        userSession.getAction(),
                         event.getGuild()
                 );
 
@@ -283,6 +339,8 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+
+                    userSessions.remove(event.getUser().getIdLong());
                 }
             }
             case "cancel" -> {
@@ -292,34 +350,31 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             case "revert" -> {
                 hook.editOriginalComponents().setEmbeds(REVERTING.build()).complete();
 
-                try {
-                    Interpreter.deleteAllChanges(
-                            userSession.interpreterResult.channels(),
-                            userSession.interpreterResult.roles()
-                    );
-                } catch (Exception e) {
-                    e.printStackTrace();
+                Interpreter.InterpreterResult result = Interpreter.deleteAllChanges(userSession);
+
+                if(result.completeSuccess()) {
+                    hook.editOriginalEmbeds(
+                            REVERTED_NO_ERROR.build()
+                    ).queue();
+                } else {
+                    String errorMessages = String.join("\n", result.messages());
                     EmbedBuilder eb = new EmbedBuilder(REVERTED_ERROR);
 
-                    hook.editOriginalEmbeds(
-                            eb
-                                    .setDescription(
-                                            String.format(
-                                                    REVERTED_ERROR.getDescriptionBuilder().toString(),
-                                                    e.getMessage()
-                                            )
+                    MessageEmbed errorEmbed = eb
+                            .setDescription(
+                                    String.format(
+                                            REVERTED_ERROR.getDescriptionBuilder().toString(),
+                                            errorMessages
                                     )
-                                    .build()
-                    ).queue();
+                            )
+                            .build();
 
-                    return;
-                } finally {
-                    userSessions.remove(event.getUser().getIdLong());
+                    hook.editOriginalEmbeds(
+                            errorEmbed
+                    ).queue();
                 }
 
-                hook.editOriginalEmbeds(
-                        REVERTED_NO_ERROR.build()
-                ).queue();
+                userSessions.remove(event.getUser().getIdLong());
             }
         }
     }
@@ -331,7 +386,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
         if(userSession == null)
             return new ArrayList<>();
-        else if(event.getName().equals(getName()) && userSession.interactionToken.equals(event.getToken())) {
+        else if(event.getName().equals(getName()) && userSession.getInteractionToken().equals(event.getToken())) {
             return new ArrayList<>() {{
                 add(getButton("brew"));
                 add(getButton("confirm"));
@@ -365,24 +420,19 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             return new CommandResponse<>(NO_PERMISSIONS.build(), isOnlyEphemeral());
 
         // Check if the prompt doesn't get flagged by OpenAI
-        prompt = String.valueOf(event.getOption("prompt"));
+        prompt = event.getOption("prompt").getAsString();
 
         if(!OpenAIHandler.isPromptSafeToUse(prompt))
             return new CommandResponse<>(PROMPT_REJECTED.build(), isOnlyEphemeral());
 
-        switch(event.getSubcommandName()) {
-            case "server" -> runServerPrompt(eb, prompt, event);
-//            case "rename" -> runRenamePrompt(eb, prompt, event);
-            case "rename" -> {
-                return new CommandResponse<>(
-                        eb
-                                .setDescription("Soon™")
-                                .setTitle("Rename")
-                                .setColor(Color.RED)
-                                .build(),
-                        isOnlyEphemeral()
-                );
+        try {
+            switch(event.getSubcommandName()) {
+                case "create" -> runCreatePrompt(eb, prompt, event);
+                case "rename" -> runRenamePrompt(eb, prompt, event);
             }
+        } catch(Exception e) {
+            userSessions.remove(userId);
+            throw e;
         }
 
         return new CommandResponse<>(eb.build(), isOnlyEphemeral());
@@ -390,14 +440,14 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
     @Override
     public void updateCommand(@NonNull JDA jda) {
-        SubcommandData server = new SubcommandData("server", "Setup your Discord server with a prompt!")
+        SubcommandData create = new SubcommandData("create", "Create new roles/categories/channels with a prompt!")
                 .addOption(OptionType.STRING, "prompt", "The prompt to use for the brew.", true);
-        SubcommandData rename = new SubcommandData("rename", "Rename your channels, roles, and categories with a prompt!")
+        SubcommandData rename = new SubcommandData("rename", "Rename your roles/categories/channels with a prompt!")
                 .addOption(OptionType.STRING, "prompt", "The prompt to use for the brew.", true);
 
         jda
                 .upsertCommand(name, description)
-                .addSubcommands(server, rename)
+                .addSubcommands(create, rename)
                 .queue(r -> setCommandId(r.getIdLong()));
     }
 
@@ -408,7 +458,8 @@ public class Brew extends ButtonCommand<MessageEmbed> {
     @NonNull
     private ArrayList<ParseActions.ExecutableAction> generateActions(
             @NonNull ChatMessage system,
-            @NonNull String prompt
+            @NonNull String prompt,
+            @NonNull ParseActions.ValidAction action
     ) {
         Gson gson = new Gson();
         String result = OpenAIHandler.getCompletion(
@@ -427,7 +478,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             config = gson.fromJson(tryToFixJSON(result), DiscordConfig.class);
         }
 
-        actions = ParseActions.parseActions(config);
+        actions = ParseActions.parseActions(config, action);
 
         return actions;
     }
@@ -441,25 +492,42 @@ public class Brew extends ButtonCommand<MessageEmbed> {
         return json;
     }
 
-    private void runServerPrompt(@NonNull EmbedBuilder eb, @NonNull String prompt, @NonNull SlashCommandInteractionEvent event) {
+    private void runCreatePrompt(@NonNull EmbedBuilder eb, @NonNull String prompt, @NonNull SlashCommandInteractionEvent event) {
         ArrayList<ParseActions.ExecutableAction> actions = generateActions(
                 OpenAIHandler.SETUP_SYSTEM_PROMPT_SETUP,
-                prompt
+                prompt,
+                ParseActions.ValidAction.CREATE
         );
+        UserSession session;
         previewChangesPage(eb, actions);
 
-        userSessions.put(event.getUser().getIdLong(), new UserSession(prompt, UserSessionType.NEW_BREW, actions, (short) 1));
-        userSessions.get(event.getUser().getIdLong()).setInteractionToken(event.getToken());
+        session = new UserSession(prompt, UserSessionType.NEW_BREW, ParseActions.ValidAction.CREATE, actions, (short) 1);
+        session.setInteractionToken(event.getToken());
+        session.setJDA(event.getJDA());
+        session.setGuildId(event.getGuild().getIdLong());
+        userSessions.put(
+                event.getUser().getIdLong(),
+                session
+        );
     }
 
     private void runRenamePrompt(@NonNull EmbedBuilder eb, @NonNull String prompt, @NonNull SlashCommandInteractionEvent event) {
         ArrayList<ParseActions.ExecutableAction> actions = generateActions(
                 OpenAIHandler.SETUP_SYSTEM_PROMPT_RENAME,
-                new GsonBuilder().setPrettyPrinting().create().toJson(getGuildData(event.getGuild(), prompt))
+                new GsonBuilder().setPrettyPrinting().create().toJson(getGuildData(event.getGuild(), "Rename name, desc, and color based on " + prompt)),
+                ParseActions.ValidAction.EDIT
         );
+        UserSession session;
         previewChangesPage(eb, actions);
 
-        userSessions.put(event.getUser().getIdLong(), new UserSession(prompt, UserSessionType.RENAME, actions, (short) 1));
+        session = new UserSession(prompt, UserSessionType.RENAME, ParseActions.ValidAction.EDIT, actions, (short) 1);
+        session.setInteractionToken(event.getToken());
+        session.setJDA(event.getJDA());
+        session.setGuildId(event.getGuild().getIdLong());
+        userSessions.put(
+                event.getUser().getIdLong(),
+                session
+        );
     }
 
     @NonNull
@@ -476,32 +544,32 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                 null,
                 null
         )));
-        guild.getChannels().forEach(channel -> {
-            String type = "";
-            String desc = null;
-            if(channel.getType().isMessage()) {
-                type = "txt";
-                desc = ((TextChannel) channel).getTopic();
-            } else if(channel.getType().isAudio())
-                type = "vc";
+        guild.getChannels(false).forEach(channel -> {
+            if(channel instanceof CategoryImpl)
+                return;
 
             channels.put(channel.getName(), new DiscordConfig.ConfigItem(
                     channel.getName(),
-                    type,
-                    ((TextChannel) channel).getParentCategory().getId(),
-                    desc,
+                    null,
+                    null,
+                    null,
                     null,
                     null
             ));
         });
-        guild.getRoles().forEach(role -> roles.put(role.getName(), new DiscordConfig.ConfigItem(
-                role.getName(),
-                null,
-                null,
-                null,
-                null,
-                null
-        )));
+        guild.getRoles().forEach(role -> {
+            if(role.isPublicRole() || role.isManaged())
+                return;
+
+            roles.put(role.getName(), new DiscordConfig.ConfigItem(
+                    role.getName(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            ));
+        });
 
         return new DiscordConfig(
                 categories,
@@ -527,29 +595,9 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
         // Categories
         categoriesVal = actions.stream().filter(
-                action -> action.target() == ParseActions.ValidTarget.CATEGORY
+                action -> action.targetType() == ParseActions.ValidTarget.CATEGORY
         ).map(
-                action -> {
-                    StringBuilder readableData = new StringBuilder();
-
-                    for(Map.Entry<String, Object> entry : action.data().entrySet()) {
-                        if(entry.getKey().equals("name") || entry.getKey().equals("perms"))
-                            continue;
-
-                        readableData.append(String.format(
-                                "└ **%s**: %s\n",
-                                entry.getKey(),
-                                entry.getValue()
-                        ));
-                    }
-
-                    return String.format(
-                            "%s %s\n%s",
-                            action.action().readable,
-                            action.data().get("name"),
-                            readableData
-                    );
-                }
+                this::generateReadablePreview
         ).reduce(
                 (a, b) -> String.format("%s\n%s", a, b)
         ).orElse("No changes");
@@ -562,30 +610,10 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
         // Channels
         channelsVal = actions.stream().filter(
-                action -> (action.target() == ParseActions.ValidTarget.TEXT_CHANNEL)
-                        || (action.target() == ParseActions.ValidTarget.VOICE_CHANNEL)
+                action -> (action.targetType() == ParseActions.ValidTarget.TEXT_CHANNEL)
+                        || (action.targetType() == ParseActions.ValidTarget.VOICE_CHANNEL)
         ).map(
-                action -> {
-                    StringBuilder readableData = new StringBuilder();
-
-                    for(Map.Entry<String, Object> entry : action.data().entrySet()) {
-                        if(entry.getKey().equals("name") || entry.getKey().equals("perms"))
-                            continue;
-
-                        readableData.append(String.format(
-                                "└ **%s**: %s\n",
-                                entry.getKey(),
-                                entry.getValue()
-                        ));
-                    }
-
-                    return String.format(
-                            "%s %s\n%s",
-                            action.action().readable,
-                            action.data().get("name"),
-                            readableData
-                    );
-                }
+                this::generateReadablePreview
         ).reduce(
                 (a, b) -> String.format("%s\n%s", a, b)
         ).orElse("No changes");
@@ -598,70 +626,54 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
         // Roles
         rolesVal = actions.stream().filter(
-                action -> action.target() == ParseActions.ValidTarget.ROLE
+                action -> action.targetType() == ParseActions.ValidTarget.ROLE
         ).map(
-                action -> {
-                    StringBuilder readableData = new StringBuilder();
-
-                    for(Map.Entry<String, Object> entry : action.data().entrySet()) {
-                        if(entry.getKey().equals("name") || entry.getKey().equals("perms"))
-                            continue;
-
-                        readableData.append(String.format(
-                                "└ **%s**: %s\n",
-                                entry.getKey(),
-                                entry.getValue()
-                        ));
-                    }
-
-                    return String.format(
-                            "%s %s\n%s",
-                            action.action().readable,
-                            action.data().get("name"),
-                            readableData
-                    );
-                }
+                this::generateReadablePreview
         ).reduce(
                 (a, b) -> String.format("%s\n%s", a, b)
         ).orElse("No changes");
 
         eb.addField(
                 "Roles",
-                rolesVal,
+                rolesVal.length() > 1024 ? rolesVal.substring(0, 1024 - TOO_LONG.length()) + TOO_LONG : rolesVal,
                 false
         );
+    }
 
-        // Other Server Modifications
-//        eb.addField(
-//                "Other Server Modifications",
-//                actions.stream().filter(
-//                        action -> (action.target() == ParseActions.ValidTarget.SERVER)
-//                ).map(
-//                        action -> {
-//                            StringBuilder readableData = new StringBuilder();
-//
-//                            for(Map.Entry<String, Object> entry : action.data().entrySet()) {
-//                                if(entry.getKey().equals("name") || entry.getKey().equals("perm"))
-//                                    continue;
-//
-//                                readableData.append(String.format(
-//                                        "└ **%s**: %s\n",
-//                                        entry.getKey(),
-//                                        entry.getValue()
-//                                ));
-//                            }
-//
-//                            return String.format(
-//                                    "%s %s\n%s",
-//                                    action.action().readable,
-//                                    action.data().get("name"),
-//                                    readableData
-//                            );
-//                        }
-//                ).reduce(
-//                        (a, b) -> String.format("%s\n%s", a, b)
-//                ).orElse("No changes"),
-//                false
-//        );
+    @NonNull
+    private String generateReadablePreview(@NonNull ParseActions.ExecutableAction action) {
+        StringBuilder readableData = new StringBuilder();
+
+        for(Map.Entry<ParseActions.ValidDataNames, Object> entry : action.data().entrySet()) {
+            if(
+                    entry.getKey() == ParseActions.ValidDataNames.NAME
+                            || entry.getKey() == ParseActions.ValidDataNames.PERMISSIONS
+                            || entry.getValue().equals("")
+            )
+                continue;
+
+            readableData.append(String.format(
+                    "└ **%s**: %s\n",
+                    entry.getKey().readable,
+                    entry.getValue()
+            ));
+        }
+
+        if(action.action() == ParseActions.ValidAction.CREATE) {
+            return String.format(
+                    action.action().editableText + "\n%s",
+                    action.target(),
+                    readableData
+            );
+        } else if(action.action() == ParseActions.ValidAction.EDIT) {
+            return String.format(
+                    action.action().editableText + "\n%s",
+                    action.target(),
+                    action.data().get(ParseActions.ValidDataNames.NAME),
+                    readableData
+            );
+        } else {
+            throw new IllegalStateException("Unexpected value: " + action.action());
+        }
     }
 }

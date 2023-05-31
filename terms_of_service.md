@@ -1,15 +1,25 @@
-# Terms of Service for Discord Brewer
+# Terms of Service for the Brewer Bot
 
-*Last Updated: 2023-05-04*
+*Last Updated: May 24, 2023*
 
 ---
 
 ## Terms of Service
-All users using the bot must abide by Discord's [Terms of Service](https://discord.com/terms) and [Community Guidelines](https://discord.com/guidelines). You must also review the bot's [Privacy Policy](https://github.com/AlphaSerpentis/Discord-Brewer/blob/main/privacy.md).
+Thanks for reading the Terms of Service for Brewer!
 
-By using the Discord Brewer bot, you agree to the following terms of service outlined in this document. If you do not agree to these terms, do not use the bot and remove the bot from your server(s). Violation of these terms may result in the termination of your access to the bot.
+When we say "the bot", we are referring to the public Brewer bot.
 
-This Terms of Service does not apply to self-hosted instances of the bot and are instead bound by Discord's Term of Services and other applicable laws.
+When we say "the service", we are referring to the bot and its related systems or networks.
+
+When we say "we", "us", or "our", we are referring to Alpha Serpentis Developments LLC.
+
+When we say "you", "your", or "user", we are referring to you, the user of the bot.
+
+All users using the bot must abide by Discord's [Terms of Service](https://discord.com/terms) and [Community Guidelines](https://discord.com/guidelines), including OpenAI's [Usage Policies](https://openai.com/policies/usage-policies). You must also review the bot's [Privacy Policy](https://github.com/AlphaSerpentis/Discord-Brewer/blob/main/privacy.md).
+
+Self-hosted instances of Brewer are not bound by these Terms of Service.
+
+By using the Brewer bot, you agree to the following terms of service outlined in this document. If you do not agree to these terms, do not use the bot and remove the bot from your server(s). Violation of these terms may result in the termination of your access to the bot.
 
 ## Use of Services
 You may use the bot for any purpose, commercial or non-commercial, as long as you abide by the terms outlined in this document.
@@ -17,7 +27,7 @@ You may use the bot for any purpose, commercial or non-commercial, as long as yo
 You may:
 - Use the bot for any purpose, commercial or non-commercial
 
-You may not:
+Including, but not limited to, you may not:
 - Use the bot to violate Discord's [Terms of Service](https://discord.com/terms) and [Community Guidelines](https://discord.com/guidelines)
 - Use the bot to violate OpenAI's [Usage Policies](https://openai.com/policies/usage-policies)
 - Use the bot to violate any laws in your jurisdiction (including but not limited to those governing intellectual property, consumer protection, unfair competition, anti-discrimination, or false advertising)
