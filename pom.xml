@@ -5,7 +5,7 @@
 
     <groupId>dev.alphaserpentis.bots</groupId>
     <artifactId>Brewer</artifactId>
-    <version>1.1.1</version>
+    <version>1.2.0</version>
     <name>Discord Brewer</name>
     <description>A Discord bot for automatically configuring a Discord server using ChatGPT</description>
 
@@ -24,11 +24,19 @@
         <project.mainClass>dev.alphaserpentis.bots.brewer.launcher.Launcher</project.mainClass>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
+
     <dependencies>
         <dependency>
             <groupId>dev.alphaserpentis</groupId>
             <artifactId>CoffeeCore</artifactId>
-            <version>0.4.0-alpha</version>
+            <version>0.4.1-alpha-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -40,6 +48,11 @@
             <groupId>com.theokanning.openai-gpt3-java</groupId>
             <artifactId>service</artifactId>
             <version>0.12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.discordbots</groupId>
+            <artifactId>DBL-Java-Library</artifactId>
+            <version>2.1.2</version>
         </dependency>
     </dependencies>
 

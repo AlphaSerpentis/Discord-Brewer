@@ -4,6 +4,7 @@ import dev.alphaserpentis.bots.brewer.commands.Brew;
 import dev.alphaserpentis.bots.brewer.commands.Vote;
 import dev.alphaserpentis.bots.brewer.handler.discord.StatusHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
+import dev.alphaserpentis.bots.brewer.handler.other.TopGgHandler;
 import dev.alphaserpentis.coffeecore.core.CoffeeCore;
 import dev.alphaserpentis.coffeecore.core.CoffeeCoreBuilder;
 import dev.alphaserpentis.coffeecore.data.bot.AboutInformation;
@@ -14,10 +15,11 @@ import java.awt.*;
 
 public class Launcher {
 
+    public static CoffeeCore core;
+
     public static void main(String[] args) {
         Dotenv dotenv = Dotenv.load();
         CoffeeCoreBuilder<?> builder = new CoffeeCoreBuilder<>();
-        CoffeeCore core;
         Brew brew = new Brew();
         Vote vote = new Vote();
         AboutInformation about;
@@ -26,6 +28,7 @@ public class Launcher {
                 """
                 Brewer is an open-source bot that uses OpenAI's ChatGPT to rename or generate new roles/categories/channels with the touch of a prompt!
                 
+                [**Invite Brewer to Your Server!**](https://asrp.dev/brewer-invite)
                 [**GitHub**](https://github.com/AlphaSerpentis/Discord-Brewer)
                 [**Discord Server**](https://asrp.dev/discord)
                 """,
@@ -56,5 +59,6 @@ public class Launcher {
 
         OpenAIHandler.init(dotenv.get("OPENAI_API_KEY"));
         StatusHandler.init(core);
+        TopGgHandler.init(dotenv.get("TOPGG_API_KEY"), core.getSelfUser().getId());
     }
 }

@@ -1,7 +1,7 @@
 package dev.alphaserpentis.bots.brewer.handler.parser;
 
-import dev.alphaserpentis.bots.brewer.commands.Brew;
 import dev.alphaserpentis.bots.brewer.data.DiscordConfig;
+import dev.alphaserpentis.bots.brewer.data.UserSession;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.annotations.Nullable;
 import net.dv8tion.jda.api.Permission;
@@ -28,7 +28,17 @@ public class Interpreter {
             @Nullable ArrayList<GuildChannel> channels,
             @Nullable ArrayList<Role> roles,
             @Nullable OriginalState originalState
-    ) {}
+    ) {
+        public InterpreterResult(boolean completeSuccess, @Nullable ArrayList<String> messages) {
+            this(completeSuccess, messages, null, null, null);
+        }
+        public InterpreterResult(boolean completeSuccess, @Nullable ArrayList<String> messages, @Nullable ArrayList<GuildChannel> channels, @Nullable ArrayList<Role> roles) {
+            this(completeSuccess, messages, channels, roles, null);
+        }
+        public InterpreterResult(boolean completeSuccess, @Nullable ArrayList<String> messages, @NonNull OriginalState originalState) {
+            this(completeSuccess, messages, null, null, originalState);
+        }
+    }
 
     /**
      * Stores the original state of the guild before edits were made
@@ -138,17 +148,26 @@ public class Interpreter {
             }
         }
 
-        return new InterpreterResult(
-                completeSuccess,
-                messages,
-                channels,
-                roles,
-                originalState
-        );
+        if(validAction == ParseActions.ValidAction.CREATE) {
+            return new InterpreterResult(
+                    completeSuccess,
+                    messages,
+                    channels,
+                    roles
+            );
+        } else if(validAction == ParseActions.ValidAction.EDIT) {
+            return new InterpreterResult(
+                    completeSuccess,
+                    messages,
+                    originalState
+            );
+        } else {
+            throw new IllegalArgumentException("Invalid action type");
+        }
     }
 
     @NonNull
-    public static InterpreterResult deleteAllChanges(@NonNull Brew.UserSession session) {
+    public static InterpreterResult deleteAllChanges(@NonNull UserSession session) {
         ArrayList<String> messages = new ArrayList<>();
         ParseActions.ValidAction action = session.getAction();
 
@@ -184,10 +203,7 @@ public class Interpreter {
             if(guild == null) {
                 return new InterpreterResult(
                         false,
-                        new ArrayList<>(List.of("Guild not found. Guild ID: " + session.getGuildId())),
-                        null,
-                        null,
-                        null
+                        new ArrayList<>(List.of("Guild not found. Guild ID: " + session.getGuildId()))
                 );
             }
 
@@ -232,10 +248,7 @@ public class Interpreter {
 
             return new InterpreterResult(
                     messages.size() == 0,
-                    messages,
-                    null,
-                    null,
-                    null
+                    messages
             );
         }
 
