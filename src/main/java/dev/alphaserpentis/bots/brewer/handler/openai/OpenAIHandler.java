@@ -33,8 +33,6 @@ public class OpenAIHandler {
     public static ChatCompletionResult getCompletion(@NonNull ChatMessage system, @NonNull String prompt) {
         ChatMessage message = new ChatMessage("user", prompt);
 
-        System.out.println("Prompt: " + prompt);
-
         return service.createChatCompletion(
                 new ChatCompletionRequest(
                         MODEL,
