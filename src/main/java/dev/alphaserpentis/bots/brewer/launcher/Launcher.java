@@ -26,7 +26,7 @@ public class Launcher {
 
         about = new AboutInformation(
                 """
-                Brewer is an open-source bot that uses OpenAI's ChatGPT to rename or generate new roles/categories/channels with the touch of a prompt!
+                Brewer is your open-source assistant, stirring up innovation in your Discord server with OpenAI's ChatGPT. Just prompt it, and watch as it brews new roles, categories, and channels, or even renames the existing ones!
                 
                 [**Invite Brewer to Your Server!**](https://asrp.dev/brewer-invite)
                 [**GitHub**](https://github.com/AlphaSerpentis/Discord-Brewer)
