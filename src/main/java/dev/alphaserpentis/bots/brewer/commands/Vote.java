@@ -10,7 +10,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 
 import java.awt.Color;
 
-public class Vote extends BotCommand<MessageEmbed> {
+public class Vote extends BotCommand<MessageEmbed, SlashCommandInteractionEvent> {
 
     public Vote() {
         super(

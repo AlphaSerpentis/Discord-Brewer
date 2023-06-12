@@ -1,6 +1,6 @@
 package dev.alphaserpentis.bots.brewer.handler.parser;
 
-import dev.alphaserpentis.bots.brewer.data.DiscordConfig;
+import dev.alphaserpentis.bots.brewer.data.discord.DiscordConfig;
 import io.reactivex.rxjava3.annotations.NonNull;
 
 import java.util.ArrayList;

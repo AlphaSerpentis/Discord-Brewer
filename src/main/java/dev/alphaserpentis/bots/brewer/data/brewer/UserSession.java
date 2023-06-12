@@ -1,4 +1,4 @@
-package dev.alphaserpentis.bots.brewer.data;
+package dev.alphaserpentis.bots.brewer.data.brewer;
 
 import dev.alphaserpentis.bots.brewer.handler.parser.Interpreter;
 import dev.alphaserpentis.bots.brewer.handler.parser.ParseActions;

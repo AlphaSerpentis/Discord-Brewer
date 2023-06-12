@@ -1,6 +1,6 @@
 # Privacy Policy
 
-*Last Updated: May 24, 2023*
+*Last Updated: June 10, 2023*
 
 ---
 
@@ -24,9 +24,11 @@ We may collect analytical data to help us improve the app. This may include, but
 We use the information we collect in various ways, including to:
 - Provide and operate the application
 - Improve the application from bugs and errors
+- Prevent abuse of the application
+- Better understand how users interact with the application
 
 ## How do we store, share and disclose your information?
-Information stored on our servers are protected by using industry standard practices. Some information may be stored in cache for faster access.
+Most information is stored in cache and not disclosed to anyone except for Discord and or OpenAI. However, some basic information, such as your server ID, is stored on our servers to provide the application to you and retain your settings. Additionally, some information may be stored on our servers, if authorized by you, such as rating submissions or errors.
 
 Some analytical data may be made public, but will not contain any personally identifiable information.
 

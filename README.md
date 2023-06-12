@@ -29,7 +29,7 @@ At its core, Brewer operates with ChatGPT 3.5-turbo, with potential upgrades on 
 - Manage Channels
 - Manage Permissions
 
-[**Invite Brewer ☕️ to your server today!**](https://discord.com/api/oauth2/authorize?client_id=1097362340468502548&permissions=268504080&scope=bot), the bot uses ChatGPT 3.5-turbo, but may change in the future.
+[**Invite Brewer ☕️ to your server today!**](https://discord.com/api/oauth2/authorize?client_id=1097362340468502548&permissions=268504080&scope=bot)
 
 ## Discord Server
 [ ![Discord Banner 4](https://discordapp.com/api/guilds/590215639785013298/widget.png?style=banner4)][discord-invite]
@@ -104,12 +104,12 @@ Brewer by default will not rename NSFW channels due to OpenAI's restrictions.
 
 An option will be available to try to rename NSFW channels in the future.
 
-#### Nothing happened/it partially worked?
+#### Nothing happened/it partially worked then stopped?
 There are two things that could have happened:
 
 1. You hit the rate limit and the action is paused for some time. It should automatically retry after a couple of minutes.
 2. An unhandled error occurred. If you don't believe the first issue is the case, do please report it!
 
 ## Dependencies
-- Coffee Core (0.4.0-alpha)
+- Coffee Core (0.5.0-alpha)
 - OpenAI-Java Service (0.12.0)

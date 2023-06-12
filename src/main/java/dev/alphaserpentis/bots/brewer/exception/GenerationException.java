@@ -7,7 +7,9 @@ public class GenerationException extends RuntimeException {
     public enum ExceptionType {
         JSON_EXCEPTION ("JSON Exception (Potentially bad JSON by ChatGPT)"),
         TIMEOUT_EXCEPTION ("Timeout Exception (ChatGPT API timed out)"),
-        OVERLOADED_EXCEPTION ("Overloaded Exception (ChatGPT API is overloaded)");
+        OVERLOADED_EXCEPTION ("Overloaded Exception (ChatGPT API is overloaded)"),
+        FILE_TOO_LARGE("File too large! Please upload something smaller"),
+        FILE_TOO_LARGE_NON_PREMIUM("File too large! Please upload something smaller or upgrade to our Mercury tier!");
 
         private final String descriptions;
 
@@ -23,6 +25,10 @@ public class GenerationException extends RuntimeException {
         public String toString() {
             return descriptions;
         }
+    }
+
+    public GenerationException(String message) {
+        super(message);
     }
 
     public GenerationException(String message, Throwable cause) {

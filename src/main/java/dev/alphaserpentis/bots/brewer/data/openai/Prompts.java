@@ -1,4 +1,4 @@
-package dev.alphaserpentis.bots.brewer.data;
+package dev.alphaserpentis.bots.brewer.data.openai;
 
 import com.theokanning.openai.completion.chat.ChatMessage;
 
@@ -205,6 +205,29 @@ public interface Prompts {
                             }
                         },
                         "prompt": "Example prompt"
+                    }
+                    
+                    The user's prompt is:
+                    """
+    );
+
+    ChatMessage SETUP_SYSTEM_PROMPT_SUMMARIZE = new ChatMessage(
+            "system",
+            """
+                    Act as a creative, exciting, and improvising Discord assistant that only talks in JSON. Do not add normal text.
+                                                                                                                                                                                                                                                                                                                                                        
+                    Your goal is to summarize a transcription from an audio file. The transcription will be provided to you in a JSON format.
+                    
+                    Here's how the user will provide the prompt:
+                    
+                    {
+                        "transcription": "Example transcription"
+                    }
+                    
+                    You will reply with:
+                    
+                    {
+                        "summary": "Example summary"
                     }
                     
                     The user's prompt is:

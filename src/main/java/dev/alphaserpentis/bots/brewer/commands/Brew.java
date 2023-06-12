@@ -2,8 +2,8 @@ package dev.alphaserpentis.bots.brewer.commands;
 
 import com.google.gson.JsonSyntaxException;
 import com.theokanning.openai.completion.chat.ChatMessage;
-import dev.alphaserpentis.bots.brewer.data.Prompts;
-import dev.alphaserpentis.bots.brewer.data.UserSession;
+import dev.alphaserpentis.bots.brewer.data.openai.Prompts;
+import dev.alphaserpentis.bots.brewer.data.brewer.UserSession;
 import dev.alphaserpentis.bots.brewer.exception.GenerationException;
 import dev.alphaserpentis.bots.brewer.handler.commands.brew.BrewHandler;
 import dev.alphaserpentis.bots.brewer.handler.commands.vote.VoteHandler;
@@ -31,7 +31,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class Brew extends ButtonCommand<MessageEmbed> {
+public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent> {
 
     private static final EmbedBuilder DMS_NOT_SUPPORTED = new EmbedBuilder()
             .setTitle("DMs Not Supported")
@@ -356,7 +356,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
         // Check if the prompt doesn't get flagged by OpenAI
         prompt = event.getOption("prompt").getAsString();
 
-        if(!OpenAIHandler.isPromptSafeToUse(prompt))
+        if(OpenAIHandler.isContentFlagged(prompt, userId, event.getGuild() != null ? event.getGuild().getIdLong() : 0))
             return new CommandResponse<>(PROMPT_REJECTED.build(), isOnlyEphemeral());
 
         try {

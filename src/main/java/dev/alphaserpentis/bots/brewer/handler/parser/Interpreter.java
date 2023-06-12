@@ -1,7 +1,7 @@
 package dev.alphaserpentis.bots.brewer.handler.parser;
 
-import dev.alphaserpentis.bots.brewer.data.DiscordConfig;
-import dev.alphaserpentis.bots.brewer.data.UserSession;
+import dev.alphaserpentis.bots.brewer.data.discord.DiscordConfig;
+import dev.alphaserpentis.bots.brewer.data.brewer.UserSession;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.annotations.Nullable;
 import net.dv8tion.jda.api.Permission;
