@@ -10,8 +10,11 @@ import dev.alphaserpentis.coffeecore.core.CoffeeCoreBuilder;
 import dev.alphaserpentis.coffeecore.data.bot.AboutInformation;
 import dev.alphaserpentis.coffeecore.data.bot.BotSettings;
 import io.github.cdimascio.dotenv.Dotenv;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
 
-import java.awt.*;
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Launcher {
 
@@ -47,6 +50,12 @@ public class Launcher {
                                 Boolean.parseBoolean(dotenv.get("UPDATE_COMMANDS_AT_LAUNCH")),
                                 Boolean.parseBoolean(dotenv.get("REGISTER_DEFAULT_COMMANDS")),
                                 about
+                        )
+                )
+                .setChunkingFilter(ChunkingFilter.NONE)
+                .setEnabledGatewayIntents(
+                        new ArrayList<>(
+                                List.of()
                         )
                 )
                 .enableSharding(true);

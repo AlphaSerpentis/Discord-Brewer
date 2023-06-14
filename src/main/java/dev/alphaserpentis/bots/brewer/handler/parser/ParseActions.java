@@ -125,19 +125,19 @@ public class ParseActions {
                                         ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
                                 )
                         ));
+                    } else {
+                        actions.add(new ExecutableAction(
+                                ValidTarget.TEXT_CHANNEL,
+                                action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
+                                action,
+                                Map.of(
+                                        ValidDataNames.NAME, Objects.requireNonNullElse(entry.getValue().name(), ""),
+                                        ValidDataNames.DESCRIPTION, Objects.requireNonNullElse(entry.getValue().desc(), ""),
+                                        ValidDataNames.CATEGORY, Objects.requireNonNullElse(catName, ""),
+                                        ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
+                                )
+                        ));
                     }
-                } else {
-                    actions.add(new ExecutableAction(
-                            ValidTarget.TEXT_CHANNEL,
-                            action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
-                            action,
-                            Map.of(
-                                    ValidDataNames.NAME, Objects.requireNonNullElse(entry.getValue().name(), ""),
-                                    ValidDataNames.DESCRIPTION, Objects.requireNonNullElse(entry.getValue().desc(), ""),
-                                    ValidDataNames.CATEGORY, Objects.requireNonNullElse(catName, ""),
-                                    ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
-                            )
-                    ));
                 }
             }
 
