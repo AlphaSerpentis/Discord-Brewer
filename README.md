@@ -3,30 +3,33 @@
 # Discord Brewer ☕️
 
 ---
+
 ## About Brewer ☕️
-Brewer is a Discord bot that uses OpenAI's ChatGPT to generate new roles, categories, and channels for your Discord server!
 
-By default, the bot uses ChatGPT 3.5-turbo, but may change in the future.
+Revolutionize your Discord server with Brewer, a dynamic bot leveraging the power of OpenAI's ChatGPT to breathe new life into your roles, categories, and channels!
 
-**Brewer built using [Coffee Core](https://github.com/AlphaSerpentis/CoffeeCore), a Java Discord bot framework!**
+At its core, Brewer operates with ChatGPT 3.5-turbo, with potential upgrades on the horizon.
+
+**Developed using [Coffee Core](https://github.com/AlphaSerpentis/CoffeeCore), a robust Java Discord bot framework!**
 
 ## Features
-- Generate new roles, categories, and channels with permissions based on a prompt
-- Rename pre-existing roles, categories, and channels based on a prompt
-- Revert any recent changes if you don't like them
+
+- **Prompt-based Generation**: Create fresh roles, categories, and channels, complete with permissions - all stemming from your creative prompts.
+- **Easy Renaming**: Redefine existing roles, categories, and channels based on new prompts for a quick server makeover.
+- **Change Control**: Not quite feeling the latest changes? You can easily revert any recent modifications to your server.
 
 ## Inviting the Bot
 
-**Notice**: You accept all responsibility for any changes made to your server by the bot.
+**Notice**: You bear all responsibility for any changes Brewer brings to your server.
 
-**We do not recommend granting the `Administrator` permission to Brewer, but if you absolutely need it, we recommend you to revoke it after the bot is done brewing!**
+**While the `Administrator` permission may be necessary for Brewer, we advise revoking it after Brewer finishes its tasks to maintain server security!**
 
 **Required Permissions**:
 - Manage Roles
 - Manage Channels
 - Manage Permissions
 
-[**Invite Brewer ☕️ to your server!**](https://discord.com/api/oauth2/authorize?client_id=1097362340468502548&permissions=268504080&scope=bot)
+[**Invite Brewer ☕️ to your server today!**](https://discord.com/api/oauth2/authorize?client_id=1097362340468502548&permissions=268504080&scope=bot), the bot uses ChatGPT 3.5-turbo, but may change in the future.
 
 ## Discord Server
 [ ![Discord Banner 4](https://discordapp.com/api/guilds/590215639785013298/widget.png?style=banner4)][discord-invite]

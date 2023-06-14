@@ -1,20 +1,20 @@
 package dev.alphaserpentis.bots.brewer.commands;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.theokanning.openai.completion.chat.ChatMessage;
-import dev.alphaserpentis.bots.brewer.data.DiscordConfig;
+import dev.alphaserpentis.bots.brewer.data.Prompts;
+import dev.alphaserpentis.bots.brewer.data.UserSession;
+import dev.alphaserpentis.bots.brewer.exception.GenerationException;
+import dev.alphaserpentis.bots.brewer.handler.commands.brew.BrewHandler;
+import dev.alphaserpentis.bots.brewer.handler.commands.vote.VoteHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.bots.brewer.handler.parser.Interpreter;
-import dev.alphaserpentis.bots.brewer.handler.parser.ParseActions;
 import dev.alphaserpentis.coffeecore.commands.ButtonCommand;
 import dev.alphaserpentis.coffeecore.data.bot.CommandResponse;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -26,95 +26,13 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
-import net.dv8tion.jda.internal.entities.channel.concrete.CategoryImpl;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Brew extends ButtonCommand<MessageEmbed> {
 
-    private enum UserSessionType {
-        NEW_BREW,
-        RENAME
-    }
-
-    public static class UserSession {
-        private final String prompt;
-        private final UserSessionType type;
-        private final ParseActions.ValidAction action;
-        private JDA jda;
-        private ArrayList<ParseActions.ExecutableAction> actionsToExecute;
-        private Interpreter.InterpreterResult interpreterResult;
-        private short brewCount;
-        private String interactionToken = "";
-        private long guildId;
-
-        public UserSession(
-                @NonNull String prompt,
-                @NonNull UserSessionType type,
-                @NonNull ParseActions.ValidAction action,
-                @NonNull ArrayList<ParseActions.ExecutableAction> actionsToExecute,
-                short brewCount
-        ) {
-            this.prompt = prompt;
-            this.type = type;
-            this.action = action;
-            this.actionsToExecute = actionsToExecute;
-            this.brewCount = brewCount;
-        }
-
-        public String getPrompt() {
-            return prompt;
-        }
-        public UserSessionType getType() {
-            return type;
-        }
-        public ParseActions.ValidAction getAction() {
-            return action;
-        }
-        public JDA getJDA() {
-            return jda;
-        }
-        public ArrayList<ParseActions.ExecutableAction> getActionsToExecute() {
-            return actionsToExecute;
-        }
-        public Interpreter.InterpreterResult getInterpreterResult() {
-            return interpreterResult;
-        }
-        public short getBrewCount() {
-            return brewCount;
-        }
-        public String getInteractionToken() {
-            return interactionToken;
-        }
-        public long getGuildId() {
-            return guildId;
-        }
-
-        public void setActionsToExecute(ArrayList<ParseActions.ExecutableAction> actionsToExecute) {
-            this.actionsToExecute = actionsToExecute;
-        }
-        public void setJDA(JDA jda) {
-            this.jda = jda;
-        }
-        public void setInterpreterResult(@NonNull Interpreter.InterpreterResult interpreterResult) {
-            this.interpreterResult = interpreterResult;
-        }
-        public void setBrewCount(short brewCount) {
-            this.brewCount = brewCount;
-        }
-        public void setInteractionToken(String interactionToken) {
-            this.interactionToken = interactionToken;
-        }
-        public void setGuildId(long guildId) {
-            this.guildId = guildId;
-        }
-    }
-
-    private final HashMap<Long, UserSession> userSessions = new HashMap<>();
     private static final EmbedBuilder DMS_NOT_SUPPORTED = new EmbedBuilder()
             .setTitle("DMs Not Supported")
             .setDescription("This command does not support DMs.")
@@ -137,7 +55,10 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             .setColor(Color.RED);
     private static final EmbedBuilder BREWING_UP = new EmbedBuilder()
             .setTitle("Brewing Up")
-            .setDescription("Brewing up your server...")
+            .setDescription("""
+            Brewing up your server...
+            
+            **This may take a while due to rate limits.**""")
             .setColor(Color.ORANGE);
     private static final EmbedBuilder GENERATING_NEW_BREW = new EmbedBuilder()
             .setTitle("Generating New Brew")
@@ -148,7 +69,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             .setDescription("""
                     An error occurred while generating a brew.
                     
-                    You can try again by pressing the "Try Again" button below.
+                    You can try again by pressing the "Brew" button below.
                     
                     Report this over at https://asrp.dev/discord
                     
@@ -160,11 +81,14 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             .setColor(Color.RED);
     private static final EmbedBuilder REVERTING = new EmbedBuilder()
             .setTitle("Reverting")
-            .setDescription("Reverting the changes made to the server...")
+            .setDescription("""
+            Reverting the changes made to the server...
+            
+            **This may take a while due to rate limits.**""")
             .setColor(Color.ORANGE);
     private static final EmbedBuilder POST_EXECUTION_NO_ERROR = new EmbedBuilder()
             .setTitle("Server Brewed Up!")
-            .setDescription("The server has been successfully brewed up!")
+            .setDescription("The server has been successfully brewed up!%s")
             .setColor(Color.GREEN);
     private static final EmbedBuilder POST_EXECUTION_ERROR = new EmbedBuilder()
             .setTitle("Server Brew Attempted")
@@ -197,11 +121,6 @@ public class Brew extends ButtonCommand<MessageEmbed> {
             .setDescription("You do not have an active session. Run </brew server:" + getCommandId() + "> or </brew rename:" + getCommandId() + "> to start a new session.")
             .setColor(Color.RED);
 
-    private final String SUGGESTION = """
-    If you're enjoying this bot, consider supporting Brewer by voting for us!
-    
-    Run </vote:%s> to vote for us!""";
-
     public Brew() {
         super(
                 new BotCommandOptions(
@@ -227,7 +146,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
     @Override
     public void runButtonInteraction(@NonNull ButtonInteractionEvent event) {
-        final UserSession userSession = userSessions.get(event.getUser().getIdLong());
+        final UserSession userSession = BrewHandler.getUserSession(event.getUser().getIdLong());
         final String buttonId = event.getComponentId().substring(getName().length() + 1);
         InteractionHook hook = event.deferEdit().complete();
 
@@ -241,10 +160,10 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                 ChatMessage chatMessage;
                 EmbedBuilder eb = new EmbedBuilder();
 
-                if(userSession.getType() == UserSessionType.NEW_BREW) {
-                    chatMessage = OpenAIHandler.SETUP_SYSTEM_PROMPT_SETUP;
+                if(userSession.getType() == UserSession.UserSessionType.NEW_BREW) {
+                    chatMessage = Prompts.SETUP_SYSTEM_PROMPT_CREATE;
                 } else {
-                    chatMessage = OpenAIHandler.SETUP_SYSTEM_PROMPT_RENAME;
+                    chatMessage = Prompts.SETUP_SYSTEM_PROMPT_RENAME;
                 }
 
                 hook.editOriginalComponents()
@@ -255,7 +174,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
                 try {
                     userSession.setActionsToExecute(
-                            generateActions(
+                            BrewHandler.generateActions(
                                     chatMessage,
                                     userSession.getPrompt(),
                                     userSession.getAction()
@@ -274,7 +193,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                             .queue();
                 }
 
-                previewChangesPage(eb, userSession.getActionsToExecute());
+                BrewHandler.previewChangesPage(eb, userSession.getActionsToExecute());
 
                 if(userSession.getBrewCount() == 3) {
                     userSession.setBrewCount((short) (userSession.getBrewCount() + 1));
@@ -313,8 +232,23 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
                 try {
                     if(result.completeSuccess()) {
+                        EmbedBuilder eb = new EmbedBuilder(POST_EXECUTION_NO_ERROR);
+
+                        if(!VoteHandler.isUserInRemindedMap(event.getUser().getIdLong())) {
+                            long voteCommandId = core.getCommandsHandler().getCommand("vote").getCommandId();
+
+                            eb.setDescription(
+                                    String.format(
+                                            POST_EXECUTION_NO_ERROR.getDescriptionBuilder().toString(),
+                                            "\n\nIf you're enjoying the bot, do please vote for Brewer! You can do so by clicking [here](https://top.gg/bot/819650039680575488/vote) or by running </vote:" + voteCommandId + ">."
+                                    )
+                            );
+
+                            VoteHandler.addUserToRemindedMap(event.getUser().getIdLong());
+                        }
+
                         hook.editOriginalEmbeds(
-                                POST_EXECUTION_NO_ERROR.build()
+                                eb.build()
                         ).setActionRow(
                                 getButton("revert")
                         ).queue();
@@ -340,12 +274,12 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                 } catch (Exception e) {
                     e.printStackTrace();
 
-                    userSessions.remove(event.getUser().getIdLong());
+                    BrewHandler.removeUserSession(event.getUser().getIdLong());
                 }
             }
             case "cancel" -> {
                 hook.editOriginalComponents().setEmbeds(CANCELLED.build()).queue();
-                userSessions.remove(event.getUser().getIdLong());
+                BrewHandler.removeUserSession(event.getUser().getIdLong());
             }
             case "revert" -> {
                 hook.editOriginalComponents().setEmbeds(REVERTING.build()).complete();
@@ -374,7 +308,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
                     ).queue();
                 }
 
-                userSessions.remove(event.getUser().getIdLong());
+                BrewHandler.removeUserSession(event.getUser().getIdLong());
             }
         }
     }
@@ -382,7 +316,7 @@ public class Brew extends ButtonCommand<MessageEmbed> {
     @Override
     @NonNull
     public Collection<ItemComponent> addButtonsToMessage(@NonNull GenericCommandInteractionEvent event) {
-        final UserSession userSession = userSessions.get(event.getUser().getIdLong());
+        final UserSession userSession = BrewHandler.getUserSession(event.getUser().getIdLong());
 
         if(userSession == null)
             return new ArrayList<>();
@@ -427,11 +361,19 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
         try {
             switch(event.getSubcommandName()) {
-                case "create" -> runCreatePrompt(eb, prompt, event);
-                case "rename" -> runRenamePrompt(eb, prompt, event);
+                case "create" -> BrewHandler.generateCreatePrompt(eb, prompt, event);
+                case "rename" -> BrewHandler.generateRenamePrompt(eb, prompt, event);
             }
+        } catch(GenerationException e) {
+            eb = new EmbedBuilder(GENERATING_ERROR);
+            eb.setDescription(String.format(GENERATING_ERROR.getDescriptionBuilder().toString(), e.getMessage()));
+
+            BrewHandler.removeUserSession(userId);
+            ratelimitMap.remove(userId);
+            return new CommandResponse<>(eb.build(), isOnlyEphemeral());
         } catch(Exception e) {
-            userSessions.remove(userId);
+            BrewHandler.removeUserSession(userId);
+            ratelimitMap.remove(userId);
             throw e;
         }
 
@@ -453,227 +395,5 @@ public class Brew extends ButtonCommand<MessageEmbed> {
 
     private boolean isUserAllowedToRunCommand(@NonNull Member member) {
         return member.hasPermission(Permission.ADMINISTRATOR);
-    }
-
-    @NonNull
-    private ArrayList<ParseActions.ExecutableAction> generateActions(
-            @NonNull ChatMessage system,
-            @NonNull String prompt,
-            @NonNull ParseActions.ValidAction action
-    ) {
-        Gson gson = new Gson();
-        String result = OpenAIHandler.getCompletion(
-                system,
-                prompt
-        ).getChoices().get(0).getMessage().getContent();
-        DiscordConfig config;
-        ArrayList<ParseActions.ExecutableAction> actions;
-
-//        System.out.println(result);
-
-        try {
-            config = gson.fromJson(result, DiscordConfig.class);
-        } catch(JsonSyntaxException e) {
-//            System.out.println("Invalid JSON, trying to fix it...");
-            config = gson.fromJson(tryToFixJSON(result), DiscordConfig.class);
-        }
-
-        actions = ParseActions.parseActions(config, action);
-
-        return actions;
-    }
-
-    @NonNull
-    private String tryToFixJSON(@NonNull String json) {
-        // Remove extra commas
-        json = json.replaceAll(",\\s*}", "}");
-        json = json.replaceAll(",\\s*]", "]");
-
-        return json;
-    }
-
-    private void runCreatePrompt(@NonNull EmbedBuilder eb, @NonNull String prompt, @NonNull SlashCommandInteractionEvent event) {
-        ArrayList<ParseActions.ExecutableAction> actions = generateActions(
-                OpenAIHandler.SETUP_SYSTEM_PROMPT_SETUP,
-                prompt,
-                ParseActions.ValidAction.CREATE
-        );
-        UserSession session;
-        previewChangesPage(eb, actions);
-
-        session = new UserSession(prompt, UserSessionType.NEW_BREW, ParseActions.ValidAction.CREATE, actions, (short) 1);
-        session.setInteractionToken(event.getToken());
-        session.setJDA(event.getJDA());
-        session.setGuildId(event.getGuild().getIdLong());
-        userSessions.put(
-                event.getUser().getIdLong(),
-                session
-        );
-    }
-
-    private void runRenamePrompt(@NonNull EmbedBuilder eb, @NonNull String prompt, @NonNull SlashCommandInteractionEvent event) {
-        ArrayList<ParseActions.ExecutableAction> actions = generateActions(
-                OpenAIHandler.SETUP_SYSTEM_PROMPT_RENAME,
-                new GsonBuilder().setPrettyPrinting().create().toJson(getGuildData(event.getGuild(), "Rename name, desc, and color based on " + prompt)),
-                ParseActions.ValidAction.EDIT
-        );
-        UserSession session;
-        previewChangesPage(eb, actions);
-
-        session = new UserSession(prompt, UserSessionType.RENAME, ParseActions.ValidAction.EDIT, actions, (short) 1);
-        session.setInteractionToken(event.getToken());
-        session.setJDA(event.getJDA());
-        session.setGuildId(event.getGuild().getIdLong());
-        userSessions.put(
-                event.getUser().getIdLong(),
-                session
-        );
-    }
-
-    @NonNull
-    private DiscordConfig getGuildData(@NonNull Guild guild, @NonNull String prompt) {
-        HashMap<String, DiscordConfig.ConfigItem> categories = new HashMap<>();
-        HashMap<String, DiscordConfig.ConfigItem> channels = new HashMap<>();
-        HashMap<String, DiscordConfig.ConfigItem> roles = new HashMap<>();
-
-        guild.getCategories().forEach(category -> categories.put(category.getName(), new DiscordConfig.ConfigItem(
-                category.getName(),
-                null,
-                null,
-                null,
-                null,
-                null
-        )));
-        guild.getChannels(false).forEach(channel -> {
-            if(channel instanceof CategoryImpl)
-                return;
-
-            channels.put(channel.getName(), new DiscordConfig.ConfigItem(
-                    channel.getName(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-            ));
-        });
-        guild.getRoles().forEach(role -> {
-            if(role.isPublicRole() || role.isManaged())
-                return;
-
-            roles.put(role.getName(), new DiscordConfig.ConfigItem(
-                    role.getName(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-            ));
-        });
-
-        return new DiscordConfig(
-                categories,
-                channels,
-                roles,
-                prompt
-        );
-    }
-
-    private void previewChangesPage(@NonNull EmbedBuilder eb, @NonNull ArrayList<ParseActions.ExecutableAction> actions) {
-        final String TOO_LONG = "... (too long to show)";
-        String categoriesVal, channelsVal, rolesVal;
-
-        eb.setTitle("Preview Changes");
-        eb.setDescription("""
-                Here is a preview of the changes that will be made to your server. Please confirm that you want to make these changes.
-
-                If you want to regenerate with the same prompt, click on the "☕ New Brew" button.
-                
-                **Notice**: Permissions are omitted from this preview. If the bot doesn't have sufficient permissions to make the changes, it will not set permissions!
-                """);
-        eb.setColor(Color.GREEN);
-
-        // Categories
-        categoriesVal = actions.stream().filter(
-                action -> action.targetType() == ParseActions.ValidTarget.CATEGORY
-        ).map(
-                this::generateReadablePreview
-        ).reduce(
-                (a, b) -> String.format("%s\n%s", a, b)
-        ).orElse("No changes");
-
-        eb.addField(
-                "Categories",
-                categoriesVal.length() > 1024 ? categoriesVal.substring(0, 1024 - TOO_LONG.length()) + TOO_LONG : categoriesVal,
-                false
-        );
-
-        // Channels
-        channelsVal = actions.stream().filter(
-                action -> (action.targetType() == ParseActions.ValidTarget.TEXT_CHANNEL)
-                        || (action.targetType() == ParseActions.ValidTarget.VOICE_CHANNEL)
-        ).map(
-                this::generateReadablePreview
-        ).reduce(
-                (a, b) -> String.format("%s\n%s", a, b)
-        ).orElse("No changes");
-
-        eb.addField(
-                "Channels",
-                channelsVal.length() > 1024 ? channelsVal.substring(0, 1024 - TOO_LONG.length()) + TOO_LONG : channelsVal,
-                false
-        );
-
-        // Roles
-        rolesVal = actions.stream().filter(
-                action -> action.targetType() == ParseActions.ValidTarget.ROLE
-        ).map(
-                this::generateReadablePreview
-        ).reduce(
-                (a, b) -> String.format("%s\n%s", a, b)
-        ).orElse("No changes");
-
-        eb.addField(
-                "Roles",
-                rolesVal.length() > 1024 ? rolesVal.substring(0, 1024 - TOO_LONG.length()) + TOO_LONG : rolesVal,
-                false
-        );
-    }
-
-    @NonNull
-    private String generateReadablePreview(@NonNull ParseActions.ExecutableAction action) {
-        StringBuilder readableData = new StringBuilder();
-
-        for(Map.Entry<ParseActions.ValidDataNames, Object> entry : action.data().entrySet()) {
-            if(
-                    entry.getKey() == ParseActions.ValidDataNames.NAME
-                            || entry.getKey() == ParseActions.ValidDataNames.PERMISSIONS
-                            || entry.getValue().equals("")
-            )
-                continue;
-
-            readableData.append(String.format(
-                    "└ **%s**: %s\n",
-                    entry.getKey().readable,
-                    entry.getValue()
-            ));
-        }
-
-        if(action.action() == ParseActions.ValidAction.CREATE) {
-            return String.format(
-                    action.action().editableText + "\n%s",
-                    action.target(),
-                    readableData
-            );
-        } else if(action.action() == ParseActions.ValidAction.EDIT) {
-            return String.format(
-                    action.action().editableText + "\n%s",
-                    action.target(),
-                    action.data().get(ParseActions.ValidDataNames.NAME),
-                    readableData
-            );
-        } else {
-            throw new IllegalStateException("Unexpected value: " + action.action());
-        }
     }
 }

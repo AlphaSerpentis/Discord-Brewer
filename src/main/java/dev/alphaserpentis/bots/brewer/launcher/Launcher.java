@@ -4,28 +4,34 @@ import dev.alphaserpentis.bots.brewer.commands.Brew;
 import dev.alphaserpentis.bots.brewer.commands.Vote;
 import dev.alphaserpentis.bots.brewer.handler.discord.StatusHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
+import dev.alphaserpentis.bots.brewer.handler.other.TopGgHandler;
 import dev.alphaserpentis.coffeecore.core.CoffeeCore;
 import dev.alphaserpentis.coffeecore.core.CoffeeCoreBuilder;
 import dev.alphaserpentis.coffeecore.data.bot.AboutInformation;
 import dev.alphaserpentis.coffeecore.data.bot.BotSettings;
 import io.github.cdimascio.dotenv.Dotenv;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
 
-import java.awt.*;
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Launcher {
+
+    public static CoffeeCore core;
 
     public static void main(String[] args) {
         Dotenv dotenv = Dotenv.load();
         CoffeeCoreBuilder<?> builder = new CoffeeCoreBuilder<>();
-        CoffeeCore core;
         Brew brew = new Brew();
         Vote vote = new Vote();
         AboutInformation about;
 
         about = new AboutInformation(
                 """
-                Brewer is an open-source bot that uses OpenAI's ChatGPT to rename or generate new roles/categories/channels with the touch of a prompt!
+                Brewer is your open-source assistant, stirring up innovation in your Discord server with OpenAI's ChatGPT. Just prompt it, and watch as it brews new roles, categories, and channels, or even renames the existing ones!
                 
+                [**Invite Brewer to Your Server!**](https://asrp.dev/brewer-invite)
                 [**GitHub**](https://github.com/AlphaSerpentis/Discord-Brewer)
                 [**Discord Server**](https://asrp.dev/discord)
                 """,
@@ -46,6 +52,12 @@ public class Launcher {
                                 about
                         )
                 )
+                .setChunkingFilter(ChunkingFilter.NONE)
+                .setEnabledGatewayIntents(
+                        new ArrayList<>(
+                                List.of()
+                        )
+                )
                 .enableSharding(true);
 
         core = builder.build(dotenv.get("DISCORD_BOT_TOKEN"));
@@ -56,5 +68,6 @@ public class Launcher {
 
         OpenAIHandler.init(dotenv.get("OPENAI_API_KEY"));
         StatusHandler.init(core);
+        TopGgHandler.init(dotenv.get("TOPGG_API_KEY"), core.getSelfUser().getId());
     }
 }
