@@ -49,9 +49,9 @@ public class BrewHandler {
                     ParseActions.ValidAction.CREATE
             );
         } catch(JsonSyntaxException e) {
-            throw new GenerationException(GenerationException.ExceptionType.JSON_EXCEPTION.getDescriptions(), e.getCause());
+            throw new GenerationException(GenerationException.Type.JSON_EXCEPTION.getDescriptions(), e.getCause());
         } catch(OpenAiHttpException e) {
-            throw new GenerationException(GenerationException.ExceptionType.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
+            throw new GenerationException(GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
         }
 
         previewChangesPage(eb, actions);
@@ -83,9 +83,9 @@ public class BrewHandler {
                     ParseActions.ValidAction.EDIT
             );
         } catch(JsonSyntaxException e) {
-            throw new GenerationException(GenerationException.ExceptionType.JSON_EXCEPTION.getDescriptions(), e.getCause());
+            throw new GenerationException(GenerationException.Type.JSON_EXCEPTION.getDescriptions(), e.getCause());
         } catch(OpenAiHttpException e) {
-            throw new GenerationException(GenerationException.ExceptionType.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
+            throw new GenerationException(GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
         }
         previewChangesPage(eb, actions);
         session = new UserSession(
