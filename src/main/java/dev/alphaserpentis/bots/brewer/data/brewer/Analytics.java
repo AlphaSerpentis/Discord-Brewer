@@ -6,10 +6,12 @@ public class Analytics {
     private final EnumMap<ServiceType, Integer> usagePerServiceType = new EnumMap<>(ServiceType.class);
     private final int snapshotUserCount;
     private final int snapshotAgeOfServer;
+    private final PaidTier paidTier;
 
-    public Analytics(int snapshotUserCount, int snapshotAgeOfServer) {
+    public Analytics(int snapshotUserCount, int snapshotAgeOfServer, PaidTier paidTier) {
         this.snapshotUserCount = snapshotUserCount;
         this.snapshotAgeOfServer = snapshotAgeOfServer;
+        this.paidTier = paidTier;
     }
 
     public EnumMap<ServiceType, Integer> getUsagePerServiceType() {
@@ -22,5 +24,9 @@ public class Analytics {
 
     public int getSnapshotAgeOfServer() {
         return snapshotAgeOfServer;
+    }
+
+    public PaidTier getPaidTier() {
+        return paidTier;
     }
 }

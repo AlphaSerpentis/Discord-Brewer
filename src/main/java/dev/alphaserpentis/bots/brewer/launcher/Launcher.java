@@ -19,11 +19,13 @@ import dev.alphaserpentis.coffeecore.handler.api.discord.commands.CommandsHandle
 import io.github.cdimascio.dotenv.Dotenv;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Launcher {
@@ -62,11 +64,16 @@ public class Launcher {
                                 about
                         )
                 )
-                .setEnabledGatewayIntents(
-                        new ArrayList<>(List.of(
-                                GatewayIntent.MESSAGE_CONTENT
-                        ))
+                .setChunkingFilter(
+                        ChunkingFilter.NONE
                 )
+                .setEnabledGatewayIntents(List.of(
+                                GatewayIntent.MESSAGE_CONTENT,
+                                GatewayIntent.GUILD_VOICE_STATES)
+                )
+                .setMemberCachePolicy(MemberCachePolicy.DEFAULT)
+                .setEnabledCacheFlags(List.of(CacheFlag.VOICE_STATE))
+                .setDisabledCacheFlags(List.of())
                 .setServerDataHandler(
                         new BrewerServerDataHandler(
                                 Path.of(dotenv.get("SERVER_DATA_PATH")),

@@ -46,7 +46,7 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
 
         for(Message.Attachment attachment: attachments) {
             description.append("# Transcription of ").append(attachment.getFileName()).append("\n");
-            description.append(OpenAIHandler.getAudioTranscription(attachment.getUrl()).getText()).append("\n\n");
+            description.append(OpenAIHandler.getAudioTranscription(attachment.getUrl()).text()).append("\n\n");
         }
         if(description.length() == 0) {
             description.append("No audio files found!");

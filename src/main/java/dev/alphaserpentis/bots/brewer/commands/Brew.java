@@ -2,8 +2,8 @@ package dev.alphaserpentis.bots.brewer.commands;
 
 import com.google.gson.JsonSyntaxException;
 import com.theokanning.openai.completion.chat.ChatMessage;
-import dev.alphaserpentis.bots.brewer.data.openai.Prompts;
 import dev.alphaserpentis.bots.brewer.data.brewer.UserSession;
+import dev.alphaserpentis.bots.brewer.data.openai.Prompts;
 import dev.alphaserpentis.bots.brewer.exception.GenerationException;
 import dev.alphaserpentis.bots.brewer.handler.commands.brew.BrewHandler;
 import dev.alphaserpentis.bots.brewer.handler.commands.vote.VoteHandler;
@@ -18,7 +18,6 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -315,7 +314,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
 
     @Override
     @NonNull
-    public Collection<ItemComponent> addButtonsToMessage(@NonNull GenericCommandInteractionEvent event) {
+    public Collection<ItemComponent> addButtonsToMessage(@NonNull SlashCommandInteractionEvent event) {
         final UserSession userSession = BrewHandler.getUserSession(event.getUser().getIdLong());
 
         if(userSession == null)

@@ -1,6 +1,7 @@
 # Terms of Service for the Brewer Bot
 
 *Last Updated: June 11, 2023*
+
 *Effective On: TBD*
 
 ---
@@ -24,6 +25,14 @@ By using the Brewer bot, you agree to the following terms of service outlined in
 Self-hosted instances of Brewer are not bound by these Terms of Service.
 
 However, you must abide by Discord's [Terms of Service](https://discord.com/terms) and [Community Guidelines](https://discord.com/guidelines), OpenAI's [Usage Policies](https://openai.com/policies/usage-policies) and any applicable laws in your jurisdiction.
+
+## Services Provided
+The bot provides the following services:
+- Generating new channels, categories, and roles to the best of its ability with the information provided by you
+- Renaming channels, categories, and roles names, descriptions, and colors to the best of its ability with the information provided by you
+- Transcribing audio to text from attachments/files/voice channels
+- Translating audio to text from attachments/files/voice channels
+- Summarizing text from transcriptions or translations
 
 ## Use of Services
 You may use the bot for any purpose, commercial or non-commercial, as long as you abide by the terms outlined in this document.
@@ -50,14 +59,15 @@ For example, the bot's abilities may be limited if:
 We reserve the right to modify, suspend, or discontinue, temporarily or permanently, the bot or any service to which it connects, with or without notice and without liability to you.
 
 ## User Content
-When using the bot, you will be allowed to provide input either through text prompts or by uploading attachment(s)/file(s) to the bot to utilize its services. In addition, you may use your server's pre-existing roles, categories, and channels to provide context to the bot. You are responsible for the content of the input you provide to the bot, whether it's in the form of a text prompt or an attachment/file.
+When using the bot, you will be allowed to provide input through text prompts, uploading attachment(s)/file(s), or connecting the bot to a voice channel (VC) to utilize its services. In addition, you may use your server's pre-existing roles, categories, and channels to provide context to the bot. You are responsible for the content of the input you provide to the bot, whether it's in the form of a text prompt or an attachment/file.
 
-You agree to not provide any prompts that violate:
+You agree to not provide any inputs/outputs that violate:
 - OpenAI's Usage Policies
 - Discord's Terms of Service and Community Guidelines
 - Any laws in your jurisdiction (including but not limited to those governing intellectual property, consumer protection, unfair competition, anti-discrimination, or false advertising)
+- The privacy of other users
 
-We reserve the right to reject your prompt if it is deemed inappropriate in accordance with OpenAI's Usage Policies.
+We reserve the right to reject your input/output if it is deemed inappropriate in accordance with OpenAI's Usage Policies.
 
 ## Paid Services
 Should you choose to purchase a paid service from us, you agree to pay the fees associated with the service. You also agree to abide by the terms outlined in this document and any additional terms that may be provided to you at the time of purchase.
@@ -69,7 +79,7 @@ We reserve the right to terminate your access to the bot, without cause or notic
 
 Examples of reasons for termination include, but are not limited to:
 - Abusive behavior towards the bot or its related systems or networks
-- Violating the acceptable use outlined in this document, such as, but not limited to, providing inappropriate prompts to the bot
+- Violating the acceptable use outlined in this document, such as, but not limited to, providing inappropriate content to the bot
 
 ## Governing Law
 These Terms of Service shall be governed and construed in accordance with the laws of the State of Texas, without regard to its conflict of law provisions.
@@ -88,7 +98,6 @@ We reserve the right, at our sole discretion, to modify or replace these Terms a
 
 Examples of a material change include, but are not limited to:
 - Changes to the Use of Services
-- Changes to the bot's functionality
 - Changes to the data we collect from you
 
 By continuing to access or use our bot after those revisions become effective, you agree to be bound by the revised terms. If you do not agree to the new terms, stop using the bot and remove it from your server(s).
@@ -98,6 +107,14 @@ By continuing to access or use our bot after those revisions become effective, y
 For a detailed description, go [here](https://github.com/AlphaSerpentis/Discord-Brewer/blob/main/privacy.md) for the Privacy Policy page
 
 Data collected by the bot is used to provide its services and improve the bot. We do not sell your data to third parties. Data shared externally is only to Discord and OpenAI, and is only used to provide the bot's services.
+
+### Deletion of Data
+Data pertaining to guilds are automatically deleted if the bot is removed from the server.
+
+Additionally, you may request for your data to be deleted by contacting us at [contact@alphaserpentis.dev](mailto:contact@alphaserpentis.dev). Please provide the following information in your request:
+- User/Guild ID(s) to be deleted from our records
+
+We will notify you when we've completed your request. Do note that if the bot is still in your guild(s), some data will be recollected to keep serving your guild(s).
 
 ## Contact Us
 

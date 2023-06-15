@@ -5,13 +5,18 @@ import io.reactivex.rxjava3.annotations.Nullable;
 
 public record AudioTranslationRequest(
         @NonNull String model,
-        @NonNull String file,
-        @NonNull String fileName,
+        @NonNull String name,
+        @Nullable String file,
+        @NonNull byte[] audioBytes,
         @Nullable String prompt,
         @Nullable String responseFormat,
         double temperature
 ) {
-    public AudioTranslationRequest(@NonNull String model, @NonNull String audioUrl, @NonNull String fileName) {
-        this(model, audioUrl, fileName, null, null, 0.0);
+    public AudioTranslationRequest(@NonNull String model, @NonNull String name, @NonNull String file, @NonNull byte[] audioBytes) {
+        this(model, name, file, audioBytes, null, null, 0.0);
+    }
+
+    public AudioTranslationRequest(@NonNull String model, @NonNull String name, @NonNull byte[] audioBytes) {
+        this(model, name, null, audioBytes, null, null, 0.0);
     }
 }

@@ -1,6 +1,8 @@
 # Privacy Policy
 
-*Last Updated: June 10, 2023*
+*Last Updated: June 11, 2023*
+
+*Effective On: TBD*
 
 ---
 
@@ -13,10 +15,11 @@ When you use our app, we may collect, but not limited to, the following informat
 - Server ID
 - Settings you choose for your server
 - Pre-existing server roles, categories, and channels
+- Audio from files/attachments/voice channels
 
 We may collect analytical data to help us improve the app. This may include, but not limited to, the following information:
 - Error logs
-- Rejected prompts
+- Flagged content
 - Usage statistics
 - Bot statistics
 
@@ -28,11 +31,13 @@ We use the information we collect in various ways, including to:
 - Better understand how users interact with the application
 
 ## How do we store, share and disclose your information?
-Most information is stored in cache and not disclosed to anyone except for Discord and or OpenAI. However, some basic information, such as your server ID, is stored on our servers to provide the application to you and retain your settings. Additionally, some information may be stored on our servers, if authorized by you, such as rating submissions or errors.
+The primary storage of your information resides within a cache, ensuring temporary hold and it is not generally disclosed to any third parties, with the notable exceptions of Discord and OpenAI, as this is integral to our operation. Essential information, such as your server ID, is securely stored on our servers in order to effectively deliver our services and to retain your chosen settings. Upon your consent, we may store additional data on our servers, such as ratings submissions or error reports.
 
-Some analytical data may be made public, but will not contain any personally identifiable information.
+For audio data derived from voice channels, we implement a stringent policy of maintaining this information solely within a temporary cache. In addition, data indicating who is speaking for transcription purposes is also included. This information is exclusively shared with OpenAI to facilitate the delivery of our services.
 
-Other information stored are not disclosed or shared to any third party except for Discord to be able to provide the application to you.
+We may disseminate aggregated analytical data for the purpose of demonstrating usage trends; however, this data is carefully compiled to ensure that no personally identifiable information is included.
+
+Apart from necessary data sharing with Discord to ensure the bot's functionality, we strictly limit any disclosure or sharing of stored information with third parties, adhering diligently to our commitment to user privacy.
 
 ## How is information deleted?
 Information stored on our servers will automatically be deleted if you remove the bot from your server(s).
