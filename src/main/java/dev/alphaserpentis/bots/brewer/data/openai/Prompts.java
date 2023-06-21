@@ -81,7 +81,7 @@ public interface Prompts {
                         "prompt": "Example prompt"
                     }
                     
-                    The user's prompt is:
+                    The user's prompt is: Rename name, desc, and color based on 
                     """
     );
 

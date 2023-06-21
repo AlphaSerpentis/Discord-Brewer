@@ -66,22 +66,28 @@ public class UserSession {
         return guildId;
     }
 
-    public void setActionsToExecute(ArrayList<ParseActions.ExecutableAction> actionsToExecute) {
+    public UserSession setActionsToExecute(ArrayList<ParseActions.ExecutableAction> actionsToExecute) {
         this.actionsToExecute = actionsToExecute;
+        return this;
     }
-    public void setJDA(JDA jda) {
+    public UserSession setJDA(JDA jda) {
         this.jda = jda;
+        return this;
     }
-    public void setInterpreterResult(@NonNull Interpreter.InterpreterResult interpreterResult) {
+    public UserSession setInterpreterResult(@NonNull Interpreter.InterpreterResult interpreterResult) {
         this.interpreterResult = interpreterResult;
+        return this;
     }
-    public void setBrewCount(short brewCount) {
+    public UserSession setBrewCount(short brewCount) {
         this.brewCount = brewCount;
+        return this;
     }
-    public void setInteractionToken(String interactionToken) {
+    public UserSession setInteractionToken(String interactionToken) {
         this.interactionToken = interactionToken;
+        return this;
     }
-    public void setGuildId(long guildId) {
+    public UserSession setGuildId(long guildId) {
         this.guildId = guildId;
+        return this;
     }
 }

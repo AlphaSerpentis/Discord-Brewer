@@ -5,18 +5,21 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.theokanning.openai.OpenAiHttpException;
 import com.theokanning.openai.completion.chat.ChatMessage;
+import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
 import dev.alphaserpentis.bots.brewer.data.discord.DiscordConfig;
 import dev.alphaserpentis.bots.brewer.data.openai.Prompts;
 import dev.alphaserpentis.bots.brewer.data.brewer.UserSession;
 import dev.alphaserpentis.bots.brewer.exception.GenerationException;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.bots.brewer.handler.parser.ParseActions;
+import dev.alphaserpentis.bots.brewer.launcher.Launcher;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.internal.entities.channel.concrete.CategoryImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.TextChannelImpl;
+import net.dv8tion.jda.internal.entities.channel.concrete.VoiceChannelImpl;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -62,9 +65,10 @@ public class BrewHandler {
                 actions,
                 (short) 0
         );
-        session.setJDA(event.getJDA());
-        session.setInteractionToken(event.getInteraction().getToken());
-        session.setGuildId(event.getGuild().getIdLong());
+        session
+                .setJDA(event.getJDA())
+                .setInteractionToken(event.getInteraction().getToken())
+                .setGuildId(event.getGuild().getIdLong());
         userSessions.put(event.getUser().getIdLong(), session);
     }
 
@@ -73,13 +77,16 @@ public class BrewHandler {
             @NonNull String prompt,
             @NonNull SlashCommandInteractionEvent event
     ) {
+        boolean allowNsfwChannelRenames = ((BrewerServerData) Launcher.core.getServerDataHandler().getServerData(event.getGuild().getIdLong())).getTryRenamingNsfwChannels();
         ArrayList<ParseActions.ExecutableAction> actions;
         UserSession session;
 
         try {
             actions = generateActions(
                     Prompts.SETUP_SYSTEM_PROMPT_RENAME,
-                    new GsonBuilder().setPrettyPrinting().create().toJson(getGuildData(event.getGuild(), "Rename name, desc, and color based on " + prompt)),
+                    new GsonBuilder().setPrettyPrinting().create().toJson(
+                            getGuildData(event.getGuild(), prompt, allowNsfwChannelRenames)
+                    ),
                     ParseActions.ValidAction.EDIT
             );
         } catch(JsonSyntaxException e) {
@@ -95,9 +102,10 @@ public class BrewHandler {
                 actions,
                 (short) 0
         );
-        session.setJDA(event.getJDA());
-        session.setInteractionToken(event.getInteraction().getToken());
-        session.setGuildId(event.getGuild().getIdLong());
+        session
+                .setJDA(event.getJDA())
+                .setInteractionToken(event.getInteraction().getToken())
+                .setGuildId(event.getGuild().getIdLong());
         userSessions.put(event.getUser().getIdLong(), session);
     }
 
@@ -138,6 +146,7 @@ public class BrewHandler {
                 
                 **Notice**: Permissions are omitted from this preview. If the bot doesn't have sufficient permissions to make the changes, it will not set permissions!
                 """);
+        eb.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
         eb.setColor(Color.GREEN);
 
         // Categories
@@ -146,7 +155,7 @@ public class BrewHandler {
         ).map(
                 BrewHandler::generateReadablePreview
         ).reduce(
-                (a, b) -> String.format("%s\n%s", a, b)
+                (a, b) -> String.format("- %s\n%s", a, b)
         ).orElse("No changes");
 
         eb.addField(
@@ -162,7 +171,7 @@ public class BrewHandler {
         ).map(
                 BrewHandler::generateReadablePreview
         ).reduce(
-                (a, b) -> String.format("%s\n%s", a, b)
+                (a, b) -> String.format("- %s\n%s", a, b)
         ).orElse("No changes");
 
         eb.addField(
@@ -177,7 +186,7 @@ public class BrewHandler {
         ).map(
                 BrewHandler::generateReadablePreview
         ).reduce(
-                (a, b) -> String.format("%s\n%s", a, b)
+                (a, b) -> String.format("- %s\n%s", a, b)
         ).orElse("No changes");
 
         eb.addField(
@@ -199,7 +208,7 @@ public class BrewHandler {
                 continue;
 
             readableData.append(String.format(
-                    "└ **%s**: %s\n",
+                    " - **%s**: %s",
                     entry.getKey().readable,
                     entry.getValue()
             ));
@@ -223,21 +232,42 @@ public class BrewHandler {
         }
     }
 
-    private static DiscordConfig getGuildData(@NonNull Guild guild, @NonNull String prompt) {
+    private static DiscordConfig getGuildData(@NonNull Guild guild, @NonNull String prompt, boolean getNsfwChannels) {
         HashMap<String, DiscordConfig.ConfigItem> categories = new HashMap<>();
         HashMap<String, DiscordConfig.ConfigItem> channels = new HashMap<>();
         HashMap<String, DiscordConfig.ConfigItem> roles = new HashMap<>();
 
-        guild.getCategories().forEach(category -> categories.put(category.getName(), new DiscordConfig.ConfigItem(
-                category.getName(),
-                null,
-                null,
-                null,
-                null,
-                null
-        )));
-        guild.getChannels(false).forEach(channel -> {
-            if(channel instanceof CategoryImpl)
+        guild.getCategories().forEach(category -> {
+            // Verify the category's name won't get us yeeted
+            if(OpenAIHandler.isContentFlagged(category.getName(), -1, -1, false))
+                return;
+
+            categories.put(category.getName(), new DiscordConfig.ConfigItem(
+                    category.getName(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            ));
+        });
+        guild.getChannels(false).forEach(channel -> {if(channel instanceof CategoryImpl)
+                return;
+            if(channel instanceof TextChannelImpl chn) {
+                if(chn.isNSFW()) {
+                    if(!getNsfwChannels)
+                        return;
+                }
+            }
+            if(channel instanceof VoiceChannelImpl vc) {
+                if(vc.isNSFW()) {
+                    if(!getNsfwChannels)
+                        return;
+                }
+            }
+
+            // Verify the channel's name won't get us yeeted
+            if(OpenAIHandler.isContentFlagged(channel.getName(), -1, -1, false))
                 return;
 
             channels.put(channel.getName(), new DiscordConfig.ConfigItem(
@@ -251,6 +281,10 @@ public class BrewHandler {
         });
         guild.getRoles().forEach(role -> {
             if(role.isPublicRole() || role.isManaged())
+                return;
+
+            // Verify the role's name won't get us yeeted
+            if(OpenAIHandler.isContentFlagged(role.getName(), -1, -1, false))
                 return;
 
             roles.put(role.getName(), new DiscordConfig.ConfigItem(
@@ -277,7 +311,11 @@ public class BrewHandler {
         json = json.replaceAll(",\\s*}", "}");
         json = json.replaceAll(",\\s*]", "]");
 
-        // Remove any text befor
+        // Remove any text before the beginning of the JSON
+        json = json.substring(json.indexOf("{"));
+
+        // Remove any text after the end of the JSON
+        json = json.substring(0, json.lastIndexOf("}") + 1);
 
         return json;
     }

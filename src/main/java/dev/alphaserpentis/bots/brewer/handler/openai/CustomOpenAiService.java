@@ -10,9 +10,20 @@ import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
+import java.util.List;
+
 public class CustomOpenAiService extends OpenAiService {
     private final CustomOpenAiApi api;
     public static final long OPENAI_MAX_FILE_SIZE = 26214400;
+    public static final List<String> SUPPORTED_EXTENSIONS = List.of(
+            "mp3",
+            "mp4",
+            "mpeg",
+            "mpga",
+            "m4a",
+            "wav",
+            "webm"
+    );
 
     public CustomOpenAiService(@NonNull CustomOpenAiApi api) {
         super(api);

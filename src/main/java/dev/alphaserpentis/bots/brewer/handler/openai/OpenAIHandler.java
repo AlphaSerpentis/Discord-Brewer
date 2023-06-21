@@ -13,7 +13,9 @@ import dev.alphaserpentis.bots.brewer.data.brewer.CachedAudio;
 import dev.alphaserpentis.bots.brewer.data.brewer.FlaggedContent;
 import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionRequest;
 import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionResponse;
-import dev.alphaserpentis.bots.brewer.handler.commands.brew.AudioHandler;
+import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationRequest;
+import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationResponse;
+import dev.alphaserpentis.bots.brewer.handler.commands.audio.AudioHandler;
 import io.reactivex.rxjava3.annotations.NonNull;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -89,7 +91,7 @@ public class OpenAIHandler {
      * @param content The content to check.
      * @return {@code true} if the content is flagged, {@code false} otherwise.
      */
-    public static boolean isContentFlagged(@NonNull String content, long userId, long guildId) {
+    public static boolean isContentFlagged(@NonNull String content, long userId, long guildId, boolean logIfFlagged) {
         ModerationResult req = service.createModeration(
                 new ModerationRequest(
                         content,
@@ -98,7 +100,7 @@ public class OpenAIHandler {
         );
         boolean isFlagged = req.getResults().get(0).isFlagged();
 
-        if(isFlagged)
+        if(isFlagged && logIfFlagged)
             writeFlaggedContentToDirectory(new FlaggedContent(userId, guildId, content));
 
         return isFlagged;
@@ -161,38 +163,19 @@ public class OpenAIHandler {
                 new AudioTranscriptionRequest(
                         "whisper-1",
                         name + ".wav",
-                        null,
                         audioBytes
                 )
         );
     }
 
-    public static AudioTranscriptionResponse getAudioTranslation(@NonNull String audioUrl) {
-        String fileName = audioUrl.substring(audioUrl.lastIndexOf('/') + 1);
-        byte[] audioBytes;
-        String hash;
-        try {
-            audioBytes = AudioHandler.readUrlStream(audioUrl);
-            hash = AudioHandler.hashAudioBytes(audioBytes);
-        } catch (IOException | NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-
-        if(translationCache.containsKey(hash))
-            return new AudioTranscriptionResponse(translationCache.get(hash).content());
-        else {
-            AudioTranscriptionResponse response = service.createAudioTranscription(
-                    new AudioTranscriptionRequest(
-                            "whisper-1",
-                            fileName,
-                            audioUrl,
-                            audioBytes
-                    )
-            );
-            translationCache.put(hash, new CachedAudio(Instant.now().getEpochSecond() + 172800, response.text()));
-
-            return response;
-        }
+    public static AudioTranslationResponse getAudioTranslation(@NonNull byte[] audioBytes, @NonNull String name) {
+        return service.createAudioTranslation(
+                new AudioTranslationRequest(
+                        "whisper-1",
+                        name + ".wav",
+                        audioBytes
+                )
+        );
     }
 
     private static void readAndSetCaches() throws IOException {

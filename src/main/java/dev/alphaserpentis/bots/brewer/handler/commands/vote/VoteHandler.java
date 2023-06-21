@@ -1,8 +1,10 @@
 package dev.alphaserpentis.bots.brewer.handler.commands.vote;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class VoteHandler {
     private static final HashMap<Long, Long> remindedExpiration = new HashMap<>();
@@ -11,12 +13,12 @@ public class VoteHandler {
 
     public static void init() {
         initialized = true;
-        scheduler.scheduleAtFixedRate(VoteHandler::update, 0, 60, java.util.concurrent.TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(VoteHandler::update, 60, 60, TimeUnit.MINUTES);
     }
 
     public static void addUserToRemindedMap(long userId) {
         initializeIfNot();
-        long currentTime = System.currentTimeMillis() / 1000L;
+        long currentTime = Instant.now().getEpochSecond();
 
         remindedExpiration.put(userId, currentTime + 86400);
     }
@@ -27,7 +29,7 @@ public class VoteHandler {
     }
 
     public static void update() {
-        long currentTime = System.currentTimeMillis() / 1000L;
+        long currentTime = Instant.now().getEpochSecond();
 
         remindedExpiration.forEach((userId, expiration) -> {
             if (expiration < currentTime) {

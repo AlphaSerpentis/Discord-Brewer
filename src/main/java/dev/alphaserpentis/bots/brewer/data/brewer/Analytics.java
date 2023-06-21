@@ -5,10 +5,10 @@ import java.util.EnumMap;
 public class Analytics {
     private final EnumMap<ServiceType, Integer> usagePerServiceType = new EnumMap<>(ServiceType.class);
     private final int snapshotUserCount;
-    private final int snapshotAgeOfServer;
+    private final long snapshotAgeOfServer;
     private final PaidTier paidTier;
 
-    public Analytics(int snapshotUserCount, int snapshotAgeOfServer, PaidTier paidTier) {
+    public Analytics(int snapshotUserCount, long snapshotAgeOfServer, PaidTier paidTier) {
         this.snapshotUserCount = snapshotUserCount;
         this.snapshotAgeOfServer = snapshotAgeOfServer;
         this.paidTier = paidTier;
@@ -22,7 +22,7 @@ public class Analytics {
         return snapshotUserCount;
     }
 
-    public int getSnapshotAgeOfServer() {
+    public long getSnapshotAgeOfServer() {
         return snapshotAgeOfServer;
     }
 

@@ -355,7 +355,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         // Check if the prompt doesn't get flagged by OpenAI
         prompt = event.getOption("prompt").getAsString();
 
-        if(OpenAIHandler.isContentFlagged(prompt, userId, event.getGuild() != null ? event.getGuild().getIdLong() : 0))
+        if(OpenAIHandler.isContentFlagged(prompt, userId, event.getGuild() != null ? event.getGuild().getIdLong() : 0, true))
             return new CommandResponse<>(PROMPT_REJECTED.build(), isOnlyEphemeral());
 
         try {
@@ -382,9 +382,9 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
     @Override
     public void updateCommand(@NonNull JDA jda) {
         SubcommandData create = new SubcommandData("create", "Create new roles/categories/channels with a prompt!")
-                .addOption(OptionType.STRING, "prompt", "The prompt to use for the brew.", true);
-        SubcommandData rename = new SubcommandData("rename", "Rename your roles/categories/channels with a prompt!")
-                .addOption(OptionType.STRING, "prompt", "The prompt to use for the brew.", true);
+                .addOption(OptionType.STRING, "prompt", "Describe a theme, style, or the specifics of what you want!", true);
+        SubcommandData rename = new SubcommandData("rename", "Rename your preexisting server!")
+                .addOption(OptionType.STRING, "prompt", "Describe a theme, style, or the specifics of what you want!", true);
 
         jda
                 .upsertCommand(name, description)

@@ -1,5 +1,7 @@
 package dev.alphaserpentis.bots.brewer.commands;
 
+import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionRequest;
+import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionResponse;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.coffeecore.commands.BotCommand;
 import dev.alphaserpentis.coffeecore.data.bot.CommandResponse;
@@ -12,6 +14,7 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -45,14 +48,24 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
         StringBuilder description = new StringBuilder();
 
         for(Message.Attachment attachment: attachments) {
-            description.append("# Transcription of ").append(attachment.getFileName()).append("\n");
-            description.append(OpenAIHandler.getAudioTranscription(attachment.getUrl()).text()).append("\n\n");
+            AudioTranscriptionResponse response = OpenAIHandler.getAudioTranscription(attachment.getUrl());
+
+            if(response.isCached()) {
+                description.append("# Cached Transcription of ").append(attachment.getFileName()).append("\n");
+            } else {
+                description.append("# Transcription of ").append(attachment.getFileName()).append("\n");
+            }
+
+            description.append(response.text()).append("\n\n");
+            eb.setColor(Color.GREEN);
         }
         if(description.length() == 0) {
             description.append("No audio files found!");
+            eb.setColor(Color.RED);
         }
 
         eb.setDescription(description.toString());
+        eb.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
 
         return new CommandResponse<>(eb.build(), isOnlyEphemeral());
     }
