@@ -6,11 +6,13 @@ public class Analytics {
     private final EnumMap<ServiceType, Integer> usagePerServiceType = new EnumMap<>(ServiceType.class);
     private final int snapshotUserCount;
     private final long snapshotAgeOfServer;
+    private final long snapshotBotAgeInServer;
     private final PaidTier paidTier;
 
-    public Analytics(int snapshotUserCount, long snapshotAgeOfServer, PaidTier paidTier) {
+    public Analytics(int snapshotUserCount, long snapshotAgeOfServer, long snapshotBotAgeInServer, PaidTier paidTier) {
         this.snapshotUserCount = snapshotUserCount;
         this.snapshotAgeOfServer = snapshotAgeOfServer;
+        this.snapshotBotAgeInServer = snapshotBotAgeInServer;
         this.paidTier = paidTier;
     }
 
@@ -24,6 +26,10 @@ public class Analytics {
 
     public long getSnapshotAgeOfServer() {
         return snapshotAgeOfServer;
+    }
+
+    public long getSnapshotBotAgeInServer() {
+        return snapshotBotAgeInServer;
     }
 
     public PaidTier getPaidTier() {

@@ -14,13 +14,11 @@ public class Vote extends BotCommand<MessageEmbed, SlashCommandInteractionEvent>
 
     public Vote() {
         super(
-                new BotCommandOptions(
-                        "vote",
-                        "Support Brewer by voting for it!",
-                        true,
-                        false,
-                        TypeOfEphemeral.DEFAULT
-                )
+                new BotCommandOptions()
+                        .setName("vote")
+                        .setDescription("Support Brewer by voting for it!")
+                        .setOnlyEmbed(true)
+                        .setDeferReplies(true)
         );
     }
 

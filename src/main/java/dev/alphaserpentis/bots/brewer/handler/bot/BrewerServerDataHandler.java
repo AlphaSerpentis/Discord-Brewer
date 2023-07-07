@@ -3,15 +3,22 @@ package dev.alphaserpentis.bots.brewer.handler.bot;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.reflect.TypeToken;
 import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
+import dev.alphaserpentis.bots.brewer.launcher.Launcher;
 import dev.alphaserpentis.coffeecore.handler.api.discord.servers.ServerDataHandler;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
+import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
 public class BrewerServerDataHandler extends ServerDataHandler<BrewerServerData> {
+
+    final Logger logger = LoggerFactory.getLogger(BrewerServerDataHandler.class);
+
     /**
      * Initializes the server data handler.
      *
@@ -29,20 +36,13 @@ public class BrewerServerDataHandler extends ServerDataHandler<BrewerServerData>
             boolean resetAcknowledgementsForNewUpdates
     ) throws IOException {
         super(path, typeToken, jsonDeserializer);
-        boolean updateFile = false;
+        boolean updateFile = resetAcknowledgementsForToS || resetAcknowledgementsForPrivacyPolicy || resetAcknowledgementsForNewUpdates;
 
-        if(resetAcknowledgementsForToS) {
-            resetAcknowledgementsForToS();
-            updateFile = true;
-        }
-        if(resetAcknowledgementsForPrivacyPolicy) {
-            resetAcknowledgementsForPrivacyPolicy();
-            updateFile = true;
-        }
-        if(resetAcknowledgementsForNewUpdates) {
-            resetAcknowledgementsForNewUpdates();
-            updateFile = true;
-        }
+        resetAcknowledgements(
+                resetAcknowledgementsForToS,
+                resetAcknowledgementsForPrivacyPolicy,
+                resetAcknowledgementsForNewUpdates
+        );
 
         if(updateFile) {
             updateServerData();
@@ -60,25 +60,36 @@ public class BrewerServerDataHandler extends ServerDataHandler<BrewerServerData>
         try {
             updateServerData();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            logger.error("Failed to update server data file.", e);
         }
     }
 
-    public void resetAcknowledgementsForToS() {
-        for(BrewerServerData serverData: serverDataHashMap.values()) {
-            serverData.setAcknowledgedNewTos(false);
+    @Override
+    public void onGuildLeave(@NonNull GuildLeaveEvent event) {
+        serverDataHashMap.remove(event.getGuild().getIdLong());
+        AnalyticsHandler.stopTrackingGuild(event.getGuild().getIdLong());
+        try {
+            updateServerData();
+        } catch (IOException e) {
+            logger.error("Failed to update server data file.", e);
         }
     }
 
-    public void resetAcknowledgementsForPrivacyPolicy() {
+    public void resetAcknowledgements(
+            boolean tos,
+            boolean privacyPolicy,
+            boolean newUpdates
+    ) {
         for(BrewerServerData serverData: serverDataHashMap.values()) {
-            serverData.setAcknowledgedNewPrivacyPolicy(false);
-        }
-    }
-
-    public void resetAcknowledgementsForNewUpdates() {
-        for(BrewerServerData serverData: serverDataHashMap.values()) {
-            serverData.setAcknowledgedNewUpdates(false);
+            if(tos) {
+                serverData.setAcknowledgedNewTos(false);
+            }
+            if(privacyPolicy) {
+                serverData.setAcknowledgedNewPrivacyPolicy(false);
+            }
+            if(newUpdates) {
+                serverData.setAcknowledgedNewUpdates(false);
+            }
         }
     }
 }

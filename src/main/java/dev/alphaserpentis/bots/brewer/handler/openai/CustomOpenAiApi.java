@@ -1,6 +1,6 @@
 package dev.alphaserpentis.bots.brewer.handler.openai;
 
-import com.theokanning.openai.OpenAiApi;
+import com.theokanning.openai.client.OpenAiApi;
 import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionResponse;
 import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationResponse;
 import io.reactivex.Single;

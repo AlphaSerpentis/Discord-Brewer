@@ -21,7 +21,10 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.interactions.commands.Command;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
@@ -31,11 +34,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent> {
-
-    private static final EmbedBuilder DMS_NOT_SUPPORTED = new EmbedBuilder()
-            .setTitle("DMs Not Supported")
-            .setDescription("This command does not support DMs.")
-            .setColor(Color.RED);
     private static final EmbedBuilder NO_PERMISSIONS = new EmbedBuilder()
             .setTitle("No Permissions")
             .setDescription("""
@@ -70,7 +68,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                     
                     You can try again by pressing the "Brew" button below.
                     
-                    Report this over at https://asrp.dev/discord
+                    Report this over at https://brewr.ai/discord
                     
                     Error Message: %s""")
             .setColor(Color.RED);
@@ -96,7 +94,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                     
                     You can revert any changes made by pressing the "Revert" button below.
                     
-                    Report this over at https://asrp.dev/discord
+                    Report this over at https://brewr.ai/discord
                     
                     Error Message: %s""")
             .setColor(Color.ORANGE);
@@ -110,7 +108,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             .setDescription("""
                     Reverted the changes made to the server (maybe), but there were errors.
                     
-                    Report this over at https://asrp.dev/discord
+                    Report this over at https://brewr.ai/discord
                     
                     Error Message: %s""")
             .setColor(Color.ORANGE);
@@ -122,19 +120,15 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
 
     public Brew() {
         super(
-                new BotCommandOptions(
-                        "brew",
-                        "Setup your Discord server with a prompt!",
-                        180,
-                        0,
-                        true,
-                        false,
-                        TypeOfEphemeral.DEFAULT,
-                        true,
-                        true,
-                        true,
-                        false
-                )
+                new BotCommandOptions("brew", "Setup your Discord server with a prompt!")
+                        .setCommandType(Command.Type.SLASH)
+                        .setRatelimitLength(180)
+                        .setOnlyEmbed(true)
+                        .setOnlyEphemeral(false)
+                        .setTypeOfEphemeral(TypeOfEphemeral.DEFAULT)
+                        .setDeferReplies(true)
+                        .setUseRatelimits(true)
+                        .setCommandVisibility(CommandVisibility.GUILD)
         );
 
         addButton("brew", ButtonStyle.PRIMARY, "New Brew", Emoji.fromUnicode("☕"),false);
@@ -344,11 +338,8 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         if(response != null)
             return response;
 
-        // Check if the command was ran in the DMs
-        if(!event.isFromGuild())
-            return new CommandResponse<>(DMS_NOT_SUPPORTED.build(), isOnlyEphemeral());
-
-        // Check if the user is allowed to run the command
+        // Although this *should* be enforced by Discord as it is configured to only show up for users with Administrator
+        // permissions, this is just a fallback *just in case*
         if(!isUserAllowedToRunCommand(event.getMember()))
             return new CommandResponse<>(NO_PERMISSIONS.build(), isOnlyEphemeral());
 
@@ -385,10 +376,13 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                 .addOption(OptionType.STRING, "prompt", "Describe a theme, style, or the specifics of what you want!", true);
         SubcommandData rename = new SubcommandData("rename", "Rename your preexisting server!")
                 .addOption(OptionType.STRING, "prompt", "Describe a theme, style, or the specifics of what you want!", true);
+        SlashCommandData cmdData = ((SlashCommandData) getJDACommandData(getCommandType(), getName(), getDescription()))
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                .addSubcommands(create, rename);
 
         jda
-                .upsertCommand(name, description)
-                .addSubcommands(create, rename)
+                .upsertCommand(cmdData)
                 .queue(r -> setCommandId(r.getIdLong()));
     }
 

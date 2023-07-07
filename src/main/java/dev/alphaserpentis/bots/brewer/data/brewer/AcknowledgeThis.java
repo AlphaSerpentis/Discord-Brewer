@@ -12,7 +12,7 @@ public record AcknowledgeThis(
         String title,
         String description,
         String footer,
-        String hexColor
+        String color
 ) {
     public enum Type {
         TOS,
@@ -32,7 +32,7 @@ public record AcknowledgeThis(
         eb.setTitle(title);
         eb.setDescription(description);
         eb.setFooter(footer);
-        eb.setColor(Color.decode(hexColor));
+        eb.setColor(Color.decode(color));
 
         return eb;
     }

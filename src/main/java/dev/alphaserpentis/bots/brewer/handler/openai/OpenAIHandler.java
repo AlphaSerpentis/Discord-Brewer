@@ -26,8 +26,8 @@ import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -108,25 +108,15 @@ public class OpenAIHandler {
 
     public static ChatCompletionResult getCompletion(@NonNull ChatMessage system, @NonNull String prompt) {
         ChatMessage message = new ChatMessage("user", prompt);
+        ChatCompletionRequest.ChatCompletionRequestBuilder builder = ChatCompletionRequest.builder()
+                .model(COMPLETION_MODEL)
+                .messages(List.of(system, message))
+                .temperature(0.8)
+                .presencePenalty(0.)
+                .frequencyPenalty(0.);
 
         return service.createChatCompletion(
-                new ChatCompletionRequest(
-                        COMPLETION_MODEL,
-                        new ArrayList<>() {{
-                            add(system);
-                            add(message);
-                        }},
-                        0.8,
-                        null,
-                        1,
-                        false,
-                        null,
-                        null,
-                        0.,
-                        0.,
-                        null,
-                        "BREWER"
-                )
+                builder.build()
         );
     }
 
