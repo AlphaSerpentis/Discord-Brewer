@@ -73,6 +73,7 @@ public class OpenAIHandler {
                     () -> {
                         try {
                             writeCachesToFile();
+                            checkCachesForExpired();
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -158,6 +159,34 @@ public class OpenAIHandler {
         );
     }
 
+    public static AudioTranslationResponse getAudioTranslation(@NonNull String audioUrl) {
+        String fileName = audioUrl.substring(audioUrl.lastIndexOf('/') + 1);
+        byte[] audioBytes;
+        String hash;
+        try {
+            audioBytes = AudioHandler.readUrlStream(audioUrl);
+            hash = AudioHandler.hashAudioBytes(audioBytes);
+        } catch (IOException | NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+
+        if(translationCache.containsKey(hash))
+            return new AudioTranslationResponse(translationCache.get(hash).content(), true);
+        else {
+            AudioTranslationResponse response = service.createAudioTranslation(
+                    new AudioTranslationRequest(
+                            "whisper-1",
+                            fileName,
+                            audioUrl,
+                            audioBytes
+                    )
+            );
+            translationCache.put(hash, new CachedAudio(Instant.now().getEpochSecond() + 172800, response.text()));
+
+            return response;
+        }
+    }
+
     public static AudioTranslationResponse getAudioTranslation(@NonNull byte[] audioBytes, @NonNull String name) {
         return service.createAudioTranslation(
                 new AudioTranslationRequest(
@@ -180,6 +209,12 @@ public class OpenAIHandler {
     private static void writeCachesToFile() throws IOException {
         Files.write(transcriptionCacheFile, new GsonBuilder().setPrettyPrinting().create().toJson(transcriptionCache).getBytes());
         Files.write(translationCacheFile, new GsonBuilder().setPrettyPrinting().create().toJson(translationCache).getBytes());
+    }
+
+    private static void checkCachesForExpired() {
+        long now = Instant.now().getEpochSecond();
+        transcriptionCache.entrySet().removeIf(entry -> entry.getValue().expirationTime() < now);
+        translationCache.entrySet().removeIf(entry -> entry.getValue().expirationTime() < now);
     }
 
     private static void writeFlaggedContentToDirectory(@NonNull FlaggedContent content) {

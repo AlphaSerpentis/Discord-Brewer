@@ -1,9 +1,12 @@
 package dev.alphaserpentis.bots.brewer.data.openai;
 
-public class AudioTranslationResponse {
-    private String text;
+import io.reactivex.rxjava3.annotations.NonNull;
 
-    public String getText() {
-        return text;
+public record AudioTranslationResponse(
+        @NonNull String text,
+        boolean isCached
+) {
+    public AudioTranslationResponse(@NonNull String text) {
+        this(text, false);
     }
 }

@@ -44,13 +44,15 @@ public class Launcher {
     private static void buildAndConfigureCore(@NonNull Dotenv dotenv) throws IOException {
         AboutInformation about = new AboutInformation(
                 """
-                Brewer is your open-source assistant, stirring up innovation in your Discord server with OpenAI's ChatGPT. Just prompt it, and watch as it brews new roles, categories, and channels, or even renames the existing ones!
+                Brew(r) is your open-source assistant, stirring up innovation in your Discord server with OpenAI's ChatGPT. Just prompt it, and watch as it brews new roles, categories, and channels, or even renames the existing ones!
                 
-                [**Invite Brewer to Your Server!**](https://brewr.ai/invite)
+                Now with transcription and translation abilities!
+                
+                [**Invite Brew(r) to Your Server!**](https://brewr.ai/invite)
                 [**GitHub**](https://github.com/AlphaSerpentis/Discord-Brewer)
                 [**Discord Server**](https://brewr.ai/discord)
                 """,
-                "asrp.dev/#bots",
+                "brewr.ai",
                 Color.ORANGE,
                 null,
                 true,
@@ -96,7 +98,9 @@ public class Launcher {
                 new Brew(),
                 new Vote(),
                 new Transcribe(),
-                new TranscribeContext()
+                new TranscribeContext(),
+                new Translate(),
+                new TranslateContext()
         );
     }
 

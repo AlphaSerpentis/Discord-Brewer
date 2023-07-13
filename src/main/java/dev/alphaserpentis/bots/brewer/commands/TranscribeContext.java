@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TranscribeContext extends BotCommand<MessageEmbed[], MessageContextInteractionEvent> implements AcknowledgeableCommand<MessageContextInteractionEvent> {
+public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextInteractionEvent> implements AcknowledgeableCommand<MessageContextInteractionEvent> {
 
     public TranscribeContext() {
         super(
@@ -28,16 +28,20 @@ public class TranscribeContext extends BotCommand<MessageEmbed[], MessageContext
                         .setCommandType(Command.Type.MESSAGE)
                         .setOnlyEmbed(true)
                         .setDeferReplies(true)
+                        .setRatelimitLength(60)
+                        .setUseRatelimits(true)
         );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @NonNull
-    public CommandResponse<MessageEmbed[]> runCommand(long userId, @NonNull MessageContextInteractionEvent event) {
+    public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull MessageContextInteractionEvent event) {
         MessageEmbed[] embedsArray;
         EmbedBuilder workingEmbed;
         List<Message.Attachment> attachments = tryToGetAudioFiles(event);
         StringBuilder description = new StringBuilder();
+        CommandResponse<MessageEmbed> rateLimitResponse;
 
         try {
             embedsArray = checkAndHandleAcknowledgement(event);
@@ -50,6 +54,12 @@ public class TranscribeContext extends BotCommand<MessageEmbed[], MessageContext
         } else {
             return new CommandResponse<>(isOnlyEphemeral(), embedsArray);
         }
+
+        // Check rate limit
+        rateLimitResponse = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
+
+        if(rateLimitResponse != null)
+            return rateLimitResponse;
 
         for(Message.Attachment attachment: attachments) {
             AudioTranscriptionResponse response = OpenAIHandler.getAudioTranscription(attachment.getUrl());

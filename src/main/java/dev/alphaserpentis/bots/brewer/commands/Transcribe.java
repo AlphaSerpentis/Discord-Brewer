@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent> {
+public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent> implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
 
     public Transcribe() {
         super(
@@ -35,6 +35,8 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
                         .setDescription("Transcribe audio!")
                         .setOnlyEmbed(true)
                         .setDeferReplies(true)
+                        .setRatelimitLength(60)
+                        .setUseRatelimits(true)
         );
 
         addButton("summarize", ButtonStyle.PRIMARY, "Summarize", false);
@@ -59,29 +61,51 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
         return List.of();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
-        EmbedBuilder eb = new EmbedBuilder();
+        MessageEmbed[] embedsArray;
+        EmbedBuilder workingEmbed;
+        CommandResponse<MessageEmbed> response;
 
-        eb.setTitle("Transcribe");
+        try {
+            embedsArray = checkAndHandleAcknowledgement(event);
+        } catch(IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        if(embedsArray == null) {
+            workingEmbed = new EmbedBuilder();
+        } else {
+            return new CommandResponse<>(isOnlyEphemeral(), embedsArray);
+        }
+
+        // Check rate limit
+        response = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
+
+        if(response != null)
+            return response;
+
+        workingEmbed.setTitle("Transcribe");
         if(event.getSubcommandName().equalsIgnoreCase("vc")) {
             try {
-                handleTranscribeVC(eb, event);
+//                handleTranscribeVC(eb, event);
+                workingEmbed.setDescription("VC transcription is currently not available. We'll update you when it is!");
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         } else if(event.getSubcommandName().equalsIgnoreCase("url")) {
-            handleTranscribeUrl(eb, event);
+            handleTranscribeUrl(workingEmbed, event);
         } else {
-            eb.setDescription("Invalid subcommand!");
+            workingEmbed.setDescription("Invalid subcommand!");
         }
 
-        return new CommandResponse<>(eb.build(), isOnlyEphemeral());
+        return new CommandResponse<>(workingEmbed.build(), isOnlyEphemeral());
     }
 
     @Override
     public void updateCommand(@NonNull JDA jda) {
-        SubcommandData vc = new SubcommandData("vc", "Join a VC and transcribe the conversations")
+        SubcommandData vc = new SubcommandData("vc", "(BETA) Join a VC and transcribe the conversations")
                 .addOption(OptionType.CHANNEL, "channel", "The channel to join", true)
                 .addOption(OptionType.INTEGER, "duration", "The duration to transcribe for (in seconds)", true);
         SubcommandData url = new SubcommandData("url", "Transcribe an audio file from a URL")

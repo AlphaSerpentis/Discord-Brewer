@@ -30,10 +30,11 @@ import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 
 import java.awt.*;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
-public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent> {
+public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent> implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
     private static final EmbedBuilder NO_PERMISSIONS = new EmbedBuilder()
             .setTitle("No Permissions")
             .setDescription("""
@@ -312,25 +313,38 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         final UserSession userSession = BrewHandler.getUserSession(event.getUser().getIdLong());
 
         if(userSession == null)
-            return new ArrayList<>();
+            return List.of();
         else if(event.getName().equals(getName()) && userSession.getInteractionToken().equals(event.getToken())) {
-            return new ArrayList<>() {{
-                add(getButton("brew"));
-                add(getButton("confirm"));
-                add(getButton("cancel"));
-            }};
+            return List.of(
+                    getButton("brew"),
+                    getButton("confirm"),
+                    getButton("cancel")
+            );
         }
 
-        return new ArrayList<>();
+        return List.of();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
-        EmbedBuilder eb = new EmbedBuilder();
+        MessageEmbed[] embedsArray;
+        EmbedBuilder workingEmbed;
         String prompt;
         CommandResponse<MessageEmbed> response;
+
+        try {
+            embedsArray = checkAndHandleAcknowledgement(event);
+        } catch(IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        if(embedsArray == null) {
+            workingEmbed = new EmbedBuilder();
+        } else {
+            return new CommandResponse<>(isOnlyEphemeral(), embedsArray);
+        }
 
         // Check rate limit
         response = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
@@ -351,23 +365,23 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
 
         try {
             switch(event.getSubcommandName()) {
-                case "create" -> BrewHandler.generateCreatePrompt(eb, prompt, event);
-                case "rename" -> BrewHandler.generateRenamePrompt(eb, prompt, event);
+                case "create" -> BrewHandler.generateCreatePrompt(workingEmbed, prompt, event);
+                case "rename" -> BrewHandler.generateRenamePrompt(workingEmbed, prompt, event);
             }
         } catch(GenerationException e) {
-            eb = new EmbedBuilder(GENERATING_ERROR);
-            eb.setDescription(String.format(GENERATING_ERROR.getDescriptionBuilder().toString(), e.getMessage()));
+            workingEmbed = new EmbedBuilder(GENERATING_ERROR);
+            workingEmbed.setDescription(String.format(GENERATING_ERROR.getDescriptionBuilder().toString(), e.getMessage()));
 
             BrewHandler.removeUserSession(userId);
             ratelimitMap.remove(userId);
-            return new CommandResponse<>(eb.build(), isOnlyEphemeral());
+            return new CommandResponse<>(workingEmbed.build(), isOnlyEphemeral());
         } catch(Exception e) {
             BrewHandler.removeUserSession(userId);
             ratelimitMap.remove(userId);
             throw e;
         }
 
-        return new CommandResponse<>(eb.build(), isOnlyEphemeral());
+        return new CommandResponse<>(workingEmbed.build(), isOnlyEphemeral());
     }
 
     @Override

@@ -112,4 +112,4 @@ There are two things that could have happened:
 
 ## Dependencies
 - Coffee Core (0.5.0-alpha)
-- OpenAI-Java Service (0.12.0)
+- OpenAI-Java Service (0.14.0)
