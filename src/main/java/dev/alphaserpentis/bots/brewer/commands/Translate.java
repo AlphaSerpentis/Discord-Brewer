@@ -1,6 +1,8 @@
 package dev.alphaserpentis.bots.brewer.commands;
 
+import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
 import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationResponse;
+import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.coffeecore.commands.ButtonCommand;
 import dev.alphaserpentis.coffeecore.data.bot.CommandResponse;
@@ -32,12 +34,20 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
                         .setUseRatelimits(true)
         );
 
-        addButton("summarize", ButtonStyle.PRIMARY, "Summarize", false);
+        addButton("acknowledge", ButtonStyle.SUCCESS, "Acknowledge", false);
+//        addButton("summarize", ButtonStyle.PRIMARY, "Summarize", false);
     }
 
     @Override
     public void runButtonInteraction(@NonNull ButtonInteractionEvent event) {
+        final String buttonId = event.getComponentId().substring(getName().length() + 1);
 
+        switch(buttonId) {
+            case "acknowledge" -> {
+
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + buttonId);
+        }
     }
 
     @Override
@@ -63,6 +73,7 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
         if(embedsArray == null) {
             workingEmbed = new EmbedBuilder();
         } else {
+            ratelimitMap.remove(userId);
             return new CommandResponse<>(isOnlyEphemeral(), embedsArray);
         }
 
@@ -89,7 +100,7 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
         jda
                 .upsertCommand(getName(), getDescription())
                 .addSubcommands(url)
-                .queue(r -> setCommandId(r.getIdLong()));
+                .queue(r -> setGlobalCommandId(r.getIdLong()));
     }
 
     private void handleTranslateUrl(@NonNull EmbedBuilder eb, @NonNull SlashCommandInteractionEvent event) {
@@ -102,5 +113,7 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
         }
 
         eb.setDescription(response.text());
+
+        AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.TRANSLATE_ATTACHMENT);
     }
 }

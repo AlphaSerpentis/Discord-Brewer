@@ -1,6 +1,8 @@
 package dev.alphaserpentis.bots.brewer.commands;
 
+import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
 import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionResponse;
+import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.CustomOpenAiService;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.coffeecore.commands.BotCommand;
@@ -52,6 +54,7 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
         if(embedsArray == null) {
             workingEmbed = new EmbedBuilder();
         } else {
+            ratelimitMap.remove(userId);
             return new CommandResponse<>(isOnlyEphemeral(), embedsArray);
         }
 
@@ -73,13 +76,15 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
             description.append(response.text()).append("\n\n");
             workingEmbed.setColor(Color.GREEN);
         }
-        if(description.length() == 0) {
+        if(description.isEmpty()) {
             description.append("No audio files found!");
             workingEmbed.setColor(Color.RED);
         }
 
         workingEmbed.setDescription(description.toString());
         workingEmbed.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
+
+        AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.TRANSLATE_ATTACHMENT);
 
         return new CommandResponse<>(isOnlyEphemeral(), workingEmbed.build());
     }
@@ -90,7 +95,7 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
 
         jda
                 .upsertCommand(cmdData)
-                .queue(r -> setCommandId(r.getIdLong()));
+                .queue(r -> setGlobalCommandId(r.getIdLong()));
     }
 
     @NonNull

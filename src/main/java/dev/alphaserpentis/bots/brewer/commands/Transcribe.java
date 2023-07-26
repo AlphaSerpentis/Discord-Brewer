@@ -1,6 +1,8 @@
 package dev.alphaserpentis.bots.brewer.commands;
 
 import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
+import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
+import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.bot.BrewerServerDataHandler;
 import dev.alphaserpentis.bots.brewer.handler.commands.audio.VoiceHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
@@ -77,6 +79,7 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
         if(embedsArray == null) {
             workingEmbed = new EmbedBuilder();
         } else {
+            ratelimitMap.remove(userId);
             return new CommandResponse<>(isOnlyEphemeral(), embedsArray);
         }
 
@@ -114,7 +117,7 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
         jda
                 .upsertCommand(getName(), getDescription())
                 .addSubcommands(vc, url)
-                .queue(r -> setCommandId(r.getIdLong()));
+                .queue(r -> setGlobalCommandId(r.getIdLong()));
     }
 
     private void handleTranscribeUrl(@NonNull EmbedBuilder eb, @NonNull SlashCommandInteractionEvent event) {
@@ -123,6 +126,8 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
                         event.getOption("url").getAsString()
                 ).text()
         );
+
+        AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.TRANSCRIBE_ATTACHMENT);
     }
 
     private void handleTranscribeVC(@NonNull EmbedBuilder eb, @NonNull SlashCommandInteractionEvent event) throws InterruptedException, IOException {
@@ -162,6 +167,8 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
                     }
                 }
             }
+
+            AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.TRANSCRIBE_VC);
         } catch(InsufficientPermissionException ignored) {
             eb.setDescription("I don't have permission to join that VC!");
             eb.setColor(Color.RED);

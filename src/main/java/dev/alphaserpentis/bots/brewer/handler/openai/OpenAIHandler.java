@@ -11,13 +11,12 @@ import com.theokanning.openai.moderation.ModerationRequest;
 import com.theokanning.openai.moderation.ModerationResult;
 import dev.alphaserpentis.bots.brewer.data.brewer.CachedAudio;
 import dev.alphaserpentis.bots.brewer.data.brewer.FlaggedContent;
-import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionRequest;
-import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionResponse;
-import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationRequest;
-import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationResponse;
+import dev.alphaserpentis.bots.brewer.data.openai.*;
 import dev.alphaserpentis.bots.brewer.handler.commands.audio.AudioHandler;
 import io.reactivex.rxjava3.annotations.NonNull;
 import okhttp3.OkHttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 
 import java.io.IOException;
@@ -36,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import static com.theokanning.openai.service.OpenAiService.*;
 
 public class OpenAIHandler {
+    private static final Logger logger = LoggerFactory.getLogger(OpenAIHandler.class);
     private static Path flaggedContentDirectory;
     private static Path transcriptionCacheFile;
     private static Path translationCacheFile;
@@ -51,7 +51,7 @@ public class OpenAIHandler {
     private static Map<String, CachedAudio> translationCache = new HashMap<>();
     private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     public static CustomOpenAiService service;
-    public static final String COMPLETION_MODEL = "gpt-3.5-turbo";
+    public static final String COMPLETION_MODEL = ChatCompletionModels.GPT_3_5_TURBO.getName();
 
     public static void init(
             @NonNull String apiKey,
@@ -75,7 +75,7 @@ public class OpenAIHandler {
                             writeCachesToFile();
                             checkCachesForExpired();
                         } catch (IOException e) {
-                            throw new RuntimeException(e);
+                            logger.error(e.getMessage(), e);
                         }
                     },
                     30,
@@ -83,7 +83,7 @@ public class OpenAIHandler {
                     TimeUnit.SECONDS
             );
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -129,6 +129,8 @@ public class OpenAIHandler {
             audioBytes = AudioHandler.readUrlStream(audioUrl);
             hash = AudioHandler.hashAudioBytes(audioBytes);
         } catch (IOException | NoSuchAlgorithmException e) {
+            logger.error(e.getMessage(), e);
+
             throw new RuntimeException(e);
         }
 
@@ -143,7 +145,10 @@ public class OpenAIHandler {
                             audioBytes
                     )
             );
-            transcriptionCache.put(hash, new CachedAudio(Instant.now().getEpochSecond() + 172800, response.text()));
+            transcriptionCache.put(
+                    hash,
+                    new CachedAudio(Instant.now().getEpochSecond() + 172800, response.text())
+            );
 
             return response;
         }
@@ -167,6 +172,8 @@ public class OpenAIHandler {
             audioBytes = AudioHandler.readUrlStream(audioUrl);
             hash = AudioHandler.hashAudioBytes(audioBytes);
         } catch (IOException | NoSuchAlgorithmException e) {
+            logger.error(e.getMessage(), e);
+
             throw new RuntimeException(e);
         }
 
@@ -181,7 +188,10 @@ public class OpenAIHandler {
                             audioBytes
                     )
             );
-            translationCache.put(hash, new CachedAudio(Instant.now().getEpochSecond() + 172800, response.text()));
+            translationCache.put(
+                    hash,
+                    new CachedAudio(Instant.now().getEpochSecond() + 172800, response.text())
+            );
 
             return response;
         }
@@ -207,8 +217,14 @@ public class OpenAIHandler {
     }
 
     private static void writeCachesToFile() throws IOException {
-        Files.write(transcriptionCacheFile, new GsonBuilder().setPrettyPrinting().create().toJson(transcriptionCache).getBytes());
-        Files.write(translationCacheFile, new GsonBuilder().setPrettyPrinting().create().toJson(translationCache).getBytes());
+        Files.write(
+                transcriptionCacheFile,
+                new GsonBuilder().setPrettyPrinting().create().toJson(transcriptionCache).getBytes()
+        );
+        Files.write(
+                translationCacheFile,
+                new GsonBuilder().setPrettyPrinting().create().toJson(translationCache).getBytes()
+        );
     }
 
     private static void checkCachesForExpired() {

@@ -1,15 +1,15 @@
 # Terms of Service for the Brewer Bot
 
-*Last Updated: June 11, 2023*
+*Last Updated: July 18, 2023*
 
 *Effective On: TBD*
 
 ---
 
 ## Terms of Service
-Thanks for reading the Terms of Service for Brewer!
+Thanks for reading the Terms of Service for Brew(r)!
 
-When we say "the bot", we are referring to the public Brewer bot.
+When we say "the bot", we are referring to the public Brew(r) bot.
 
 When we say "the service", we are referring to the bot and its related systems or networks.
 
@@ -19,10 +19,10 @@ When we say "you", "your", or "user", we are referring to you, the user of the b
 
 All users using the bot must abide by Discord's [Terms of Service](https://discord.com/terms) and [Community Guidelines](https://discord.com/guidelines), including OpenAI's [Usage Policies](https://openai.com/policies/usage-policies). You must also review the bot's [Privacy Policy](https://github.com/AlphaSerpentis/Discord-Brewer/blob/main/privacy.md).
 
-By using the Brewer bot, you agree to the following terms of service outlined in this document. If you do not agree to these terms, do not use the bot and remove the bot from your server(s). Violation of these terms may result in the termination of your access to the bot.
+By using the Brew(r) bot, you agree to the following terms of service outlined in this document. If you do not agree to these terms, do not use the bot and remove the bot from your server(s). Violation of these terms may result in the termination of your access to the bot.
 
 ## Self-Hosted Instances
-Self-hosted instances of Brewer are not bound by these Terms of Service.
+Self-hosted instances of Brew(r) are not bound by these Terms of Service.
 
 However, you must abide by Discord's [Terms of Service](https://discord.com/terms) and [Community Guidelines](https://discord.com/guidelines), OpenAI's [Usage Policies](https://openai.com/policies/usage-policies) and any applicable laws in your jurisdiction.
 
@@ -112,9 +112,10 @@ Data collected by the bot is used to provide its services and improve the bot. W
 Data pertaining to guilds are automatically deleted if the bot is removed from the server.
 
 Additionally, you may request for your data to be deleted by contacting us at [contact@alphaserpentis.dev](mailto:contact@alphaserpentis.dev). Please provide the following information in your request:
+- Your Discord ID (required to verify ownership)
 - User/Guild ID(s) to be deleted from our records
 
-We will notify you when we've completed your request. Do note that if the bot is still in your guild(s), some data will be recollected to keep serving your guild(s).
+We will notify you when we've completed your request. Do note that if the bot is still in your guild(s), some data will be recollected to keep serving your guild(s). If you wish to make this permanent, remove the bot from all your guilds prior to submitting the request.
 
 ## Contact Us
 

@@ -3,7 +3,6 @@ package dev.alphaserpentis.bots.brewer.handler.bot;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.reflect.TypeToken;
 import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
-import dev.alphaserpentis.bots.brewer.launcher.Launcher;
 import dev.alphaserpentis.coffeecore.handler.api.discord.servers.ServerDataHandler;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;

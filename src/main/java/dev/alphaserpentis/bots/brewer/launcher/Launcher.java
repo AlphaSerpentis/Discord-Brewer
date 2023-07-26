@@ -58,6 +58,7 @@ public class Launcher {
                 true,
                 true
         );
+
         CoffeeCoreBuilder<?> builder = new CoffeeCoreBuilder<>()
                 .setSettings(
                         new BotSettings(
@@ -124,21 +125,7 @@ public class Launcher {
     private static void setEnvAcknowledgementsBackToFalse() {
         try {
             FileReader fileReader = new FileReader(".env");
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-
-            List<String> lines = new ArrayList<>();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                if (line.startsWith("RESET_ACKNOWLEDGEMENT_TOS")) {
-                    lines.add("RESET_ACKNOWLEDGEMENT_TOS=false");
-                } else if (line.startsWith("RESET_ACKNOWLEDGEMENT_PRIVACY")) {
-                    lines.add("RESET_ACKNOWLEDGEMENT_PRIVACY=false");
-                } else if (line.startsWith("RESET_ACKNOWLEDGEMENT_UPDATES")) {
-                    lines.add("RESET_ACKNOWLEDGEMENT_UPDATES=false");
-                } else {
-                    lines.add(line);
-                }
-            }
+            List<String> lines = getLines(fileReader);
 
             fileReader.close();
 
@@ -156,5 +143,26 @@ public class Launcher {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static List<String> getLines(FileReader fileReader) throws IOException {
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+        List<String> lines = new ArrayList<>();
+        String line;
+
+        while ((line = bufferedReader.readLine()) != null) {
+            if (line.startsWith("RESET_ACKNOWLEDGEMENT_TOS")) {
+                lines.add("RESET_ACKNOWLEDGEMENT_TOS=false");
+            } else if (line.startsWith("RESET_ACKNOWLEDGEMENT_PRIVACY")) {
+                lines.add("RESET_ACKNOWLEDGEMENT_PRIVACY=false");
+            } else if (line.startsWith("RESET_ACKNOWLEDGEMENT_UPDATES")) {
+                lines.add("RESET_ACKNOWLEDGEMENT_UPDATES=false");
+            } else {
+                lines.add(line);
+            }
+        }
+
+        return lines;
     }
 }

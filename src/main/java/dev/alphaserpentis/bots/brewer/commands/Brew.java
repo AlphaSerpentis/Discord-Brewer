@@ -13,8 +13,8 @@ import dev.alphaserpentis.coffeecore.commands.ButtonCommand;
 import dev.alphaserpentis.coffeecore.data.bot.CommandResponse;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -82,7 +82,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             .setDescription("""
             Reverting the changes made to the server...
             
-            **This may take a while due to rate limits.**""")
+            **This may take a while due to Discord rate limits.**""")
             .setColor(Color.ORANGE);
     private static final EmbedBuilder POST_EXECUTION_NO_ERROR = new EmbedBuilder()
             .setTitle("Server Brewed Up!")
@@ -116,7 +116,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
 
     private final EmbedBuilder USER_SESSION_NOT_FOUND = new EmbedBuilder()
             .setTitle("User Session Not Found")
-            .setDescription("You do not have an active session. Run </brew server:" + getCommandId() + "> or </brew rename:" + getCommandId() + "> to start a new session.")
+            .setDescription("You do not have an active session. Run </brew create:%d> or </brew rename:%d> to start a new session.")
             .setColor(Color.RED);
 
     public Brew() {
@@ -145,165 +145,26 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         InteractionHook hook = event.deferEdit().complete();
 
         if(userSession == null) {
-            hook.editOriginalComponents().setEmbeds(USER_SESSION_NOT_FOUND.build()).queue();
+            EmbedBuilder eb = new EmbedBuilder(USER_SESSION_NOT_FOUND);
+
+            eb.setDescription(
+                    String.format(
+                            USER_SESSION_NOT_FOUND.getDescriptionBuilder().toString(),
+                            getGuildCommandId(event.getGuild()),
+                            getGuildCommandId(event.getGuild())
+                    )
+            );
+
+            hook.editOriginalComponents().setEmbeds(eb.build()).queue();
             return;
         }
 
         switch(buttonId) {
-            case "brew" -> {
-                ChatMessage chatMessage;
-                EmbedBuilder eb = new EmbedBuilder();
-
-                if(userSession.getType() == UserSession.UserSessionType.NEW_BREW) {
-                    chatMessage = Prompts.SETUP_SYSTEM_PROMPT_CREATE;
-                } else {
-                    chatMessage = Prompts.SETUP_SYSTEM_PROMPT_RENAME;
-                }
-
-                hook.editOriginalComponents()
-                        .setEmbeds(
-                                GENERATING_NEW_BREW.build()
-                        )
-                        .queue();
-
-                try {
-                    userSession.setActionsToExecute(
-                            BrewHandler.generateActions(
-                                    chatMessage,
-                                    userSession.getPrompt(),
-                                    userSession.getAction()
-                            )
-                    );
-                } catch(JsonSyntaxException e) {
-                    eb = new EmbedBuilder(GENERATING_ERROR);
-                    eb.setDescription(String.format(GENERATING_ERROR.getDescriptionBuilder().toString(), e.getMessage()));
-
-                    hook
-                            .editOriginalComponents()
-                            .setEmbeds(eb.build())
-                            .setActionRow(
-                                    getButton("brew")
-                            )
-                            .queue();
-                }
-
-                BrewHandler.previewChangesPage(eb, userSession.getActionsToExecute());
-
-                if(userSession.getBrewCount() == 3) {
-                    userSession.setBrewCount((short) (userSession.getBrewCount() + 1));
-
-                    hook
-                            .editOriginalComponents()
-                            .setEmbeds(eb.build())
-                            .setActionRow(
-                                    getButton("confirm"),
-                                    getButton("cancel")
-                            )
-                            .queue();
-                } else {
-                    hook
-                            .editOriginalComponents()
-                            .setEmbeds(eb.build())
-                            .setActionRow(
-                                    getButton("brew"),
-                                    getButton("confirm"),
-                                    getButton("cancel")
-                            )
-                            .queue();
-                }
-
-            }
-            case "confirm" -> {
-                hook.editOriginalComponents().setEmbeds(BREWING_UP.build()).complete();
-
-                Interpreter.InterpreterResult result = Interpreter.interpretAndExecute(
-                        userSession.getActionsToExecute(),
-                        userSession.getAction(),
-                        event.getGuild()
-                );
-
-                userSession.setInterpreterResult(result);
-
-                try {
-                    if(result.completeSuccess()) {
-                        EmbedBuilder eb = new EmbedBuilder(POST_EXECUTION_NO_ERROR);
-
-                        if(!VoteHandler.isUserInRemindedMap(event.getUser().getIdLong())) {
-                            long voteCommandId = core.getCommandsHandler().getCommand("vote").getCommandId();
-
-                            eb.setDescription(
-                                    String.format(
-                                            POST_EXECUTION_NO_ERROR.getDescriptionBuilder().toString(),
-                                            "\n\nIf you're enjoying the bot, do please vote for Brewer! You can do so by clicking [here](https://top.gg/bot/819650039680575488/vote) or by running </vote:" + voteCommandId + ">."
-                                    )
-                            );
-
-                            VoteHandler.addUserToRemindedMap(event.getUser().getIdLong());
-                        }
-
-                        hook.editOriginalEmbeds(
-                                eb.build()
-                        ).setActionRow(
-                                getButton("revert")
-                        ).queue();
-                    } else {
-                        String errorMessages = String.join("\n", result.messages());
-                        EmbedBuilder eb = new EmbedBuilder(POST_EXECUTION_ERROR);
-
-                        MessageEmbed errorEmbed = eb
-                                .setDescription(
-                                        String.format(
-                                                POST_EXECUTION_ERROR.getDescriptionBuilder().toString(),
-                                                errorMessages
-                                        )
-                                )
-                                .build();
-
-                        hook.editOriginalEmbeds(
-                                errorEmbed
-                        ).setActionRow(
-                                getButton("revert")
-                        ).queue();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-
-                    BrewHandler.removeUserSession(event.getUser().getIdLong());
-                }
-            }
-            case "cancel" -> {
-                hook.editOriginalComponents().setEmbeds(CANCELLED.build()).queue();
-                BrewHandler.removeUserSession(event.getUser().getIdLong());
-            }
-            case "revert" -> {
-                hook.editOriginalComponents().setEmbeds(REVERTING.build()).complete();
-
-                Interpreter.InterpreterResult result = Interpreter.deleteAllChanges(userSession);
-
-                if(result.completeSuccess()) {
-                    hook.editOriginalEmbeds(
-                            REVERTED_NO_ERROR.build()
-                    ).queue();
-                } else {
-                    String errorMessages = String.join("\n", result.messages());
-                    EmbedBuilder eb = new EmbedBuilder(REVERTED_ERROR);
-
-                    MessageEmbed errorEmbed = eb
-                            .setDescription(
-                                    String.format(
-                                            REVERTED_ERROR.getDescriptionBuilder().toString(),
-                                            errorMessages
-                                    )
-                            )
-                            .build();
-
-                    hook.editOriginalEmbeds(
-                            errorEmbed
-                    ).queue();
-                }
-
-                BrewHandler.removeUserSession(event.getUser().getIdLong());
-            }
+            case "brew" -> onBrewButtonClick(userSession, hook);
+            case "confirm" -> onConfirmButtonClick(userSession, hook, event);
+            case "cancel" -> onCancelButtonClick(hook, event);
+            case "revert" -> onRevertButtonClick(userSession, hook, event);
+            default -> throw new IllegalStateException("Unexpected value: " + buttonId);
         }
     }
 
@@ -343,6 +204,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         if(embedsArray == null) {
             workingEmbed = new EmbedBuilder();
         } else {
+            ratelimitMap.remove(userId);
             return new CommandResponse<>(isOnlyEphemeral(), embedsArray);
         }
 
@@ -374,10 +236,12 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
 
             BrewHandler.removeUserSession(userId);
             ratelimitMap.remove(userId);
+
             return new CommandResponse<>(workingEmbed.build(), isOnlyEphemeral());
         } catch(Exception e) {
             BrewHandler.removeUserSession(userId);
             ratelimitMap.remove(userId);
+
             throw e;
         }
 
@@ -385,7 +249,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
     }
 
     @Override
-    public void updateCommand(@NonNull JDA jda) {
+    public void updateCommand(@NonNull Guild guild) {
         SubcommandData create = new SubcommandData("create", "Create new roles/categories/channels with a prompt!")
                 .addOption(OptionType.STRING, "prompt", "Describe a theme, style, or the specifics of what you want!", true);
         SubcommandData rename = new SubcommandData("rename", "Rename your preexisting server!")
@@ -395,12 +259,181 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                 .addSubcommands(create, rename);
 
-        jda
+        guild
                 .upsertCommand(cmdData)
-                .queue(r -> setCommandId(r.getIdLong()));
+                .queue();
     }
 
     private boolean isUserAllowedToRunCommand(@NonNull Member member) {
         return member.hasPermission(Permission.ADMINISTRATOR);
+    }
+
+    private void onBrewButtonClick(
+            @NonNull UserSession userSession,
+            @NonNull InteractionHook hook
+    ) {
+        ChatMessage chatMessage;
+        EmbedBuilder eb = new EmbedBuilder();
+
+        if(userSession.getType() == UserSession.UserSessionType.NEW_BREW) {
+            chatMessage = Prompts.SETUP_SYSTEM_PROMPT_CREATE;
+        } else {
+            chatMessage = Prompts.SETUP_SYSTEM_PROMPT_RENAME;
+        }
+
+        hook.editOriginalComponents()
+                .setEmbeds(
+                        GENERATING_NEW_BREW.build()
+                )
+                .queue();
+
+        try {
+            userSession.setActionsToExecute(
+                    BrewHandler.generateActions(
+                            chatMessage,
+                            userSession.getPrompt(),
+                            userSession.getAction()
+                    )
+            );
+        } catch(JsonSyntaxException e) {
+            eb = new EmbedBuilder(GENERATING_ERROR);
+            eb.setDescription(String.format(GENERATING_ERROR.getDescriptionBuilder().toString(), e.getMessage()));
+
+            hook
+                    .editOriginalComponents()
+                    .setEmbeds(eb.build())
+                    .setActionRow(
+                            getButton("brew")
+                    )
+                    .queue();
+        }
+
+        BrewHandler.previewChangesPage(eb, userSession.getActionsToExecute());
+
+        if(userSession.getBrewCount() == 3) {
+            hook
+                    .editOriginalComponents()
+                    .setEmbeds(eb.build())
+                    .setActionRow(
+                            getButton("confirm"),
+                            getButton("cancel")
+                    )
+                    .queue();
+        } else {
+            hook
+                    .editOriginalComponents()
+                    .setEmbeds(eb.build())
+                    .setActionRow(
+                            getButton("brew"),
+                            getButton("confirm"),
+                            getButton("cancel")
+                    )
+                    .queue();
+        }
+
+        userSession.setBrewCount((short) (userSession.getBrewCount() + 1));
+    }
+
+    private void onConfirmButtonClick(
+            @NonNull UserSession userSession,
+            @NonNull InteractionHook hook,
+            @NonNull ButtonInteractionEvent event
+    ) {
+        hook.editOriginalComponents().setEmbeds(BREWING_UP.build()).complete();
+
+        Interpreter.InterpreterResult result = Interpreter.interpretAndExecute(
+                userSession.getActionsToExecute(),
+                userSession.getAction(),
+                event.getGuild()
+        );
+
+        userSession.setInterpreterResult(result);
+
+        try {
+            if(result.completeSuccess()) {
+                EmbedBuilder eb = new EmbedBuilder(POST_EXECUTION_NO_ERROR);
+
+                if(!VoteHandler.isUserInRemindedMap(event.getUser().getIdLong())) {
+                    long voteCommandId = core.getCommandsHandler().getCommand("vote").getGlobalCommandId();
+
+                    eb.setDescription(
+                            String.format(
+                                    POST_EXECUTION_NO_ERROR.getDescriptionBuilder().toString(),
+                                    "\n\nIf you're enjoying the bot, do please vote for Brewer! You can do so by clicking [here](https://top.gg/bot/819650039680575488/vote) or by running </vote:" + voteCommandId + ">."
+                            )
+                    );
+
+                    VoteHandler.addUserToRemindedMap(event.getUser().getIdLong());
+                }
+
+                hook.editOriginalEmbeds(
+                        eb.build()
+                ).setActionRow(
+                        getButton("revert")
+                ).queue();
+            } else {
+                String errorMessages = String.join("\n", result.messages());
+                EmbedBuilder eb = new EmbedBuilder(POST_EXECUTION_ERROR);
+
+                MessageEmbed errorEmbed = eb
+                        .setDescription(
+                                String.format(
+                                        POST_EXECUTION_ERROR.getDescriptionBuilder().toString(),
+                                        errorMessages
+                                )
+                        )
+                        .build();
+
+                hook.editOriginalEmbeds(
+                        errorEmbed
+                ).setActionRow(
+                        getButton("revert")
+                ).queue();
+            }
+        } catch (Exception ignored) {
+            BrewHandler.removeUserSession(event.getUser().getIdLong());
+        }
+    }
+
+    private void onCancelButtonClick(
+            @NonNull InteractionHook hook,
+            @NonNull ButtonInteractionEvent event
+    ) {
+        hook.editOriginalComponents().setEmbeds(CANCELLED.build()).queue();
+        BrewHandler.removeUserSession(event.getUser().getIdLong());
+    }
+
+    private void onRevertButtonClick(
+            @NonNull UserSession userSession,
+            @NonNull InteractionHook hook,
+            @NonNull ButtonInteractionEvent event
+    ) {
+        hook.editOriginalComponents().setEmbeds(REVERTING.build()).complete();
+
+        Interpreter.InterpreterResult result = Interpreter.deleteAllChanges(userSession);
+
+        if(result.completeSuccess()) {
+            hook.editOriginalEmbeds(
+                    REVERTED_NO_ERROR.build()
+            ).queue();
+        } else {
+            String errorMessages = String.join("\n", result.messages());
+            EmbedBuilder eb = new EmbedBuilder(REVERTED_ERROR);
+
+            MessageEmbed errorEmbed = eb
+                    .setDescription(
+                            String.format(
+                                    REVERTED_ERROR.getDescriptionBuilder().toString(),
+                                    errorMessages
+                            )
+                    )
+                    .build();
+
+            hook.editOriginalEmbeds(
+                    errorEmbed
+            ).queue();
+        }
+
+        BrewHandler.removeUserSession(event.getUser().getIdLong());
     }
 }

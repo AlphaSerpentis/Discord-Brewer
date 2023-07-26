@@ -29,13 +29,27 @@ public class Interpreter {
             @Nullable ArrayList<Role> roles,
             @Nullable OriginalState originalState
     ) {
-        public InterpreterResult(boolean completeSuccess, @Nullable ArrayList<String> messages) {
+        public InterpreterResult(
+                boolean completeSuccess,
+                @Nullable ArrayList<String> messages
+        ) {
             this(completeSuccess, messages, null, null, null);
         }
-        public InterpreterResult(boolean completeSuccess, @Nullable ArrayList<String> messages, @Nullable ArrayList<GuildChannel> channels, @Nullable ArrayList<Role> roles) {
+
+        public InterpreterResult(
+                boolean completeSuccess,
+                @Nullable ArrayList<String> messages,
+                @Nullable ArrayList<GuildChannel> channels,
+                @Nullable ArrayList<Role> roles
+        ) {
             this(completeSuccess, messages, channels, roles, null);
         }
-        public InterpreterResult(boolean completeSuccess, @Nullable ArrayList<String> messages, @NonNull OriginalState originalState) {
+
+        public InterpreterResult(
+                boolean completeSuccess,
+                @Nullable ArrayList<String> messages,
+                @NonNull OriginalState originalState
+        ) {
             this(completeSuccess, messages, null, null, originalState);
         }
     }
@@ -174,6 +188,7 @@ public class Interpreter {
         if(action == ParseActions.ValidAction.CREATE) {
             ArrayList<GuildChannel> channels = session.getInterpreterResult().channels();
             ArrayList<Role> roles = session.getInterpreterResult().roles();
+
             for(GuildChannel channel: channels) {
                 try {
                     channel.delete().completeAfter(1, TimeUnit.SECONDS);
@@ -190,7 +205,7 @@ public class Interpreter {
             }
 
             return new InterpreterResult(
-                    messages.size() == 0,
+                    messages.isEmpty(),
                     null,
                     null,
                     null,
@@ -210,8 +225,12 @@ public class Interpreter {
             for(long categoryId: originalState.originalCategoryData().keySet()) {
                 try {
                     Category category = guild.getCategoryById(categoryId);
+
                     if(category == null) throw new Exception("Category not found. Category ID: " + categoryId);
-                    category.getManager().setName(originalState.originalCategoryData().get(categoryId).get("name")).completeAfter(1, TimeUnit.SECONDS);
+
+                    category.getManager().setName(
+                            originalState.originalCategoryData().get(categoryId).get("name")
+                    ).completeAfter(1, TimeUnit.SECONDS);
                 } catch (Exception e) {
                     messages.add(e.getMessage());
                 }
@@ -219,9 +238,16 @@ public class Interpreter {
             for(long textChannelId: originalState.originalTextChannelData().keySet()) {
                 try {
                     TextChannel channel = guild.getTextChannelById(textChannelId);
+
                     if(channel == null) throw new Exception("Text channel not found. Text channel ID: " + textChannelId);
-                    channel.getManager().setName(originalState.originalTextChannelData().get(textChannelId).get("name")).completeAfter(1, TimeUnit.SECONDS);
-                    channel.getManager().setTopic(originalState.originalTextChannelData().get(textChannelId).get("desc")).completeAfter(1, TimeUnit.SECONDS);
+
+                    channel.getManager().setName(
+                            originalState.originalTextChannelData().get(textChannelId).get("name")
+                    ).completeAfter(1, TimeUnit.SECONDS);
+
+                    channel.getManager().setTopic(
+                            originalState.originalTextChannelData().get(textChannelId).get("desc")
+                    ).completeAfter(1, TimeUnit.SECONDS);
                 } catch (Exception e) {
                     messages.add(e.getMessage());
                 }
@@ -229,8 +255,12 @@ public class Interpreter {
             for(long voiceChannelId: originalState.originalVoiceChannelData().keySet()) {
                 try {
                     VoiceChannel channel = guild.getVoiceChannelById(voiceChannelId);
+
                     if(channel == null) throw new Exception("Voice channel not found. Voice channel ID: " + voiceChannelId);
-                    channel.getManager().setName(originalState.originalVoiceChannelData().get(voiceChannelId).get("name")).completeAfter(1, TimeUnit.SECONDS);
+
+                    channel.getManager().setName(
+                            originalState.originalVoiceChannelData().get(voiceChannelId).get("name")
+                    ).completeAfter(1, TimeUnit.SECONDS);
                 } catch (Exception e) {
                     messages.add(e.getMessage());
                 }
@@ -239,15 +269,21 @@ public class Interpreter {
                 try {
                     Role role = guild.getRoleById(roleId);
                     if(role == null) throw new Exception("Role not found. Role ID: " + roleId);
-                    role.getManager().setName(originalState.originalRoleData().get(roleId).get("name")).completeAfter(1, TimeUnit.SECONDS);
-                    role.getManager().setColor(Color.decode(originalState.originalRoleData().get(roleId).get("color"))).completeAfter(1, TimeUnit.SECONDS);
+
+                    role.getManager().setName(
+                            originalState.originalRoleData().get(roleId).get("name")
+                    ).completeAfter(1, TimeUnit.SECONDS);
+
+                    role.getManager().setColor(
+                            Color.decode(originalState.originalRoleData().get(roleId).get("color"))
+                    ).completeAfter(1, TimeUnit.SECONDS);
                 } catch (Exception e) {
                     messages.add(e.getMessage());
                 }
             }
 
             return new InterpreterResult(
-                    messages.size() == 0,
+                    messages.isEmpty(),
                     messages
             );
         }
@@ -280,7 +316,7 @@ public class Interpreter {
                                 .setAllowed(Long.parseLong(perm.allow()))
                                 .setDenied(Long.parseLong(perm.deny()))
                                 .completeAfter(1, TimeUnit.SECONDS);
-                    } else if(roles.size() > 0) {
+                    } else if(!roles.isEmpty()) {
                         Role role = roles.get(0);
                         category.upsertPermissionOverride(role)
                                 .setAllowed(Long.parseLong(perm.allow()))
@@ -329,7 +365,7 @@ public class Interpreter {
                                 .setAllowed(Long.parseLong(allowed))
                                 .setDenied(Long.parseLong(denied))
                                 .completeAfter(1, TimeUnit.SECONDS);
-                    } else if(roles.size() > 0) {
+                    } else if(!roles.isEmpty()) {
                         Role role = roles.get(0);
                         channel.upsertPermissionOverride(role)
                                 .setAllowed(Long.parseLong(allowed))
@@ -345,7 +381,7 @@ public class Interpreter {
                 List<Category> categories = guild.getCategoriesByName(action.data().get(CATEGORY).toString(), true);
                 Category category;
 
-                if(categories.size() > 0) {
+                if(!categories.isEmpty()) {
                     category = guild.getCategoriesByName(action.data().get(CATEGORY).toString(), true).get(0);
                 } else {
                     return channel;
@@ -395,7 +431,7 @@ public class Interpreter {
                                 .setAllowed(Long.parseLong(allowed))
                                 .setDenied(Long.parseLong(denied))
                                 .completeAfter(1, TimeUnit.SECONDS);
-                    } else if(roles.size() > 0) {
+                    } else if(!roles.isEmpty()) {
                         Role role = roles.get(0);
                         channel.upsertPermissionOverride(role)
                                 .setAllowed(Long.parseLong(allowed))
@@ -411,7 +447,7 @@ public class Interpreter {
                 List<Category> categories = guild.getCategoriesByName(action.data().get(CATEGORY).toString(), true);
                 Category category;
 
-                if(categories.size() > 0) {
+                if(!categories.isEmpty()) {
                     category = guild.getCategoriesByName(action.data().get(CATEGORY).toString(), true).get(0);
                 } else {
                     return channel;

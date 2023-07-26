@@ -6,10 +6,12 @@ import com.google.gson.JsonSyntaxException;
 import com.theokanning.openai.OpenAiHttpException;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
+import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
 import dev.alphaserpentis.bots.brewer.data.discord.DiscordConfig;
 import dev.alphaserpentis.bots.brewer.data.openai.Prompts;
 import dev.alphaserpentis.bots.brewer.data.brewer.UserSession;
 import dev.alphaserpentis.bots.brewer.exception.GenerationException;
+import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.bots.brewer.handler.parser.ParseActions;
 import dev.alphaserpentis.bots.brewer.launcher.Launcher;
@@ -45,6 +47,8 @@ public class BrewHandler {
         ArrayList<ParseActions.ExecutableAction> actions;
         UserSession session;
 
+        AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.CREATE);
+
         try {
             actions = generateActions(
                     Prompts.SETUP_SYSTEM_PROMPT_CREATE,
@@ -62,8 +66,7 @@ public class BrewHandler {
                 prompt,
                 UserSession.UserSessionType.NEW_BREW,
                 ParseActions.ValidAction.CREATE,
-                actions,
-                (short) 0
+                actions
         );
         session
                 .setJDA(event.getJDA())
@@ -77,9 +80,13 @@ public class BrewHandler {
             @NonNull String prompt,
             @NonNull SlashCommandInteractionEvent event
     ) {
-        boolean allowNsfwChannelRenames = ((BrewerServerData) Launcher.core.getServerDataHandler().getServerData(event.getGuild().getIdLong())).getTryRenamingNsfwChannels();
+        boolean allowNsfwChannelRenames = (
+                (BrewerServerData) Launcher.core.getServerDataHandler().getServerData(event.getGuild().getIdLong())
+        ).getTryRenamingNsfwChannels();
         ArrayList<ParseActions.ExecutableAction> actions;
         UserSession session;
+
+        AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.RENAME);
 
         try {
             actions = generateActions(
@@ -99,8 +106,7 @@ public class BrewHandler {
                 prompt,
                 UserSession.UserSessionType.RENAME,
                 ParseActions.ValidAction.EDIT,
-                actions,
-                (short) 0
+                actions
         );
         session
                 .setJDA(event.getJDA())
@@ -134,7 +140,10 @@ public class BrewHandler {
         return actions;
     }
 
-    public static void previewChangesPage(@NonNull EmbedBuilder eb, @NonNull ArrayList<ParseActions.ExecutableAction> actions) {
+    public static void previewChangesPage(
+            @NonNull EmbedBuilder eb,
+            @NonNull ArrayList<ParseActions.ExecutableAction> actions
+    ) {
         final String TOO_LONG = "... (too long to show)";
         String categoriesVal, channelsVal, rolesVal;
 
@@ -155,7 +164,7 @@ public class BrewHandler {
         ).map(
                 BrewHandler::generateReadablePreview
         ).reduce(
-                (a, b) -> String.format("- %s\n%s", a, b)
+                (a, b) -> String.format("%s%s", a, b)
         ).orElse("No changes");
 
         eb.addField(
@@ -171,7 +180,7 @@ public class BrewHandler {
         ).map(
                 BrewHandler::generateReadablePreview
         ).reduce(
-                (a, b) -> String.format("- %s\n%s", a, b)
+                (a, b) -> String.format("%s%s", a, b)
         ).orElse("No changes");
 
         eb.addField(
@@ -186,7 +195,7 @@ public class BrewHandler {
         ).map(
                 BrewHandler::generateReadablePreview
         ).reduce(
-                (a, b) -> String.format("- %s\n%s", a, b)
+                (a, b) -> String.format("%s%s", a, b)
         ).orElse("No changes");
 
         eb.addField(
@@ -197,22 +206,7 @@ public class BrewHandler {
     }
 
     private static String generateReadablePreview(@NonNull ParseActions.ExecutableAction action) {
-        StringBuilder readableData = new StringBuilder();
-
-        for(Map.Entry<ParseActions.ValidDataNames, Object> entry : action.data().entrySet()) {
-            if(
-                    entry.getKey() == ParseActions.ValidDataNames.NAME
-                            || entry.getKey() == ParseActions.ValidDataNames.PERMISSIONS
-                            || entry.getValue().equals("")
-            )
-                continue;
-
-            readableData.append(String.format(
-                    " - **%s**: %s",
-                    entry.getKey().readable,
-                    entry.getValue()
-            ));
-        }
+        StringBuilder readableData = getData(action);
 
         if(action.action() == ParseActions.ValidAction.CREATE) {
             return String.format(
@@ -232,7 +226,31 @@ public class BrewHandler {
         }
     }
 
-    private static DiscordConfig getGuildData(@NonNull Guild guild, @NonNull String prompt, boolean getNsfwChannels) {
+    private static StringBuilder getData(ParseActions.ExecutableAction action) {
+        StringBuilder readableData = new StringBuilder();
+
+        for(Map.Entry<ParseActions.ValidDataNames, ?> entry : action.data().entrySet()) {
+            if(
+                    entry.getKey() == ParseActions.ValidDataNames.NAME
+                            || entry.getKey() == ParseActions.ValidDataNames.PERMISSIONS
+                            || entry.getValue().equals("")
+            )
+                continue;
+
+            readableData.append(String.format(
+                    " - **%s**: %s\n",
+                    entry.getKey().readable,
+                    entry.getValue()
+            ));
+        }
+        return readableData;
+    }
+
+    private static DiscordConfig getGuildData(
+            @NonNull Guild guild,
+            @NonNull String prompt,
+            boolean getNsfwChannels
+    ) {
         HashMap<String, DiscordConfig.ConfigItem> categories = new HashMap<>();
         HashMap<String, DiscordConfig.ConfigItem> channels = new HashMap<>();
         HashMap<String, DiscordConfig.ConfigItem> roles = new HashMap<>();

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.alphaserpentis.bots.brewer.data.brewer.Analytics;
 import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
+import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
 import dev.alphaserpentis.bots.brewer.launcher.Launcher;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.entities.Guild;
@@ -43,6 +44,17 @@ public class AnalyticsHandler {
                 generateAnalytics(guild.getIdLong());
             }
         });
+    }
+
+    public static void addUsage(long guildId, @NonNull ServiceType type) {
+        if(serverAnalytics.get(guildId) == null) {
+            generateAnalytics(guildId);
+        }
+
+        Analytics analytics = serverAnalytics.get(guildId);
+
+        analytics.getUsagePerServiceType().putIfAbsent(type, 0);
+        analytics.getUsagePerServiceType().put(type, analytics.getUsagePerServiceType().get(type) + 1);
     }
 
     public static void generateAnalytics(long guildId) {

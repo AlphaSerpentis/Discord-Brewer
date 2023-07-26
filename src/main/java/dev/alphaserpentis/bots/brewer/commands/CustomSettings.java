@@ -55,13 +55,9 @@ public class CustomSettings extends Settings {
                             eb.setDescription(NO_PERMISSIONS);
                         }
                     }
-                    case "opt-out-transcriptions" -> {
-                        if(isUserPermissioned(event.getMember())) {
-                            setUserDisallowVCTranscriptions(event.getGuild().getIdLong(), event.getMember().getIdLong(), eb);
-                        } else {
-                            eb.setDescription(NO_PERMISSIONS);
-                        }
-                    }
+                    case "opt-out-vc" -> setUserDisallowVCListening(
+                            event.getGuild().getIdLong(), event.getMember().getIdLong(), eb
+                    );
                     case "rename-nsfw-channels" -> {
                         if(isUserPermissioned(event.getMember())) {
                             setTryRenamingNsfwChannels(event.getGuild().getIdLong(), eb);
@@ -69,6 +65,7 @@ public class CustomSettings extends Settings {
                             eb.setDescription(NO_PERMISSIONS);
                         }
                     }
+                    default -> eb.setDescription("Invalid subcommand.");
                 }
             } catch(IOException e) {
                 eb.setColor(Color.RED);
@@ -90,8 +87,8 @@ public class CustomSettings extends Settings {
                 "Toggle to opt out of analytics for this server"
         );
         SubcommandData optOutOfTranscriptions = new SubcommandData(
-                "opt-out-transcriptions",
-                "(USER ONLY) Toggle to opt out of transcriptions for this server"
+                "opt-out-vc",
+                "(USER ONLY) Toggle to opt out of VC listening for this server"
         );
         SubcommandData tryRenamingNsfwChannels = new SubcommandData(
                 "rename-nsfw-channels",
@@ -100,7 +97,7 @@ public class CustomSettings extends Settings {
         jda.upsertCommand(name, description).addSubcommands(
                 ephemeral, optOutOfAnalytics, optOutOfTranscriptions, tryRenamingNsfwChannels
         ).queue(
-                (cmd) -> setCommandId(cmd.getIdLong())
+                (cmd) -> setGlobalCommandId(cmd.getIdLong())
         );
     }
 
@@ -117,6 +114,7 @@ public class CustomSettings extends Settings {
 
         sdh.updateServerData();
     }
+
     private void setServerWideOptOutOfAnalytics(long guildId, @NonNull EmbedBuilder eb) throws IOException {
         BrewerServerDataHandler sdh = (BrewerServerDataHandler) core.getServerDataHandler();
         BrewerServerData sd = sdh.getServerData(guildId);
@@ -146,7 +144,7 @@ public class CustomSettings extends Settings {
         """.formatted(!currentSetting ? "enabled" : "disabled"));
     }
 
-    private void setUserDisallowVCTranscriptions(long guildId, long userId, @NonNull EmbedBuilder eb) throws IOException {
+    private void setUserDisallowVCListening(long guildId, long userId, @NonNull EmbedBuilder eb) throws IOException {
         BrewerServerDataHandler sdh = (BrewerServerDataHandler) core.getServerDataHandler();
         BrewerServerData sd = sdh.getServerData(guildId);
         boolean isUserOptedOut = sd.isUserOptedOutOfVCTranscription(userId);

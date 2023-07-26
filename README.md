@@ -4,11 +4,11 @@
 
 ---
 
-## About Brewer ☕️
+## About Brew(r) ☕️
 
 Revolutionize your Discord server with Brewer, a dynamic bot leveraging the power of OpenAI's ChatGPT to breathe new life into your roles, categories, and channels!
 
-At its core, Brewer operates with ChatGPT 3.5-turbo, with potential upgrades on the horizon.
+At its core, Brew(r)'s powered by OpenAI.
 
 **Developed using [Coffee Core](https://github.com/AlphaSerpentis/CoffeeCore), a robust Java Discord bot framework!**
 
@@ -17,6 +17,7 @@ At its core, Brewer operates with ChatGPT 3.5-turbo, with potential upgrades on 
 - **Prompt-based Generation**: Create fresh roles, categories, and channels, complete with permissions - all stemming from your creative prompts.
 - **Easy Renaming**: Redefine existing roles, categories, and channels based on new prompts for a quick server makeover.
 - **Change Control**: Not quite feeling the latest changes? You can easily revert any recent modifications to your server.
+- **Speech-to-Text**: Brew(r) is equipped with speech-to-text capabilities, enabling transcription and translation of attachments/URLs.
 
 ## Inviting the Bot
 
@@ -97,10 +98,10 @@ Please send them my way by either going to our [Discord server][discord-invite] 
 If you ran the command recently, click on the **Revert** button that appears on the last message sent by the bot. This will revert all changes made by the bot.
 
 #### The permissions are wrong/don't make sense!
-Brewer might skip the permissions creation process if it is unable to add them (e.g., insufficient permissions). If it does add them, it might not be up-to-date with current available permissions. Due to the nature of ChatGPT 3.5 Turbo (the model Brewer will use by default), it may not generate accurate permissions. This is a known issue and will be tweaked over time.
+Brew(r) might skip the permissions creation process if it is unable to add them (e.g., insufficient permissions). If it does add them, it might not be up-to-date with current available permissions. Due to the nature of ChatGPT 3.5 Turbo (the model Brew(r) will use by default), it may not generate accurate permissions. This is a known issue and will be tweaked over time.
 
 #### Brewer didn't rename my NSFW channels?
-Brewer by default will not rename NSFW channels due to OpenAI's restrictions.
+Brew(r) by default will not rename NSFW channels due to OpenAI's restrictions.
 
 An option will be available to try to rename NSFW channels in the future.
 

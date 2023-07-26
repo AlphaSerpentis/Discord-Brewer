@@ -28,14 +28,13 @@ public class UserSession {
             @NonNull String prompt,
             @NonNull UserSessionType type,
             @NonNull ParseActions.ValidAction action,
-            @NonNull ArrayList<ParseActions.ExecutableAction> actionsToExecute,
-            short brewCount
+            @NonNull ArrayList<ParseActions.ExecutableAction> actionsToExecute
     ) {
         this.prompt = prompt;
         this.type = type;
         this.action = action;
         this.actionsToExecute = actionsToExecute;
-        this.brewCount = brewCount;
+        this.brewCount = 1;
     }
 
     public String getPrompt() {
