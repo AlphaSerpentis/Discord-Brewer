@@ -39,9 +39,11 @@ public class AudioHandler {
     public static String hashAudioBytes(@NonNull byte[] bytes) throws NoSuchAlgorithmException {
         byte[] hash = MessageDigest.getInstance("SHA3-256").digest(bytes);
         StringBuilder sb = new StringBuilder();
+
         for(byte b: hash) {
             sb.append(String.format("%02x", b));
         }
+
         return sb.toString();
     }
 }

@@ -67,6 +67,7 @@ public class OpenAIHandler {
         OpenAIHandler.flaggedContentDirectory = flaggedContentDirectory;
         OpenAIHandler.transcriptionCacheFile = transcriptionCacheFile;
         OpenAIHandler.translationCacheFile = translationCacheFile;
+
         try {
             readAndSetCaches();
             executorService.scheduleAtFixedRate(
@@ -125,6 +126,7 @@ public class OpenAIHandler {
         String fileName = audioUrl.substring(audioUrl.lastIndexOf('/') + 1);
         byte[] audioBytes;
         String hash;
+
         try {
             audioBytes = AudioHandler.readUrlStream(audioUrl);
             hash = AudioHandler.hashAudioBytes(audioBytes);
@@ -145,6 +147,7 @@ public class OpenAIHandler {
                             audioBytes
                     )
             );
+
             transcriptionCache.put(
                     hash,
                     new CachedAudio(Instant.now().getEpochSecond() + 172800, response.text())
@@ -168,6 +171,7 @@ public class OpenAIHandler {
         String fileName = audioUrl.substring(audioUrl.lastIndexOf('/') + 1);
         byte[] audioBytes;
         String hash;
+
         try {
             audioBytes = AudioHandler.readUrlStream(audioUrl);
             hash = AudioHandler.hashAudioBytes(audioBytes);
@@ -188,6 +192,7 @@ public class OpenAIHandler {
                             audioBytes
                     )
             );
+
             translationCache.put(
                     hash,
                     new CachedAudio(Instant.now().getEpochSecond() + 172800, response.text())
@@ -214,6 +219,11 @@ public class OpenAIHandler {
         translationCache = new Gson().fromJson(
                 Files.newBufferedReader(translationCacheFile), new TypeToken<Map<String, CachedAudio>>(){}.getType()
         );
+
+        if(transcriptionCache == null)
+            transcriptionCache = new HashMap<>();
+        if(translationCache == null)
+            translationCache = new HashMap<>();
     }
 
     private static void writeCachesToFile() throws IOException {
@@ -229,6 +239,7 @@ public class OpenAIHandler {
 
     private static void checkCachesForExpired() {
         long now = Instant.now().getEpochSecond();
+
         transcriptionCache.entrySet().removeIf(entry -> entry.getValue().expirationTime() < now);
         translationCache.entrySet().removeIf(entry -> entry.getValue().expirationTime() < now);
     }

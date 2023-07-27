@@ -23,7 +23,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.ArrayList;

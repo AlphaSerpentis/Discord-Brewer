@@ -16,10 +16,11 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextInteractionEvent> implements AcknowledgeableCommand<MessageContextInteractionEvent> {
 
@@ -49,6 +50,8 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
             embedsArray = checkAndHandleAcknowledgement(event);
         } catch(IOException e) {
             throw new RuntimeException(e);
+        } catch(NullPointerException ignored) {
+            embedsArray = null;
         }
 
         if(embedsArray == null) {
@@ -84,7 +87,10 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
         workingEmbed.setDescription(description.toString());
         workingEmbed.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
 
-        AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.TRANSCRIBE_ATTACHMENT);
+        AnalyticsHandler.addUsage(
+                event.getGuild(),
+                ServiceType.TRANSCRIBE_ATTACHMENT
+        );
 
         return new CommandResponse<>(isOnlyEphemeral(), workingEmbed.build());
     }

@@ -23,7 +23,15 @@ public interface AcknowledgeableCommand<E extends GenericCommandInteractionEvent
      */
     @Nullable
     default MessageEmbed[] checkAndHandleAcknowledgement(@NonNull E event) throws IOException {
-        BrewerServerData serverData = ((BrewerServerDataHandler) Launcher.core.getServerDataHandler()).getServerData(event.getGuild().getIdLong());
+        BrewerServerData serverData;
+
+        try {
+            serverData = ((BrewerServerDataHandler) Launcher.core.getServerDataHandler()).getServerData(
+                    event.getGuild().getIdLong()
+            );
+        } catch(NullPointerException ignored) {
+            return null;
+        }
 
         if(serverData != null) {
             ArrayList<AcknowledgeThis.Type> typesToAcknowledge = new ArrayList<>(3);
@@ -43,6 +51,7 @@ public interface AcknowledgeableCommand<E extends GenericCommandInteractionEvent
 
             if(!typesToAcknowledge.isEmpty()) {
                 Launcher.core.getServerDataHandler().updateServerData();
+
                 return AcknowledgementHandler.getAcknowledgementEmbeds(typesToAcknowledge);
             } else {
                 return null;

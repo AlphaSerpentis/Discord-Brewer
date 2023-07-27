@@ -2,7 +2,7 @@ package dev.alphaserpentis.bots.brewer.data.brewer;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 
-import java.awt.*;
+import java.awt.Color;
 
 /**
  * Record storing to display to the user to acknowledge for
@@ -20,10 +20,20 @@ public record AcknowledgeThis(
         UPDATES
     }
 
-    public AcknowledgeThis(Type type, String title, String description, String hexColor) {
+    public AcknowledgeThis(
+            Type type,
+            String title,
+            String description,
+            String hexColor
+    ) {
         this(type, title, description, null, hexColor);
     }
-    public AcknowledgeThis(Type type, String title, String description) {
+
+    public AcknowledgeThis(
+            Type type,
+            String title,
+            String description
+    ) {
         this(type, title, description, null, null);
     }
 

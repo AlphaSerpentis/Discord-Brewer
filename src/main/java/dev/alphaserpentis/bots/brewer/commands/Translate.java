@@ -15,7 +15,6 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -34,20 +33,12 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
                         .setUseRatelimits(true)
         );
 
-        addButton("acknowledge", ButtonStyle.SUCCESS, "Acknowledge", false);
 //        addButton("summarize", ButtonStyle.PRIMARY, "Summarize", false);
     }
 
     @Override
     public void runButtonInteraction(@NonNull ButtonInteractionEvent event) {
-        final String buttonId = event.getComponentId().substring(getName().length() + 1);
 
-        switch(buttonId) {
-            case "acknowledge" -> {
-
-            }
-            default -> throw new IllegalStateException("Unexpected value: " + buttonId);
-        }
     }
 
     @Override
@@ -74,6 +65,7 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
             workingEmbed = new EmbedBuilder();
         } else {
             ratelimitMap.remove(userId);
+
             return new CommandResponse<>(isOnlyEphemeral(), embedsArray);
         }
 
@@ -114,6 +106,6 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
 
         eb.setDescription(response.text());
 
-        AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.TRANSLATE_ATTACHMENT);
+        AnalyticsHandler.addUsage(event.getGuild(), ServiceType.TRANSLATE_ATTACHMENT);
     }
 }

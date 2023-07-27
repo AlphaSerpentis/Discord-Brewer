@@ -14,7 +14,12 @@ public class ErrorSubmission {
     private final String prompt;
     private final String[] attachmentUrl;
 
-    public ErrorSubmission(long guildId, long userId, @NonNull Exception exceptionThrown, @NonNull String prompt) {
+    public ErrorSubmission(
+            long guildId,
+            long userId,
+            @NonNull Exception exceptionThrown,
+            @NonNull String prompt
+    ) {
         this.guildId = guildId;
         this.userId = userId;
         this.exceptionThrown = exceptionThrown;
@@ -22,7 +27,12 @@ public class ErrorSubmission {
         this.attachmentUrl = null;
     }
 
-    public ErrorSubmission(long guildId, long userId, @NonNull Exception exceptionThrown, @NonNull String[] attachmentUrl) {
+    public ErrorSubmission(
+            long guildId,
+            long userId,
+            @NonNull Exception exceptionThrown,
+            @NonNull String[] attachmentUrl
+    ) {
         this.guildId = guildId;
         this.userId = userId;
         this.exceptionThrown = exceptionThrown;
@@ -30,7 +40,11 @@ public class ErrorSubmission {
         this.attachmentUrl = attachmentUrl;
     }
 
-    public ErrorSubmission(long guildId, long userId, @NonNull Exception exceptionThrown) {
+    public ErrorSubmission(
+            long guildId,
+            long userId,
+            @NonNull Exception exceptionThrown
+    ) {
         this.guildId = guildId;
         this.userId = userId;
         this.exceptionThrown = exceptionThrown;

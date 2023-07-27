@@ -35,7 +35,6 @@ public class CustomOpenAiService extends OpenAiService {
     public AudioTranscriptionResponse createAudioTranscription(@NonNull AudioTranscriptionRequest request) {
         String extension = request.name().substring(request.name().lastIndexOf('.') + 1);
         RequestBody audio = RequestBody.create(MediaType.parse("audio/" + extension), request.audioBytes());
-
         MultipartBody.Builder builder = new MultipartBody.Builder()
                 .setType(MediaType.get("multipart/form-data"))
                 .addFormDataPart("model", request.model())
@@ -50,6 +49,7 @@ public class CustomOpenAiService extends OpenAiService {
         if(request.language() != null) {
             builder.addFormDataPart("language", request.language());
         }
+
         builder.addFormDataPart("temperature", String.valueOf(request.temperature()));
 
         return execute(api.createAudioTranscription(builder.build()));
@@ -59,7 +59,6 @@ public class CustomOpenAiService extends OpenAiService {
     public AudioTranslationResponse createAudioTranslation(@NonNull AudioTranslationRequest request) {
         String extension = request.name().substring(request.name().lastIndexOf('.') + 1);
         RequestBody audio = RequestBody.create(MediaType.parse("audio/" + extension), request.audioBytes());
-
         MultipartBody.Builder builder = new MultipartBody.Builder()
                 .setType(MediaType.get("multipart/form-data"))
                 .addFormDataPart("model", request.model())
@@ -71,6 +70,7 @@ public class CustomOpenAiService extends OpenAiService {
         if(request.responseFormat() != null) {
             builder.addFormDataPart("response_format", request.responseFormat());
         }
+
         builder.addFormDataPart("temperature", String.valueOf(request.temperature()));
 
         return execute(api.createAudioTranslation(builder.build()));

@@ -22,7 +22,7 @@ import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.managers.AudioManager;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -127,7 +127,7 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
                 ).text()
         );
 
-        AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.TRANSCRIBE_ATTACHMENT);
+        AnalyticsHandler.addUsage(event.getGuild(), ServiceType.TRANSCRIBE_ATTACHMENT);
     }
 
     private void handleTranscribeVC(@NonNull EmbedBuilder eb, @NonNull SlashCommandInteractionEvent event) throws InterruptedException, IOException {
@@ -168,7 +168,7 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
                 }
             }
 
-            AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.TRANSCRIBE_VC);
+            AnalyticsHandler.addUsage(event.getGuild(), ServiceType.TRANSCRIBE_VC);
         } catch(InsufficientPermissionException ignored) {
             eb.setDescription("I don't have permission to join that VC!");
             eb.setColor(Color.RED);

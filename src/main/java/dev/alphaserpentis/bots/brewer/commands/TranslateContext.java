@@ -16,7 +16,7 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,7 +84,7 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
         workingEmbed.setDescription(description.toString());
         workingEmbed.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
 
-        AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.TRANSLATE_ATTACHMENT);
+        AnalyticsHandler.addUsage(event.getGuild(), ServiceType.TRANSLATE_ATTACHMENT);
 
         return new CommandResponse<>(isOnlyEphemeral(), workingEmbed.build());
     }

@@ -33,6 +33,7 @@ public class CustomSettings extends Settings {
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
+
         eb.setTitle("Server Settings");
 
         if(event.getGuild() == null) {
@@ -94,6 +95,7 @@ public class CustomSettings extends Settings {
                 "rename-nsfw-channels",
                 "Toggle whether the bot should try to rename NSFW channels"
         );
+
         jda.upsertCommand(name, description).addSubcommands(
                 ephemeral, optOutOfAnalytics, optOutOfTranscriptions, tryRenamingNsfwChannels
         ).queue(
@@ -104,6 +106,7 @@ public class CustomSettings extends Settings {
     private void setServerEphemeral(long guildId, @NonNull EmbedBuilder eb) throws IOException {
         ServerDataHandler<?> sdh = (ServerDataHandler<?>) core.getServerDataHandler();
         ServerData sd = sdh.getServerData(guildId);
+
         if(sd.getOnlyEphemeral()) {
             sd.setOnlyEphemeral(false);
             eb.setDescription("The bot's responses are no longer ephemeral.");

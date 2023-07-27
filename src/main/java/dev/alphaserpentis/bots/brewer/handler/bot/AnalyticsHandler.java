@@ -7,6 +7,7 @@ import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
 import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
 import dev.alphaserpentis.bots.brewer.launcher.Launcher;
 import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.annotations.Nullable;
 import net.dv8tion.jda.api.entities.Guild;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,12 +47,16 @@ public class AnalyticsHandler {
         });
     }
 
-    public static void addUsage(long guildId, @NonNull ServiceType type) {
-        if(serverAnalytics.get(guildId) == null) {
-            generateAnalytics(guildId);
+    public static void addUsage(@Nullable Guild guild, @NonNull ServiceType type) {
+        if(guild == null) {
+            return;
         }
 
-        Analytics analytics = serverAnalytics.get(guildId);
+        if(serverAnalytics.get(guild.getIdLong()) == null) {
+            generateAnalytics(guild.getIdLong());
+        }
+
+        Analytics analytics = serverAnalytics.get(guild.getIdLong());
 
         analytics.getUsagePerServiceType().putIfAbsent(type, 0);
         analytics.getUsagePerServiceType().put(type, analytics.getUsagePerServiceType().get(type) + 1);

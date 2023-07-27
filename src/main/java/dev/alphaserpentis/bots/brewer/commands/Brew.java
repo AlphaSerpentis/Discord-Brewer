@@ -29,7 +29,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;

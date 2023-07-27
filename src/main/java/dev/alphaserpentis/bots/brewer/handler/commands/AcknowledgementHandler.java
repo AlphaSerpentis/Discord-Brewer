@@ -59,10 +59,12 @@ public class AcknowledgementHandler {
                 case TOS -> file = new File(classLoader.getResource("default/acknowledgement/tos.json").getFile());
                 case PRIVACY_POLICY -> file = new File(classLoader.getResource("default/acknowledgement/privacy_policy.json").getFile());
                 case UPDATES -> file = new File(classLoader.getResource("default/acknowledgement/updates.json").getFile());
+                default -> throw new IllegalStateException("Unexpected value: " + type);
             }
         }
 
         reader = new BufferedReader(new FileReader(file));
+
         return gson.fromJson(reader, AcknowledgeThis.class);
     }
 }

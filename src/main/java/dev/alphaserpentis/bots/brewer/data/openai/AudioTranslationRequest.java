@@ -12,11 +12,20 @@ public record AudioTranslationRequest(
         @Nullable String responseFormat,
         double temperature
 ) {
-    public AudioTranslationRequest(@NonNull String model, @NonNull String name, @NonNull String file, @NonNull byte[] audioBytes) {
+    public AudioTranslationRequest(
+            @NonNull String model,
+            @NonNull String name,
+            @NonNull String file,
+            @NonNull byte[] audioBytes
+    ) {
         this(model, name, file, audioBytes, null, null, 0.0);
     }
 
-    public AudioTranslationRequest(@NonNull String model, @NonNull String name, @NonNull byte[] audioBytes) {
+    public AudioTranslationRequest(
+            @NonNull String model,
+            @NonNull String name,
+            @NonNull byte[] audioBytes
+    ) {
         this(model, name, null, audioBytes, null, null, 0.0);
     }
 }

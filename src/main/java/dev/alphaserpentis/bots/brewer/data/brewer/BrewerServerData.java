@@ -17,9 +17,11 @@ public class BrewerServerData extends ServerData {
     public BrewerServerData() {
         super();
     }
+
     public BrewerServerData(boolean onlyEphemeral) {
         super(onlyEphemeral);
     }
+
     public BrewerServerData(boolean onlyEphemeral, boolean tryRenamingNsfwChannels) {
         super(onlyEphemeral);
         this.tryRenamingNsfwChannels = tryRenamingNsfwChannels;

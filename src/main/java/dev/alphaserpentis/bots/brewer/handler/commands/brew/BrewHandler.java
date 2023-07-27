@@ -47,7 +47,7 @@ public class BrewHandler {
         ArrayList<ParseActions.ExecutableAction> actions;
         UserSession session;
 
-        AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.CREATE);
+        AnalyticsHandler.addUsage(event.getGuild(), ServiceType.CREATE);
 
         try {
             actions = generateActions(
@@ -86,7 +86,7 @@ public class BrewHandler {
         ArrayList<ParseActions.ExecutableAction> actions;
         UserSession session;
 
-        AnalyticsHandler.addUsage(event.getGuild().getIdLong(), ServiceType.RENAME);
+        AnalyticsHandler.addUsage(event.getGuild(), ServiceType.RENAME);
 
         try {
             actions = generateActions(
