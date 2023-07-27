@@ -31,20 +31,16 @@ public class AnalyticsHandler {
 
     public static void init(@NonNull Path analyticsDirectory) {
         AnalyticsHandler.analyticsDirectory = analyticsDirectory;
+
         scheduledExecutor.scheduleAtFixedRate(() -> {
             try {
                 dumpAnalytics();
             } catch (IOException e) {
                logger.error("Failed to dump analytics", e);
             }
-        }, 1, 1440, TimeUnit.MINUTES);
+        }, 1, 60, TimeUnit.MINUTES);
 
-        Launcher.core.getShardManager().getGuilds().forEach(guild -> {
-            BrewerServerData serverData = (BrewerServerData) Launcher.core.getServerDataHandler().getServerData(guild.getIdLong());
-            if(!serverData.getServerWideOptOutOfAnalytics()) {
-                generateAnalytics(guild.getIdLong());
-            }
-        });
+        Launcher.core.getShardManager().getGuilds().forEach(guild -> generateAnalytics(guild.getIdLong()));
     }
 
     public static void addUsage(@Nullable Guild guild, @NonNull ServiceType type) {
@@ -53,7 +49,8 @@ public class AnalyticsHandler {
         }
 
         if(serverAnalytics.get(guild.getIdLong()) == null) {
-            generateAnalytics(guild.getIdLong());
+            if(!generateAnalytics(guild.getIdLong()))
+                return;
         }
 
         Analytics analytics = serverAnalytics.get(guild.getIdLong());
@@ -62,18 +59,24 @@ public class AnalyticsHandler {
         analytics.getUsagePerServiceType().put(type, analytics.getUsagePerServiceType().get(type) + 1);
     }
 
-    public static void generateAnalytics(long guildId) {
+    /**
+     * Generates analytics for a guild
+     * @param guildId ID of the guild to generate analytics for
+     * @return true if analytics were generated, false if the guild opted out of analytics
+     */
+    public static boolean generateAnalytics(long guildId) {
         BrewerServerData serverData = (BrewerServerData) Launcher.core.getServerDataHandler().getServerData(guildId);
-
-        if(serverData.getServerWideOptOutOfAnalytics()) {
-            return;
-        }
-
-        Guild guild = Launcher.core.getShardManager().getGuildById(guildId);
+        Guild guild;
         Analytics analytics;
         int snapshotUserCount;
         long snapshotAgeOfServer;
         long snapshotBotAgeInServer;
+
+        if(serverData.getServerWideOptOutOfAnalytics()) {
+            return false;
+        }
+
+        guild = Launcher.core.getShardManager().getGuildById(guildId);
 
         // Take snapshot of the server
         snapshotUserCount = guild.retrieveMetaData().complete().getApproximateMembers();
@@ -81,9 +84,16 @@ public class AnalyticsHandler {
         snapshotBotAgeInServer = Instant.now().getEpochSecond() - guild.getSelfMember().getTimeJoined().toInstant().getEpochSecond();
 
         // Set analytics
-        analytics = new Analytics(snapshotUserCount, snapshotAgeOfServer, snapshotBotAgeInServer, serverData.getPaidTier());
+        analytics = new Analytics(
+                snapshotUserCount,
+                snapshotAgeOfServer,
+                snapshotBotAgeInServer,
+                serverData.getPaidTier()
+        );
 
         serverAnalytics.put(guildId, analytics);
+
+        return true;
     }
 
     /**
