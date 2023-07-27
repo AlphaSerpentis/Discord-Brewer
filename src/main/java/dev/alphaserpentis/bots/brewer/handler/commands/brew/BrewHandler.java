@@ -23,7 +23,7 @@ import net.dv8tion.jda.internal.entities.channel.concrete.CategoryImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.TextChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.VoiceChannelImpl;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -269,18 +269,17 @@ public class BrewHandler {
                     null
             ));
         });
-        guild.getChannels(false).forEach(channel -> {if(channel instanceof CategoryImpl)
+        guild.getChannels(false).forEach(channel -> {
+            if(channel instanceof CategoryImpl)
                 return;
             if(channel instanceof TextChannelImpl chn) {
-                if(chn.isNSFW()) {
-                    if(!getNsfwChannels)
-                        return;
+                if(chn.isNSFW() && !getNsfwChannels) {
+                    return;
                 }
             }
             if(channel instanceof VoiceChannelImpl vc) {
-                if(vc.isNSFW()) {
-                    if(!getNsfwChannels)
-                        return;
+                if(vc.isNSFW() && !getNsfwChannels) {
+                    return;
                 }
             }
 

@@ -6,7 +6,7 @@
 
 ## About Brew(r) ☕️
 
-Revolutionize your Discord server with Brewer, a dynamic bot leveraging the power of OpenAI's ChatGPT to breathe new life into your roles, categories, and channels!
+Revolutionize your Discord server with Brew(r), a dynamic bot leveraging the power of OpenAI's ChatGPT to breathe new life into your roles, categories, and channels!
 
 At its core, Brew(r)'s powered by OpenAI.
 
@@ -21,16 +21,16 @@ At its core, Brew(r)'s powered by OpenAI.
 
 ## Inviting the Bot
 
-**Notice**: You bear all responsibility for any changes Brewer brings to your server.
+**Notice**: You bear all responsibility for any changes Brew(r) brings to your server.
 
-**While the `Administrator` permission may be necessary for Brewer, we advise revoking it after Brewer finishes its tasks to maintain server security!**
+**While the `Administrator` permission may be necessary for Brew(r), we advise revoking it after Brew(r) finishes its tasks to maintain server security!**
 
-**Required Permissions**:
+**Minimum Required Permissions**:
 - Manage Roles
 - Manage Channels
 - Manage Permissions
 
-[**Invite Brewer ☕️ to your server today!**](https://discord.com/api/oauth2/authorize?client_id=1097362340468502548&permissions=268504080&scope=bot)
+[**Invite Brew(r) ☕️ to your server today!**](https://discord.com/api/oauth2/authorize?client_id=1097362340468502548&permissions=268504080&scope=bot)
 
 ## Discord Server
 [ ![Discord Banner 4](https://discordapp.com/api/guilds/590215639785013298/widget.png?style=banner4)][discord-invite]
@@ -69,9 +69,9 @@ The file name of the jar will be different depending on the version you are runn
 
 ## How To Use
 
-### `/brew server [prompt]`
+### `/brew create [prompt]`
 
-This is the primary command of Brewer and will generate new roles, categories, and channels based on the prompt you provide.
+This is the primary command of Brew(r) and will generate new roles, categories, and channels based on the prompt you provide.
 
 For the prompt, you provide the bot what you desire. For example:
 - You ask it to create categories containing the names of "General", "Voice", and "Text" and it will do so.
@@ -94,16 +94,14 @@ You can run `/brew` every 3 minutes (globally). Additionally, if you generated a
 #### I got error messages after brewing!
 Please send them my way by either going to our [Discord server][discord-invite] or by opening an issue [here](https://github.com/AlphaSerpentis/Discord-Brewer/issues/new).
 
-#### I don't like the changes Brewer did to my server! Help!
-If you ran the command recently, click on the **Revert** button that appears on the last message sent by the bot. This will revert all changes made by the bot.
+#### I don't like the changes Brew(r) did to my server! Help!
+If you ran the command recently, click on the **Revert** button that appears on the last message sent by the bot. This will revert all changes made by the bot to the best of its abilities.
 
 #### The permissions are wrong/don't make sense!
 Brew(r) might skip the permissions creation process if it is unable to add them (e.g., insufficient permissions). If it does add them, it might not be up-to-date with current available permissions. Due to the nature of ChatGPT 3.5 Turbo (the model Brew(r) will use by default), it may not generate accurate permissions. This is a known issue and will be tweaked over time.
 
 #### Brewer didn't rename my NSFW channels?
-Brew(r) by default will not rename NSFW channels due to OpenAI's restrictions.
-
-An option will be available to try to rename NSFW channels in the future.
+Brew(r) by default will not rename NSFW channels due to OpenAI's restrictions. You need to toggle this in the settings command.
 
 #### Nothing happened/it partially worked then stopped?
 There are two things that could have happened:

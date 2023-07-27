@@ -156,6 +156,7 @@ public class Interpreter {
                             ));
                         }
                     }
+                    default -> throw new IllegalArgumentException("Invalid target type");
                 }
             } catch (Exception e) {
                 completeSuccess = false;
