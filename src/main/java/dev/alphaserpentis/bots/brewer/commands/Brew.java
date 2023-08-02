@@ -28,13 +28,17 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
 public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent> implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Brew.class);
     private static final EmbedBuilder NO_PERMISSIONS = new EmbedBuilder()
             .setTitle("No Permissions")
             .setDescription("""
@@ -295,7 +299,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                             userSession.getAction()
                     )
             );
-        } catch(JsonSyntaxException e) {
+        } catch(JsonSyntaxException | IOException | GenerationException e) {
             eb = new EmbedBuilder(GENERATING_ERROR);
             eb.setDescription(String.format(GENERATING_ERROR.getDescriptionBuilder().toString(), e.getMessage()));
 
@@ -306,6 +310,8 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                             getButton("brew")
                     )
                     .queue();
+
+            LOGGER.error("Error while generating brew", e);
         }
 
         BrewHandler.previewChangesPage(eb, userSession.getActionsToExecute());

@@ -1,6 +1,6 @@
 [discord-invite]: https://asrp.dev/discord
 
-# Discord Brewer ☕️
+# Brew(r) ☕️
 
 ---
 
@@ -10,7 +10,7 @@ Revolutionize your Discord server with Brew(r), a dynamic bot leveraging the pow
 
 At its core, Brew(r)'s powered by OpenAI.
 
-**Developed using [Coffee Core](https://github.com/AlphaSerpentis/CoffeeCore), a robust Java Discord bot framework!**
+**Developed using [Coffee Core](https://github.com/AlphaSerpentis/CoffeeCore), a Java Discord bot framework!**
 
 ## Features
 

@@ -1,6 +1,6 @@
 # Terms of Service for the Brewer Bot
 
-*Last Updated: July 18, 2023*
+*Last Updated: July 28, 2023*
 
 *Effective On: TBD*
 
@@ -67,9 +67,11 @@ You agree to not provide any inputs/outputs that violate:
 - Any laws in your jurisdiction (including but not limited to those governing intellectual property, consumer protection, unfair competition, anti-discrimination, or false advertising)
 - The privacy of other users
 
-We reserve the right to reject your input/output if it is deemed inappropriate in accordance with OpenAI's Usage Policies.
+We reserve the right to reject your input/output if it is deemed inappropriate in accordance with OpenAI's Usage Policies and Discord's Community Guidelines.
 
 ## Paid Services
+To help operate the bot, we may offer optional paid services to you.
+
 Should you choose to purchase a paid service from us, you agree to pay the fees associated with the service. You also agree to abide by the terms outlined in this document and any additional terms that may be provided to you at the time of purchase.
 
 Failure to pay the fees associated with the service or abide by the terms outlined in this document and any additional terms that may be provided to you at the time of purchase may result in the limitation or termination of your access to the service.
@@ -80,6 +82,8 @@ We reserve the right to terminate your access to the bot, without cause or notic
 Examples of reasons for termination include, but are not limited to:
 - Abusive behavior towards the bot or its related systems or networks
 - Violating the acceptable use outlined in this document, such as, but not limited to, providing inappropriate content to the bot
+- Failure to pay the fees associated with a paid service
+- Failure to abide by any additional terms that may have been provided to you for, but not limited to, a paid service
 
 ## Governing Law
 These Terms of Service shall be governed and construed in accordance with the laws of the State of Texas, without regard to its conflict of law provisions.
@@ -109,9 +113,9 @@ For a detailed description, go [here](https://github.com/AlphaSerpentis/Discord-
 Data collected by the bot is used to provide its services and improve the bot. We do not sell your data to third parties. Data shared externally is only to Discord and OpenAI, and is only used to provide the bot's services.
 
 ### Deletion of Data
-Data pertaining to guilds are automatically deleted if the bot is removed from the server.
+Data pertaining to guilds are automatically deleted if the bot is removed from the server. User-specific data is only stored temporarily to provide the bot's services, and is deleted after the service is completed.
 
-Additionally, you may request for your data to be deleted by contacting us at [contact@alphaserpentis.dev](mailto:contact@alphaserpentis.dev). Please provide the following information in your request:
+Additionally, you may request for your data to be manually deleted by contacting us at [contact@alphaserpentis.dev](mailto:contact@alphaserpentis.dev). Please provide the following information in your request:
 - Your Discord ID (required to verify ownership)
 - User/Guild ID(s) to be deleted from our records
 

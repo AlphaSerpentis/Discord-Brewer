@@ -70,22 +70,23 @@ public class OpenAIHandler {
 
         try {
             readAndSetCaches();
-            executorService.scheduleAtFixedRate(
-                    () -> {
-                        try {
-                            writeCachesToFile();
-                            checkCachesForExpired();
-                        } catch (IOException e) {
-                            logger.error(e.getMessage(), e);
-                        }
-                    },
-                    30,
-                    3600,
-                    TimeUnit.SECONDS
-            );
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }
+
+        executorService.scheduleAtFixedRate(
+                () -> {
+                    try {
+                        writeCachesToFile();
+                        checkCachesForExpired();
+                    } catch (IOException e) {
+                        logger.error(e.getMessage(), e);
+                    }
+                },
+                300,
+                3600,
+                TimeUnit.SECONDS
+        );
     }
 
     /**

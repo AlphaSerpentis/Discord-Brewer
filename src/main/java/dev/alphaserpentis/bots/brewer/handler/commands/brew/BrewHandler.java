@@ -7,9 +7,9 @@ import com.theokanning.openai.OpenAiHttpException;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
 import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
+import dev.alphaserpentis.bots.brewer.data.brewer.UserSession;
 import dev.alphaserpentis.bots.brewer.data.discord.DiscordConfig;
 import dev.alphaserpentis.bots.brewer.data.openai.Prompts;
-import dev.alphaserpentis.bots.brewer.data.brewer.UserSession;
 import dev.alphaserpentis.bots.brewer.exception.GenerationException;
 import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
@@ -19,16 +19,25 @@ import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.internal.entities.ForumChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.CategoryImpl;
+import net.dv8tion.jda.internal.entities.channel.concrete.StageChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.TextChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.VoiceChannelImpl;
+import net.dv8tion.jda.internal.entities.channel.middleman.AbstractStandardGuildMessageChannelImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.Color;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class BrewHandler {
+
+    public static Logger logger = LoggerFactory.getLogger(BrewHandler.class);
+
     private static final HashMap<Long, UserSession> userSessions = new HashMap<>();
 
     public static UserSession getUserSession(@NonNull long userId) {
@@ -56,9 +65,17 @@ public class BrewHandler {
                     ParseActions.ValidAction.CREATE
             );
         } catch(JsonSyntaxException e) {
+            logger.error("JSONSyntaxException thrown in generateCreatePrompt", e);
+
             throw new GenerationException(GenerationException.Type.JSON_EXCEPTION.getDescriptions(), e.getCause());
         } catch(OpenAiHttpException e) {
+            logger.error("OpenAiHttpException thrown in generateCreatePrompt", e);
+
             throw new GenerationException(GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
+        } catch(SocketTimeoutException e) {
+            logger.error("SocketTimeoutException thrown in generateCreatePrompt", e);
+
+            throw new GenerationException(GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(), e.getCause());
         }
 
         previewChangesPage(eb, actions);
@@ -89,18 +106,29 @@ public class BrewHandler {
         AnalyticsHandler.addUsage(event.getGuild(), ServiceType.RENAME);
 
         try {
-            actions = generateActions(
-                    Prompts.SETUP_SYSTEM_PROMPT_RENAME,
-                    new GsonBuilder().setPrettyPrinting().create().toJson(
-                            getGuildData(event.getGuild(), prompt, allowNsfwChannelRenames)
-                    ),
-                    ParseActions.ValidAction.EDIT
+            actions = optimizeRenameActions(
+                    generateActions(
+                        Prompts.SETUP_SYSTEM_PROMPT_RENAME,
+                        new GsonBuilder().setPrettyPrinting().create().toJson(
+                                getGuildData(event.getGuild(), prompt, allowNsfwChannelRenames)
+                        ),
+                        ParseActions.ValidAction.EDIT
+                    )
             );
         } catch(JsonSyntaxException e) {
+            logger.error("JSONSyntaxException thrown in generateCreatePrompt", e);
+
             throw new GenerationException(GenerationException.Type.JSON_EXCEPTION.getDescriptions(), e.getCause());
         } catch(OpenAiHttpException e) {
+            logger.error("OpenAiHttpException thrown in generateCreatePrompt", e);
+
             throw new GenerationException(GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
+        } catch(SocketTimeoutException e) {
+            logger.error("SocketTimeoutException thrown in generateCreatePrompt", e);
+
+            throw new GenerationException(GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(), e.getCause());
         }
+
         previewChangesPage(eb, actions);
         session = new UserSession(
                 prompt,
@@ -120,7 +148,7 @@ public class BrewHandler {
             @NonNull ChatMessage system,
             @NonNull String prompt,
             @NonNull ParseActions.ValidAction action
-    ) {
+    ) throws SocketTimeoutException {
         Gson gson = new Gson();
         String result = OpenAIHandler.getCompletion(
                 system,
@@ -226,6 +254,30 @@ public class BrewHandler {
         }
     }
 
+    @NonNull
+    private static ArrayList<ParseActions.ExecutableAction> optimizeRenameActions(
+            @NonNull ArrayList<ParseActions.ExecutableAction> actions
+    ) {
+        ArrayList<ParseActions.ExecutableAction> optimizedActions = new ArrayList<>(actions.size());
+
+        for(ParseActions.ExecutableAction action : actions) {
+            String name = (String) action.data().get(ParseActions.ValidDataNames.NAME);
+            String desc = (String) action.data().get(ParseActions.ValidDataNames.DESCRIPTION);
+            String color = (String) action.data().get(ParseActions.ValidDataNames.COLOR);
+
+            if(name != null && !name.isEmpty() && !name.equals(action.target())) { // Check if name is different
+                optimizedActions.add(action);
+            } else if(name != null && !name.isEmpty()
+                    && (desc != null && !desc.isEmpty())
+                    || (color != null && !color.isEmpty())
+            ) { // If the name is the same, check if description or color is different
+                optimizedActions.add(action);
+            }
+        }
+
+        return optimizedActions;
+    }
+
     private static StringBuilder getData(ParseActions.ExecutableAction action) {
         StringBuilder readableData = new StringBuilder();
 
@@ -270,17 +322,25 @@ public class BrewHandler {
             ));
         });
         guild.getChannels(false).forEach(channel -> {
+            String type;
+
             if(channel instanceof CategoryImpl)
                 return;
-            if(channel instanceof TextChannelImpl chn) {
-                if(chn.isNSFW() && !getNsfwChannels) {
+
+            if(channel instanceof AbstractStandardGuildMessageChannelImpl<?> chn)
+                if(chn.isNSFW() && !getNsfwChannels)
                     return;
-                }
-            }
-            if(channel instanceof VoiceChannelImpl vc) {
-                if(vc.isNSFW() && !getNsfwChannels) {
-                    return;
-                }
+
+            if(channel instanceof TextChannelImpl) {
+                type = "txt";
+            } else if(channel instanceof VoiceChannelImpl) {
+                type = "vc";
+            } else if(channel instanceof ForumChannelImpl) {
+                type = "forum";
+            } else if(channel instanceof StageChannelImpl) {
+                type = "stage";
+            } else {
+                return;
             }
 
             // Verify the channel's name won't get us yeeted
@@ -289,7 +349,7 @@ public class BrewHandler {
 
             channels.put(channel.getName(), new DiscordConfig.ConfigItem(
                     channel.getName(),
-                    (channel instanceof TextChannelImpl) ? null : "vc",
+                    type,
                     null,
                     (channel instanceof TextChannelImpl) ? ((TextChannelImpl) channel).getTopic() : null,
                     null,
