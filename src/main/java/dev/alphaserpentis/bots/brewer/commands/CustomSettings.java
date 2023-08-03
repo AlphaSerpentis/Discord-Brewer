@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 
 public class CustomSettings extends Settings {

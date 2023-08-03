@@ -28,7 +28,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent> implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
+public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent>
+        implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
 
     public Transcribe() {
         super(

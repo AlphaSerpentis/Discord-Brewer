@@ -36,7 +36,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent> implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
+public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent>
+        implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Brew.class);
     private static final EmbedBuilder NO_PERMISSIONS = new EmbedBuilder()

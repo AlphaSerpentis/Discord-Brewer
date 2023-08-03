@@ -21,7 +21,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInteractionEvent> implements AcknowledgeableCommand<MessageContextInteractionEvent> {
+public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInteractionEvent>
+        implements AcknowledgeableCommand<MessageContextInteractionEvent> {
 
     public TranslateContext() {
         super(

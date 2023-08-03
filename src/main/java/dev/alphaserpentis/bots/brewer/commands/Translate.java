@@ -20,7 +20,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent> implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
+public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent>
+        implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
 
     public Translate() {
         super(

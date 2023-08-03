@@ -20,9 +20,9 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextInteractionEvent> implements AcknowledgeableCommand<MessageContextInteractionEvent> {
+public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextInteractionEvent>
+        implements AcknowledgeableCommand<MessageContextInteractionEvent> {
 
     public TranscribeContext() {
         super(

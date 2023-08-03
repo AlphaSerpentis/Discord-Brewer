@@ -14,10 +14,6 @@ public class BrewerServerData extends ServerData {
     private Map<Long, Boolean> userDisallowVCTranscriptions = new HashMap<>();
     private PaidTier paidTier = PaidTier.NONE;
 
-    public BrewerServerData() {
-        super();
-    }
-
     public BrewerServerData(boolean onlyEphemeral) {
         super(onlyEphemeral);
     }

@@ -13,11 +13,20 @@ public record AudioTranscriptionRequest(
         double temperature,
         @Nullable String language
 ) {
-    public AudioTranscriptionRequest(@NonNull String model, @NonNull String name, @NonNull String file, @NonNull byte[] audioBytes) {
+    public AudioTranscriptionRequest(
+            @NonNull String model,
+            @NonNull String name,
+            @NonNull String file,
+            @NonNull byte[] audioBytes
+    ) {
         this(model, name, file, audioBytes, null, null, 0.0, null);
     }
 
-    public AudioTranscriptionRequest(@NonNull String model, @NonNull String name, @NonNull byte[] audioBytes) {
+    public AudioTranscriptionRequest(
+            @NonNull String model,
+            @NonNull String name,
+            @NonNull byte[] audioBytes
+    ) {
         this(model, name, null, audioBytes, null, null, 0.0, null);
     }
 }
