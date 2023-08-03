@@ -24,6 +24,7 @@ import net.dv8tion.jda.internal.entities.channel.concrete.CategoryImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.StageChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.TextChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.VoiceChannelImpl;
+import net.dv8tion.jda.internal.entities.channel.concrete.NewsChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.middleman.AbstractStandardGuildMessageChannelImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -331,7 +332,7 @@ public class BrewHandler {
                 if(chn.isNSFW() && !getNsfwChannels)
                     return;
 
-            if(channel instanceof TextChannelImpl) {
+            if(channel instanceof TextChannelImpl || channel instanceof NewsChannelImpl) {
                 type = "txt";
             } else if(channel instanceof VoiceChannelImpl) {
                 type = "vc";

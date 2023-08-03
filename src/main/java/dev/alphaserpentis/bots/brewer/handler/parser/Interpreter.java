@@ -151,9 +151,9 @@ public class Interpreter {
                                 ForumChannel channel = createForumChannel(action, guild);
                                 channels.add(channel);
                             }
-                            case EDIT -> originalState.originalTextChannelData.putAll(editTextChannel(
+                            case EDIT -> originalState.originalForumChannelData.putAll(editForumChannel(
                                     action,
-                                    guild.getTextChannelsByName(
+                                    guild.getForumChannelsByName(
                                             action.target(),
                                             true
                                     ).get(0)
@@ -166,8 +166,13 @@ public class Interpreter {
                                 StageChannel channel = createStageChannel(action, guild);
                                 channels.add(channel);
                             }
-                            case EDIT -> {
-                            }
+                            case EDIT -> originalState.originalStageChannelData.putAll(editStageChannel(
+                                    action,
+                                    guild.getStageChannelsByName(
+                                            action.target(),
+                                            true
+                                    ).get(0)
+                            ));
                         }
                     }
                     case ROLE -> {
@@ -818,7 +823,7 @@ public class Interpreter {
 
     private static HashMap<Long, HashMap<String, String>> editStageChannel(
             @NonNull ParseActions.ExecutableAction action,
-            @NonNull ForumChannel channel
+            @NonNull StageChannel channel
     ) {
         final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
 
