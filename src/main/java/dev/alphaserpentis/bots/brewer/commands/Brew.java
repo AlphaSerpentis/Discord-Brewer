@@ -371,6 +371,13 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                     );
 
                     VoteHandler.addUserToRemindedMap(event.getUser().getIdLong());
+                } else {
+                    eb.setDescription(
+                            String.format(
+                                    POST_EXECUTION_NO_ERROR.getDescriptionBuilder().toString(),
+                                    ""
+                            )
+                    );
                 }
 
                 hook.editOriginalEmbeds(
