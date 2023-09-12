@@ -237,8 +237,8 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             }
         } catch(GenerationException e) {
             workingEmbed = new EmbedBuilder(GENERATING_ERROR);
-            workingEmbed.setDescription(String.format(GENERATING_ERROR.getDescriptionBuilder().toString(), e.getMessage()));
 
+            workingEmbed.setDescription(String.format(GENERATING_ERROR.getDescriptionBuilder().toString(), e.getMessage()));
             BrewHandler.removeUserSession(userId);
             ratelimitMap.remove(userId);
 

@@ -73,7 +73,7 @@ The file name of the jar will be different depending on the version you are runn
 
 This is the primary command of Brew(r) and will generate new roles, categories, and channels based on the prompt you provide.
 
-For the prompt, you provide the bot what you desire. For example:
+For the prompt, you provide Brew(r) what you desire. For example:
 - You ask it to create categories containing the names of "General", "Voice", and "Text" and it will do so.
 - Stylize your server with a theme (e.g., medieval, futuristic, etc.)
 - Generate a server based on a topic (e.g., gaming, anime, etc.)
@@ -95,13 +95,15 @@ You can run `/brew` every 3 minutes (globally). Additionally, if you generated a
 Please send them my way by either going to our [Discord server][discord-invite] or by opening an issue [here](https://github.com/AlphaSerpentis/Discord-Brewer/issues/new).
 
 #### I don't like the changes Brew(r) did to my server! Help!
-If you ran the command recently, click on the **Revert** button that appears on the last message sent by the bot. This will revert all changes made by the bot to the best of its abilities.
+If you ran the command recently, click on the **Revert** button that appears on the last message sent by Brew(r). This will revert all changes made by Brew(r) to the best of its abilities.
 
 #### The permissions are wrong/don't make sense!
 Brew(r) might skip the permissions creation process if it is unable to add them (e.g., insufficient permissions). If it does add them, it might not be up-to-date with current available permissions. Due to the nature of ChatGPT 3.5 Turbo (the model Brew(r) will use by default), it may not generate accurate permissions. This is a known issue and will be tweaked over time.
 
 #### Brewer didn't rename my NSFW channels?
 Brew(r) by default will not rename NSFW channels due to OpenAI's restrictions. You need to toggle this in the settings command.
+
+This won't affect Brew(r) from skipping a channel if the name is deemed too inappropriate.
 
 #### Nothing happened/it partially worked then stopped?
 There are two things that could have happened:
@@ -111,4 +113,4 @@ There are two things that could have happened:
 
 ## Dependencies
 - Coffee Core (0.5.0-alpha)
-- OpenAI-Java Service (0.14.0)
+- OpenAI-Java Service (0.16.0)

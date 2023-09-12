@@ -1,7 +1,13 @@
 package dev.alphaserpentis.bots.brewer.launcher;
 
 import com.google.gson.reflect.TypeToken;
-import dev.alphaserpentis.bots.brewer.commands.*;
+import dev.alphaserpentis.bots.brewer.commands.Brew;
+import dev.alphaserpentis.bots.brewer.commands.CustomSettings;
+import dev.alphaserpentis.bots.brewer.commands.Transcribe;
+import dev.alphaserpentis.bots.brewer.commands.TranscribeContext;
+import dev.alphaserpentis.bots.brewer.commands.Translate;
+import dev.alphaserpentis.bots.brewer.commands.TranslateContext;
+import dev.alphaserpentis.bots.brewer.commands.Vote;
 import dev.alphaserpentis.bots.brewer.data.serialization.BrewerServerDataDeserializer;
 import dev.alphaserpentis.bots.brewer.executor.CustomExecutors;
 import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
@@ -21,10 +27,13 @@ import io.github.cdimascio.dotenv.Dotenv;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
-import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import java.awt.Color;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,12 +79,12 @@ public class Launcher {
                         )
                 ).setEnabledGatewayIntents(
                         List.of(
-                                GatewayIntent.MESSAGE_CONTENT,
-                                GatewayIntent.GUILD_VOICE_STATES
+                                GatewayIntent.MESSAGE_CONTENT
+//                                GatewayIntent.GUILD_VOICE_STATES
                         )
                 )
                 .setMemberCachePolicy(MemberCachePolicy.DEFAULT)
-                .setEnabledCacheFlags(List.of(CacheFlag.VOICE_STATE))
+//                .setEnabledCacheFlags(List.of(CacheFlag.VOICE_STATE))
                 .setDisabledCacheFlags(List.of())
                 .setServerDataHandler(
                         new BrewerServerDataHandler(
