@@ -257,7 +257,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
     public void updateCommand(@NonNull Guild guild) {
         SubcommandData create = new SubcommandData("create", "Create new roles/categories/channels with a prompt!")
                 .addOption(OptionType.STRING, "prompt", "Describe a theme, style, or the specifics of what you want!", true);
-        SubcommandData rename = new SubcommandData("rename", "Rename your preexisting server!")
+        SubcommandData rename = new SubcommandData("rename", "Rename your preexisting server's channels, roles, and categories!")
                 .addOption(OptionType.STRING, "prompt", "Describe a theme, style, or the specifics of what you want!", true);
         SlashCommandData cmdData = ((SlashCommandData) getJDACommandData(getCommandType(), getName(), getDescription()))
                 .setGuildOnly(true)
