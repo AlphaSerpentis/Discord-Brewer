@@ -55,8 +55,7 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
         if(embedsArray == null) {
             workingEmbed = new EmbedBuilder();
         } else {
-            ratelimitMap.remove(userId);
-            return new CommandResponse<>(isOnlyEphemeral(), embedsArray);
+            return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
         }
 
         // Check rate limit
