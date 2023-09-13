@@ -60,6 +60,8 @@ public class Launcher {
                 [**Invite Brew(r) to Your Server!**](https://brewr.ai/invite)
                 [**GitHub**](https://github.com/AlphaSerpentis/Discord-Brewer)
                 [**Discord Server**](https://brewr.ai/discord)
+                [**TOS**](https://brewr.ai/tos)
+                [**Privacy Policy**](https://brewr.ai/privacy_policy)
                 """,
                 "brewr.ai",
                 Color.ORANGE,

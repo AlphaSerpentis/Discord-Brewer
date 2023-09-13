@@ -1,7 +1,7 @@
 package dev.alphaserpentis.bots.brewer.commands;
 
 import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
-import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionResponse;
+import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationResponse;
 import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.CustomOpenAiService;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
@@ -16,7 +16,7 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +66,7 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
             return rateLimitResponse;
 
         for(Message.Attachment attachment: attachments) {
-            AudioTranscriptionResponse response = OpenAIHandler.getAudioTranscription(attachment.getUrl());
+            AudioTranslationResponse response = OpenAIHandler.getAudioTranslation(attachment.getUrl());
 
             if(response.isCached()) {
                 description.append("# Cached Translation of ").append(attachment.getFileName()).append("\n");
