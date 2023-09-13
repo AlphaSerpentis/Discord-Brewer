@@ -1,4 +1,4 @@
-package dev.alphaserpentis.bots.brewer.data;
+package dev.alphaserpentis.bots.brewer.data.brewer;
 
 import dev.alphaserpentis.bots.brewer.handler.parser.Interpreter;
 import dev.alphaserpentis.bots.brewer.handler.parser.ParseActions;
@@ -28,60 +28,78 @@ public class UserSession {
             @NonNull String prompt,
             @NonNull UserSessionType type,
             @NonNull ParseActions.ValidAction action,
-            @NonNull ArrayList<ParseActions.ExecutableAction> actionsToExecute,
-            short brewCount
+            @NonNull ArrayList<ParseActions.ExecutableAction> actionsToExecute
     ) {
         this.prompt = prompt;
         this.type = type;
         this.action = action;
         this.actionsToExecute = actionsToExecute;
-        this.brewCount = brewCount;
+        this.brewCount = 1;
     }
 
     public String getPrompt() {
         return prompt;
     }
+
     public UserSessionType getType() {
         return type;
     }
+
     public ParseActions.ValidAction getAction() {
         return action;
     }
+
     public JDA getJDA() {
         return jda;
     }
+
     public ArrayList<ParseActions.ExecutableAction> getActionsToExecute() {
         return actionsToExecute;
     }
+
     public Interpreter.InterpreterResult getInterpreterResult() {
         return interpreterResult;
     }
+
     public short getBrewCount() {
         return brewCount;
     }
+
     public String getInteractionToken() {
         return interactionToken;
     }
+
     public long getGuildId() {
         return guildId;
     }
 
-    public void setActionsToExecute(ArrayList<ParseActions.ExecutableAction> actionsToExecute) {
+    public UserSession setActionsToExecute(ArrayList<ParseActions.ExecutableAction> actionsToExecute) {
         this.actionsToExecute = actionsToExecute;
+        return this;
     }
-    public void setJDA(JDA jda) {
+
+    public UserSession setJDA(JDA jda) {
         this.jda = jda;
+        return this;
     }
-    public void setInterpreterResult(@NonNull Interpreter.InterpreterResult interpreterResult) {
+
+    public UserSession setInterpreterResult(@NonNull Interpreter.InterpreterResult interpreterResult) {
         this.interpreterResult = interpreterResult;
+        return this;
     }
-    public void setBrewCount(short brewCount) {
+
+    public UserSession setBrewCount(short brewCount) {
         this.brewCount = brewCount;
+        return this;
     }
-    public void setInteractionToken(String interactionToken) {
+
+    public UserSession setInteractionToken(String interactionToken) {
         this.interactionToken = interactionToken;
+        return this;
     }
-    public void setGuildId(long guildId) {
+
+    public UserSession setGuildId(long guildId) {
         this.guildId = guildId;
+        return this;
     }
 }

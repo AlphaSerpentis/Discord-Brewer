@@ -1,19 +1,20 @@
 package dev.alphaserpentis.bots.brewer.handler.parser;
 
-import dev.alphaserpentis.bots.brewer.data.DiscordConfig;
-import dev.alphaserpentis.bots.brewer.data.UserSession;
+import dev.alphaserpentis.bots.brewer.data.discord.DiscordConfig;
+import dev.alphaserpentis.bots.brewer.data.brewer.UserSession;
+import dev.alphaserpentis.bots.brewer.exception.DiscordEntityException;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.annotations.Nullable;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.channel.concrete.Category;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.*;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,9 @@ import java.util.concurrent.TimeUnit;
 import static dev.alphaserpentis.bots.brewer.handler.parser.ParseActions.ValidDataNames.*;
 
 public class Interpreter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Interpreter.class);
+
     public record InterpreterResult(
             boolean completeSuccess,
             @Nullable ArrayList<String> messages,
@@ -29,13 +33,27 @@ public class Interpreter {
             @Nullable ArrayList<Role> roles,
             @Nullable OriginalState originalState
     ) {
-        public InterpreterResult(boolean completeSuccess, @Nullable ArrayList<String> messages) {
+        public InterpreterResult(
+                boolean completeSuccess,
+                @Nullable ArrayList<String> messages
+        ) {
             this(completeSuccess, messages, null, null, null);
         }
-        public InterpreterResult(boolean completeSuccess, @Nullable ArrayList<String> messages, @Nullable ArrayList<GuildChannel> channels, @Nullable ArrayList<Role> roles) {
+
+        public InterpreterResult(
+                boolean completeSuccess,
+                @Nullable ArrayList<String> messages,
+                @Nullable ArrayList<GuildChannel> channels,
+                @Nullable ArrayList<Role> roles
+        ) {
             this(completeSuccess, messages, channels, roles, null);
         }
-        public InterpreterResult(boolean completeSuccess, @Nullable ArrayList<String> messages, @NonNull OriginalState originalState) {
+
+        public InterpreterResult(
+                boolean completeSuccess,
+                @Nullable ArrayList<String> messages,
+                @NonNull OriginalState originalState
+        ) {
             this(completeSuccess, messages, null, null, originalState);
         }
     }
@@ -51,8 +69,14 @@ public class Interpreter {
             @NonNull HashMap<Long, HashMap<String, String>> originalCategoryData,
             @NonNull HashMap<Long, HashMap<String, String>> originalTextChannelData,
             @NonNull HashMap<Long, HashMap<String, String>> originalVoiceChannelData,
+            @NonNull HashMap<Long, HashMap<String, String>> originalForumChannelData,
+            @NonNull HashMap<Long, HashMap<String, String>> originalStageChannelData,
             @NonNull HashMap<Long, HashMap<String, String>> originalRoleData
-    ) {}
+    ) {
+        public OriginalState() {
+            this(new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>());
+        }
+    }
 
     @NonNull
     public static InterpreterResult interpretAndExecute(
@@ -70,12 +94,7 @@ public class Interpreter {
             channels = new ArrayList<>();
             roles = new ArrayList<>();
         } else if(validAction == ParseActions.ValidAction.EDIT) {
-            originalState = new OriginalState(
-                    new HashMap<>(),
-                    new HashMap<>(),
-                    new HashMap<>(),
-                    new HashMap<>()
-            );
+            originalState = new OriginalState();
         }
 
         for (ParseActions.ExecutableAction action : actions) {
@@ -126,6 +145,36 @@ public class Interpreter {
                             ));
                         }
                     }
+                    case FORUM_CHANNEL -> {
+                        switch (action.action()) {
+                            case CREATE -> {
+                                ForumChannel channel = createForumChannel(action, guild);
+                                channels.add(channel);
+                            }
+                            case EDIT -> originalState.originalForumChannelData.putAll(editForumChannel(
+                                    action,
+                                    guild.getForumChannelsByName(
+                                            action.target(),
+                                            true
+                                    ).get(0)
+                            ));
+                        }
+                    }
+                    case STAGE_CHANNEL -> {
+                        switch (action.action()) {
+                            case CREATE -> {
+                                StageChannel channel = createStageChannel(action, guild);
+                                channels.add(channel);
+                            }
+                            case EDIT -> originalState.originalStageChannelData.putAll(editStageChannel(
+                                    action,
+                                    guild.getStageChannelsByName(
+                                            action.target(),
+                                            true
+                                    ).get(0)
+                            ));
+                        }
+                    }
                     case ROLE -> {
                         switch (action.action()) {
                             case CREATE -> {
@@ -141,10 +190,13 @@ public class Interpreter {
                             ));
                         }
                     }
+                    default -> throw new IllegalArgumentException("Invalid target type");
                 }
             } catch (Exception e) {
                 completeSuccess = false;
                 messages.add(e.getMessage());
+
+                LOGGER.error("Error while executing action", e);
             }
         }
 
@@ -174,6 +226,7 @@ public class Interpreter {
         if(action == ParseActions.ValidAction.CREATE) {
             ArrayList<GuildChannel> channels = session.getInterpreterResult().channels();
             ArrayList<Role> roles = session.getInterpreterResult().roles();
+
             for(GuildChannel channel: channels) {
                 try {
                     channel.delete().completeAfter(1, TimeUnit.SECONDS);
@@ -190,7 +243,7 @@ public class Interpreter {
             }
 
             return new InterpreterResult(
-                    messages.size() == 0,
+                    messages.isEmpty(),
                     null,
                     null,
                     null,
@@ -210,8 +263,13 @@ public class Interpreter {
             for(long categoryId: originalState.originalCategoryData().keySet()) {
                 try {
                     Category category = guild.getCategoryById(categoryId);
-                    if(category == null) throw new Exception("Category not found. Category ID: " + categoryId);
-                    category.getManager().setName(originalState.originalCategoryData().get(categoryId).get("name")).completeAfter(1, TimeUnit.SECONDS);
+
+                    if(category == null)
+                        throw new DiscordEntityException("Category not found. Category ID: " + categoryId);
+
+                    category.getManager().setName(
+                            originalState.originalCategoryData().get(categoryId).get("name")
+                    ).completeAfter(1, TimeUnit.SECONDS);
                 } catch (Exception e) {
                     messages.add(e.getMessage());
                 }
@@ -219,9 +277,17 @@ public class Interpreter {
             for(long textChannelId: originalState.originalTextChannelData().keySet()) {
                 try {
                     TextChannel channel = guild.getTextChannelById(textChannelId);
-                    if(channel == null) throw new Exception("Text channel not found. Text channel ID: " + textChannelId);
-                    channel.getManager().setName(originalState.originalTextChannelData().get(textChannelId).get("name")).completeAfter(1, TimeUnit.SECONDS);
-                    channel.getManager().setTopic(originalState.originalTextChannelData().get(textChannelId).get("desc")).completeAfter(1, TimeUnit.SECONDS);
+
+                    if(channel == null)
+                        throw new DiscordEntityException("Text channel not found. Text channel ID: " + textChannelId);
+
+                    channel.getManager().setName(
+                            originalState.originalTextChannelData().get(textChannelId).get("name")
+                    ).completeAfter(1, TimeUnit.SECONDS);
+
+                    channel.getManager().setTopic(
+                            originalState.originalTextChannelData().get(textChannelId).get("desc")
+                    ).completeAfter(1, TimeUnit.SECONDS);
                 } catch (Exception e) {
                     messages.add(e.getMessage());
                 }
@@ -229,8 +295,13 @@ public class Interpreter {
             for(long voiceChannelId: originalState.originalVoiceChannelData().keySet()) {
                 try {
                     VoiceChannel channel = guild.getVoiceChannelById(voiceChannelId);
-                    if(channel == null) throw new Exception("Voice channel not found. Voice channel ID: " + voiceChannelId);
-                    channel.getManager().setName(originalState.originalVoiceChannelData().get(voiceChannelId).get("name")).completeAfter(1, TimeUnit.SECONDS);
+
+                    if(channel == null)
+                        throw new DiscordEntityException("Voice channel not found. Voice channel ID: " + voiceChannelId);
+
+                    channel.getManager().setName(
+                            originalState.originalVoiceChannelData().get(voiceChannelId).get("name")
+                    ).completeAfter(1, TimeUnit.SECONDS);
                 } catch (Exception e) {
                     messages.add(e.getMessage());
                 }
@@ -238,16 +309,24 @@ public class Interpreter {
             for(long roleId: originalState.originalRoleData().keySet()) {
                 try {
                     Role role = guild.getRoleById(roleId);
-                    if(role == null) throw new Exception("Role not found. Role ID: " + roleId);
-                    role.getManager().setName(originalState.originalRoleData().get(roleId).get("name")).completeAfter(1, TimeUnit.SECONDS);
-                    role.getManager().setColor(Color.decode(originalState.originalRoleData().get(roleId).get("color"))).completeAfter(1, TimeUnit.SECONDS);
+
+                    if(role == null)
+                        throw new DiscordEntityException("Role not found. Role ID: " + roleId);
+
+                    role.getManager().setName(
+                            originalState.originalRoleData().get(roleId).get("name")
+                    ).completeAfter(1, TimeUnit.SECONDS);
+
+                    role.getManager().setColor(
+                            Color.decode(originalState.originalRoleData().get(roleId).get("color"))
+                    ).completeAfter(1, TimeUnit.SECONDS);
                 } catch (Exception e) {
                     messages.add(e.getMessage());
                 }
             }
 
             return new InterpreterResult(
-                    messages.size() == 0,
+                    messages.isEmpty(),
                     messages
             );
         }
@@ -256,8 +335,13 @@ public class Interpreter {
     }
 
     @SuppressWarnings("unchecked")
-    private static Category createCategory(@NonNull ParseActions.ExecutableAction action, @NonNull Guild guild) {
-        Category category = guild.createCategory(action.data().get(NAME).toString()).completeAfter(1, TimeUnit.SECONDS);
+    private static Category createCategory(
+            @NonNull ParseActions.ExecutableAction action,
+            @NonNull Guild guild
+    ) {
+        Category category = guild.createCategory(
+                action.data().get(NAME).toString()
+        ).completeAfter(1, TimeUnit.SECONDS);
 
         // Check if there's a data name for permissions
         if(action.data().containsKey(PERMISSIONS)) {
@@ -280,7 +364,7 @@ public class Interpreter {
                                 .setAllowed(Long.parseLong(perm.allow()))
                                 .setDenied(Long.parseLong(perm.deny()))
                                 .completeAfter(1, TimeUnit.SECONDS);
-                    } else if(roles.size() > 0) {
+                    } else if(!roles.isEmpty()) {
                         Role role = roles.get(0);
                         category.upsertPermissionOverride(role)
                                 .setAllowed(Long.parseLong(perm.allow()))
@@ -295,7 +379,10 @@ public class Interpreter {
     }
 
     @SuppressWarnings("unchecked")
-    private static TextChannel createTextChannel(@NonNull ParseActions.ExecutableAction action, @NonNull Guild guild) {
+    private static TextChannel createTextChannel(
+            @NonNull ParseActions.ExecutableAction action,
+            @NonNull Guild guild
+    ) {
         TextChannel channel = guild
                 .createTextChannel(
                         action.data().get(NAME).toString()
@@ -329,8 +416,9 @@ public class Interpreter {
                                 .setAllowed(Long.parseLong(allowed))
                                 .setDenied(Long.parseLong(denied))
                                 .completeAfter(1, TimeUnit.SECONDS);
-                    } else if(roles.size() > 0) {
+                    } else if(!roles.isEmpty()) {
                         Role role = roles.get(0);
+
                         channel.upsertPermissionOverride(role)
                                 .setAllowed(Long.parseLong(allowed))
                                 .setDenied(Long.parseLong(denied))
@@ -342,10 +430,13 @@ public class Interpreter {
 
         if(action.data().containsKey(CATEGORY)) {
             if(!action.data().get(CATEGORY).equals("") || action.data().get(CATEGORY) == null) {
-                List<Category> categories = guild.getCategoriesByName(action.data().get(CATEGORY).toString(), true);
+                List<Category> categories = guild.getCategoriesByName(
+                        action.data().get(CATEGORY).toString(),
+                        true
+                );
                 Category category;
 
-                if(categories.size() > 0) {
+                if(!categories.isEmpty()) {
                     category = guild.getCategoriesByName(action.data().get(CATEGORY).toString(), true).get(0);
                 } else {
                     return channel;
@@ -359,7 +450,10 @@ public class Interpreter {
     }
 
     @SuppressWarnings("unchecked")
-    private static VoiceChannel createVoiceChannel(@NonNull ParseActions.ExecutableAction action, @NonNull Guild guild) {
+    private static VoiceChannel createVoiceChannel(
+            @NonNull ParseActions.ExecutableAction action,
+            @NonNull Guild guild
+    ) {
         VoiceChannel channel = guild
                 .createVoiceChannel(
                         action.data().get(NAME).toString()
@@ -389,14 +483,17 @@ public class Interpreter {
                     if(denied == null)
                         denied = "0";
 
-
-                    if(perm.role().equalsIgnoreCase("@everyone") || perm.role().equalsIgnoreCase("everyone")) {
+                    if(
+                            perm.role().equalsIgnoreCase("@everyone") ||
+                                    perm.role().equalsIgnoreCase("everyone")
+                    ) {
                         channel.upsertPermissionOverride(guild.getPublicRole())
                                 .setAllowed(Long.parseLong(allowed))
                                 .setDenied(Long.parseLong(denied))
                                 .completeAfter(1, TimeUnit.SECONDS);
-                    } else if(roles.size() > 0) {
+                    } else if(!roles.isEmpty()) {
                         Role role = roles.get(0);
+
                         channel.upsertPermissionOverride(role)
                                 .setAllowed(Long.parseLong(allowed))
                                 .setDenied(Long.parseLong(denied))
@@ -408,11 +505,167 @@ public class Interpreter {
 
         if(action.data().containsKey(CATEGORY)) {
             if(!action.data().get(CATEGORY).equals("") || action.data().get(CATEGORY) == null) {
-                List<Category> categories = guild.getCategoriesByName(action.data().get(CATEGORY).toString(), true);
+                List<Category> categories = guild.getCategoriesByName(
+                        action.data().get(CATEGORY).toString(),
+                        true
+                );
                 Category category;
 
-                if(categories.size() > 0) {
+                if(!categories.isEmpty()) {
                     category = guild.getCategoriesByName(action.data().get(CATEGORY).toString(), true).get(0);
+                } else {
+                    return channel;
+                }
+
+                channel.getManager().setParent(category).completeAfter(1, TimeUnit.SECONDS);
+            }
+        }
+
+        return channel;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ForumChannel createForumChannel(@NonNull ParseActions.ExecutableAction action, @NonNull Guild guild) {
+        ForumChannel channel = guild
+                .createForumChannel(
+                        action.data().get(NAME).toString()
+                ).completeAfter(1, TimeUnit.SECONDS);
+
+        if(action.data().containsKey(PERMISSIONS)) {
+            if(
+                    action.data().get(PERMISSIONS).equals("")
+                            || action.data().get(PERMISSIONS) == null
+            ) {
+                return channel;
+            }
+
+            ArrayList<DiscordConfig.ConfigItem.Permission> permsData =
+                    (ArrayList<DiscordConfig.ConfigItem.Permission>) action.data().get(PERMISSIONS);
+
+            for(DiscordConfig.ConfigItem.Permission perm: permsData) {
+                try {
+                    List<Role> roles = guild.getRolesByName(perm.role(), true);
+                    String allowed, denied;
+
+                    allowed = perm.allow();
+                    denied = perm.deny();
+
+                    if(allowed == null)
+                        allowed = "0";
+                    if(denied == null)
+                        denied = "0";
+
+                    if(
+                            perm.role().equalsIgnoreCase("@everyone") ||
+                                    perm.role().equalsIgnoreCase("everyone")
+                    ) {
+                        channel.upsertPermissionOverride(guild.getPublicRole())
+                                .setAllowed(Long.parseLong(allowed))
+                                .setDenied(Long.parseLong(denied))
+                                .completeAfter(1, TimeUnit.SECONDS);
+                    } else if(!roles.isEmpty()) {
+                        Role role = roles.get(0);
+
+                        channel.upsertPermissionOverride(role)
+                                .setAllowed(Long.parseLong(allowed))
+                                .setDenied(Long.parseLong(denied))
+                                .completeAfter(1, TimeUnit.SECONDS);
+                    }
+                } catch(InsufficientPermissionException ignored) {}
+            }
+        }
+
+        if(action.data().containsKey(CATEGORY)) {
+            if(!action.data().get(CATEGORY).equals("") || action.data().get(CATEGORY) == null) {
+                List<Category> categories = guild.getCategoriesByName(
+                        action.data().get(CATEGORY).toString(),
+                        true
+                );
+                Category category;
+
+                if(!categories.isEmpty()) {
+                    category = guild.getCategoriesByName(
+                            action.data().get(CATEGORY).toString(),
+                            true
+                    ).get(0);
+                } else {
+                    return channel;
+                }
+
+                channel.getManager().setParent(category).completeAfter(1, TimeUnit.SECONDS);
+            }
+        }
+
+        return channel;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static StageChannel createStageChannel(
+            @NonNull ParseActions.ExecutableAction action,
+            @NonNull Guild guild
+    ) {
+        StageChannel channel = guild
+                .createStageChannel(
+                        action.data().get(NAME).toString()
+                ).completeAfter(1, TimeUnit.SECONDS);
+
+        if(action.data().containsKey(PERMISSIONS)) {
+            if(
+                    action.data().get(PERMISSIONS).equals("")
+                            || action.data().get(PERMISSIONS) == null
+            ) {
+                return channel;
+            }
+
+            ArrayList<DiscordConfig.ConfigItem.Permission> permsData =
+                    (ArrayList<DiscordConfig.ConfigItem.Permission>) action.data().get(PERMISSIONS);
+
+            for(DiscordConfig.ConfigItem.Permission perm: permsData) {
+                try {
+                    List<Role> roles = guild.getRolesByName(perm.role(), true);
+                    String allowed, denied;
+
+                    allowed = perm.allow();
+                    denied = perm.deny();
+
+                    if(allowed == null)
+                        allowed = "0";
+                    if(denied == null)
+                        denied = "0";
+
+                    if(
+                            perm.role().equalsIgnoreCase("@everyone") ||
+                                    perm.role().equalsIgnoreCase("everyone")
+                    ) {
+                        channel.upsertPermissionOverride(guild.getPublicRole())
+                                .setAllowed(Long.parseLong(allowed))
+                                .setDenied(Long.parseLong(denied))
+                                .completeAfter(1, TimeUnit.SECONDS);
+                    } else if(!roles.isEmpty()) {
+                        Role role = roles.get(0);
+
+                        channel.upsertPermissionOverride(role)
+                                .setAllowed(Long.parseLong(allowed))
+                                .setDenied(Long.parseLong(denied))
+                                .completeAfter(1, TimeUnit.SECONDS);
+                    }
+                } catch(InsufficientPermissionException ignored) {}
+            }
+        }
+
+        if(action.data().containsKey(CATEGORY)) {
+            if(!action.data().get(CATEGORY).equals("") || action.data().get(CATEGORY) == null) {
+                List<Category> categories = guild.getCategoriesByName(
+                        action.data().get(CATEGORY).toString(),
+                        true
+                );
+                Category category;
+
+                if(!categories.isEmpty()) {
+                    category = guild.getCategoriesByName(
+                            action.data().get(CATEGORY).toString(),
+                            true
+                    ).get(0);
                 } else {
                     return channel;
                 }
@@ -458,8 +711,12 @@ public class Interpreter {
         return role;
     }
 
-    private static HashMap<Long, HashMap<String, String>> editCategory(@NonNull ParseActions.ExecutableAction action, @NonNull Category category) {
+    private static HashMap<Long, HashMap<String, String>> editCategory(
+            @NonNull ParseActions.ExecutableAction action,
+            @NonNull Category category
+    ) {
         final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+
         result.put(
                 category.getIdLong(),
                 new HashMap<>() {{
@@ -470,15 +727,21 @@ public class Interpreter {
         // Set new name if not null or empty
         if(action.data().containsKey(NAME)) {
             if(!action.data().get(NAME).equals("") || action.data().get(NAME) != null) {
-                category.getManager().setName(action.data().get(NAME).toString()).completeAfter(1, TimeUnit.SECONDS);
+                category.getManager().setName(
+                        action.data().get(NAME).toString()
+                ).completeAfter(1, TimeUnit.SECONDS);
             }
         }
 
         return result;
     }
 
-    private static HashMap<Long, HashMap<String, String>> editTextChannel(@NonNull ParseActions.ExecutableAction action, @NonNull TextChannel channel) {
+    private static HashMap<Long, HashMap<String, String>> editTextChannel(
+            @NonNull ParseActions.ExecutableAction action,
+            @NonNull TextChannel channel
+    ) {
         final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+
         result.put(
                 channel.getIdLong(),
                 new HashMap<>() {{
@@ -490,22 +753,30 @@ public class Interpreter {
         // Set new name if not null or empty
         if(action.data().containsKey(NAME)) {
             if(!action.data().get(NAME).equals("") || action.data().get(NAME) != null) {
-                channel.getManager().setName(action.data().get(NAME).toString()).completeAfter(1, TimeUnit.SECONDS);
+                channel.getManager().setName(
+                        action.data().get(NAME).toString()
+                ).completeAfter(1, TimeUnit.SECONDS);
             }
         }
 
         // Set new description if not null or empty
         if(action.data().containsKey(DESCRIPTION)) {
             if(!action.data().get(DESCRIPTION).equals("") || action.data().get(DESCRIPTION) != null) {
-                channel.getManager().setTopic(action.data().get(DESCRIPTION).toString()).completeAfter(1, TimeUnit.SECONDS);
+                channel.getManager().setTopic(
+                        action.data().get(DESCRIPTION).toString()
+                ).completeAfter(1, TimeUnit.SECONDS);
             }
         }
 
         return result;
     }
 
-    private static HashMap<Long, HashMap<String, String>> editVoiceChannel(@NonNull ParseActions.ExecutableAction action, @NonNull VoiceChannel channel) {
+    private static HashMap<Long, HashMap<String, String>> editVoiceChannel(
+            @NonNull ParseActions.ExecutableAction action,
+            @NonNull VoiceChannel channel
+    ) {
         final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+
         result.put(
                 channel.getIdLong(),
                 new HashMap<>() {{
@@ -516,16 +787,72 @@ public class Interpreter {
         // Set new name if not null or empty
         if(action.data().containsKey(NAME)) {
             if(!action.data().get(NAME).equals("") || action.data().get(NAME) != null) {
-                channel.getManager().setName(action.data().get(NAME).toString()).completeAfter(1, TimeUnit.SECONDS);
+                channel.getManager().setName(
+                        action.data().get(NAME).toString()
+                ).completeAfter(1, TimeUnit.SECONDS);
             }
         }
 
         return result;
     }
 
-    private static HashMap<Long, HashMap<String, String>> editRole(@NonNull ParseActions.ExecutableAction action, @NonNull Role role) {
+    private static HashMap<Long, HashMap<String, String>> editForumChannel(
+            @NonNull ParseActions.ExecutableAction action,
+            @NonNull ForumChannel channel
+    ) {
+        final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+
+        result.put(
+                channel.getIdLong(),
+                new HashMap<>() {{
+                    put("name", channel.getName());
+                }}
+        );
+
+        // Set new name if not null or empty
+        if(action.data().containsKey(NAME)) {
+            if(!action.data().get(NAME).equals("") || action.data().get(NAME) != null) {
+                channel.getManager().setName(
+                        action.data().get(NAME).toString()
+                ).completeAfter(1, TimeUnit.SECONDS);
+            }
+        }
+
+        return result;
+    }
+
+    private static HashMap<Long, HashMap<String, String>> editStageChannel(
+            @NonNull ParseActions.ExecutableAction action,
+            @NonNull StageChannel channel
+    ) {
+        final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+
+        result.put(
+                channel.getIdLong(),
+                new HashMap<>() {{
+                    put("name", channel.getName());
+                }}
+        );
+
+        // Set new name if not null or empty
+        if(action.data().containsKey(NAME)) {
+            if(!action.data().get(NAME).equals("") || action.data().get(NAME) != null) {
+                channel.getManager().setName(
+                        action.data().get(NAME).toString()
+                ).completeAfter(1, TimeUnit.SECONDS);
+            }
+        }
+
+        return result;
+    }
+
+    private static HashMap<Long, HashMap<String, String>> editRole(
+            @NonNull ParseActions.ExecutableAction action,
+            @NonNull Role role
+    ) {
         final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
         final Color color = role.getColor();
+
         result.put(
                 role.getIdLong(),
                 new HashMap<>() {{
@@ -537,14 +864,18 @@ public class Interpreter {
         // Set new name if not null or empty
         if(action.data().containsKey(NAME)) {
             if(!action.data().get(NAME).equals("") || action.data().get(NAME) != null) {
-                role.getManager().setName(action.data().get(NAME).toString()).completeAfter(1, TimeUnit.SECONDS);
+                role.getManager().setName(
+                        action.data().get(NAME).toString()
+                ).completeAfter(1, TimeUnit.SECONDS);
             }
         }
 
         // Set new color if not null or empty
         if(action.data().containsKey(COLOR)) {
             if(!action.data().get(COLOR).equals("") || action.data().get(COLOR) != null) {
-                role.getManager().setColor(Color.decode(action.data().get(COLOR).toString())).completeAfter(1, TimeUnit.SECONDS);
+                role.getManager().setColor(
+                        Color.decode(action.data().get(COLOR).toString())
+                ).completeAfter(1, TimeUnit.SECONDS);
             }
         }
 

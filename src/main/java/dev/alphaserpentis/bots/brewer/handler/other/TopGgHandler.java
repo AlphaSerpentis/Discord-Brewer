@@ -18,7 +18,13 @@ public class TopGgHandler {
                 .token(token)
                 .botId(botId)
                 .build();
-        scheduler.scheduleAtFixedRate(TopGgHandler::update, 0, 60, java.util.concurrent.TimeUnit.MINUTES);
+
+        scheduler.scheduleAtFixedRate(
+                TopGgHandler::update,
+                0,
+                60,
+                java.util.concurrent.TimeUnit.MINUTES
+        );
     }
 
     public static void update() {

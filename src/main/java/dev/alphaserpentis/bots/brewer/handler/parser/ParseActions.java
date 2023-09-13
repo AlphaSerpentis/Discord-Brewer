@@ -1,6 +1,6 @@
 package dev.alphaserpentis.bots.brewer.handler.parser;
 
-import dev.alphaserpentis.bots.brewer.data.DiscordConfig;
+import dev.alphaserpentis.bots.brewer.data.discord.DiscordConfig;
 import io.reactivex.rxjava3.annotations.NonNull;
 
 import java.util.ArrayList;
@@ -28,6 +28,8 @@ public class ParseActions {
         CATEGORY ("cat", "Category"),
         TEXT_CHANNEL ("chnl-txt", "Text Channel"),
         VOICE_CHANNEL ("chnl-vc", "Voice Channel"),
+        FORUM_CHANNEL ("chnl-forum", "Forum Channel"),
+        STAGE_CHANNEL ("chnl-stage", "Stage Channel"),
         ROLE ("role", "Role");
 
         public final String role;
@@ -40,8 +42,8 @@ public class ParseActions {
     }
 
     public enum ValidAction {
-        CREATE ("create", "Create", "Create **%s**"),
-        EDIT ("edit", "Edit", "Edit **%s** to **%s**");
+        CREATE ("create", "Create", "- Create **%s**"),
+        EDIT ("edit", "Edit", "- Edit **%s** to **%s**");
 
         public final String role;
         public final String readable;
@@ -60,6 +62,7 @@ public class ParseActions {
         CATEGORY ("cat", "Category"),
         PERMISSIONS ("perms", "Perms."),
         COLOR ("color", "Color");
+
         public final String role;
         public final String readable;
 
@@ -70,7 +73,10 @@ public class ParseActions {
     }
 
     @NonNull
-    public static ArrayList<ExecutableAction> parseActions(@NonNull DiscordConfig config, @NonNull ValidAction action) {
+    public static ArrayList<ExecutableAction> parseActions(
+            @NonNull DiscordConfig config,
+            @NonNull ValidAction action
+    ) {
         ArrayList<ExecutableAction> actions = new ArrayList<>();
 
         if(config.roles() != null)
@@ -125,7 +131,7 @@ public class ParseActions {
                                         ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
                                 )
                         ));
-                    } else {
+                    } else if (entry.getValue().type().equalsIgnoreCase("txt")) {
                         actions.add(new ExecutableAction(
                                 ValidTarget.TEXT_CHANNEL,
                                 action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
@@ -133,6 +139,28 @@ public class ParseActions {
                                 Map.of(
                                         ValidDataNames.NAME, Objects.requireNonNullElse(entry.getValue().name(), ""),
                                         ValidDataNames.DESCRIPTION, Objects.requireNonNullElse(entry.getValue().desc(), ""),
+                                        ValidDataNames.CATEGORY, Objects.requireNonNullElse(catName, ""),
+                                        ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
+                                )
+                        ));
+                    } else if (entry.getValue().type().equalsIgnoreCase("forum")) {
+                        actions.add(new ExecutableAction(
+                                ValidTarget.FORUM_CHANNEL,
+                                action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
+                                action,
+                                Map.of(
+                                        ValidDataNames.NAME, Objects.requireNonNullElse(entry.getValue().name(), ""),
+                                        ValidDataNames.CATEGORY, Objects.requireNonNullElse(catName, ""),
+                                        ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
+                                )
+                        ));
+                    } else if (entry.getValue().type().equalsIgnoreCase("stage")) {
+                        actions.add(new ExecutableAction(
+                                ValidTarget.STAGE_CHANNEL,
+                                action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
+                                action,
+                                Map.of(
+                                        ValidDataNames.NAME, Objects.requireNonNullElse(entry.getValue().name(), ""),
                                         ValidDataNames.CATEGORY, Objects.requireNonNullElse(catName, ""),
                                         ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
                                 )

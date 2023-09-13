@@ -1,4 +1,4 @@
-package dev.alphaserpentis.bots.brewer.data;
+package dev.alphaserpentis.bots.brewer.data.discord;
 
 import java.util.List;
 import java.util.Map;

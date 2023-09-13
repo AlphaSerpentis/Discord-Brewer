@@ -5,25 +5,40 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.theokanning.openai.OpenAiHttpException;
 import com.theokanning.openai.completion.chat.ChatMessage;
-import dev.alphaserpentis.bots.brewer.data.DiscordConfig;
-import dev.alphaserpentis.bots.brewer.data.Prompts;
-import dev.alphaserpentis.bots.brewer.data.UserSession;
+import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
+import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
+import dev.alphaserpentis.bots.brewer.data.brewer.UserSession;
+import dev.alphaserpentis.bots.brewer.data.discord.DiscordConfig;
+import dev.alphaserpentis.bots.brewer.data.openai.Prompts;
 import dev.alphaserpentis.bots.brewer.exception.GenerationException;
+import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.bots.brewer.handler.parser.ParseActions;
+import dev.alphaserpentis.bots.brewer.launcher.Launcher;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.internal.entities.ForumChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.CategoryImpl;
+import net.dv8tion.jda.internal.entities.channel.concrete.StageChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.TextChannelImpl;
+import net.dv8tion.jda.internal.entities.channel.concrete.VoiceChannelImpl;
+import net.dv8tion.jda.internal.entities.channel.concrete.NewsChannelImpl;
+import net.dv8tion.jda.internal.entities.channel.middleman.AbstractStandardGuildMessageChannelImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.awt.*;
+import java.awt.Color;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class BrewHandler {
+
+    public static Logger logger = LoggerFactory.getLogger(BrewHandler.class);
+
     private static final HashMap<Long, UserSession> userSessions = new HashMap<>();
 
     public static UserSession getUserSession(@NonNull long userId) {
@@ -42,6 +57,8 @@ public class BrewHandler {
         ArrayList<ParseActions.ExecutableAction> actions;
         UserSession session;
 
+        AnalyticsHandler.addUsage(event.getGuild(), ServiceType.CREATE);
+
         try {
             actions = generateActions(
                     Prompts.SETUP_SYSTEM_PROMPT_CREATE,
@@ -49,9 +66,17 @@ public class BrewHandler {
                     ParseActions.ValidAction.CREATE
             );
         } catch(JsonSyntaxException e) {
-            throw new GenerationException(GenerationException.ExceptionType.JSON_EXCEPTION.getDescriptions(), e.getCause());
+            logger.error("JSONSyntaxException thrown in generateCreatePrompt", e);
+
+            throw new GenerationException(GenerationException.Type.JSON_EXCEPTION.getDescriptions(), e.getCause());
         } catch(OpenAiHttpException e) {
-            throw new GenerationException(GenerationException.ExceptionType.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
+            logger.error("OpenAiHttpException thrown in generateCreatePrompt", e);
+
+            throw new GenerationException(GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
+        } catch(SocketTimeoutException e) {
+            logger.error("SocketTimeoutException thrown in generateCreatePrompt", e);
+
+            throw new GenerationException(GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(), e.getCause());
         }
 
         previewChangesPage(eb, actions);
@@ -59,12 +84,12 @@ public class BrewHandler {
                 prompt,
                 UserSession.UserSessionType.NEW_BREW,
                 ParseActions.ValidAction.CREATE,
-                actions,
-                (short) 0
+                actions
         );
-        session.setJDA(event.getJDA());
-        session.setInteractionToken(event.getInteraction().getToken());
-        session.setGuildId(event.getGuild().getIdLong());
+        session
+                .setJDA(event.getJDA())
+                .setInteractionToken(event.getInteraction().getToken())
+                .setGuildId(event.getGuild().getIdLong());
         userSessions.put(event.getUser().getIdLong(), session);
     }
 
@@ -73,31 +98,49 @@ public class BrewHandler {
             @NonNull String prompt,
             @NonNull SlashCommandInteractionEvent event
     ) {
+        boolean allowNsfwChannelRenames = (
+                (BrewerServerData) Launcher.core.getServerDataHandler().getServerData(event.getGuild().getIdLong())
+        ).getTryRenamingNsfwChannels();
         ArrayList<ParseActions.ExecutableAction> actions;
         UserSession session;
 
+        AnalyticsHandler.addUsage(event.getGuild(), ServiceType.RENAME);
+
         try {
-            actions = generateActions(
-                    Prompts.SETUP_SYSTEM_PROMPT_RENAME,
-                    new GsonBuilder().setPrettyPrinting().create().toJson(getGuildData(event.getGuild(), "Rename name, desc, and color based on " + prompt)),
-                    ParseActions.ValidAction.EDIT
+            actions = optimizeRenameActions(
+                    generateActions(
+                        Prompts.SETUP_SYSTEM_PROMPT_RENAME,
+                        new GsonBuilder().setPrettyPrinting().create().toJson(
+                                getGuildData(event.getGuild(), prompt, allowNsfwChannelRenames)
+                        ),
+                        ParseActions.ValidAction.EDIT
+                    )
             );
         } catch(JsonSyntaxException e) {
-            throw new GenerationException(GenerationException.ExceptionType.JSON_EXCEPTION.getDescriptions(), e.getCause());
+            logger.error("JSONSyntaxException thrown in generateCreatePrompt", e);
+
+            throw new GenerationException(GenerationException.Type.JSON_EXCEPTION.getDescriptions(), e.getCause());
         } catch(OpenAiHttpException e) {
-            throw new GenerationException(GenerationException.ExceptionType.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
+            logger.error("OpenAiHttpException thrown in generateCreatePrompt", e);
+
+            throw new GenerationException(GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
+        } catch(SocketTimeoutException e) {
+            logger.error("SocketTimeoutException thrown in generateCreatePrompt", e);
+
+            throw new GenerationException(GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(), e.getCause());
         }
+
         previewChangesPage(eb, actions);
         session = new UserSession(
                 prompt,
                 UserSession.UserSessionType.RENAME,
                 ParseActions.ValidAction.EDIT,
-                actions,
-                (short) 0
+                actions
         );
-        session.setJDA(event.getJDA());
-        session.setInteractionToken(event.getInteraction().getToken());
-        session.setGuildId(event.getGuild().getIdLong());
+        session
+                .setJDA(event.getJDA())
+                .setInteractionToken(event.getInteraction().getToken())
+                .setGuildId(event.getGuild().getIdLong());
         userSessions.put(event.getUser().getIdLong(), session);
     }
 
@@ -106,7 +149,7 @@ public class BrewHandler {
             @NonNull ChatMessage system,
             @NonNull String prompt,
             @NonNull ParseActions.ValidAction action
-    ) {
+    ) throws SocketTimeoutException {
         Gson gson = new Gson();
         String result = OpenAIHandler.getCompletion(
                 system,
@@ -126,7 +169,10 @@ public class BrewHandler {
         return actions;
     }
 
-    public static void previewChangesPage(@NonNull EmbedBuilder eb, @NonNull ArrayList<ParseActions.ExecutableAction> actions) {
+    public static void previewChangesPage(
+            @NonNull EmbedBuilder eb,
+            @NonNull ArrayList<ParseActions.ExecutableAction> actions
+    ) {
         final String TOO_LONG = "... (too long to show)";
         String categoriesVal, channelsVal, rolesVal;
 
@@ -138,6 +184,7 @@ public class BrewHandler {
                 
                 **Notice**: Permissions are omitted from this preview. If the bot doesn't have sufficient permissions to make the changes, it will not set permissions!
                 """);
+        eb.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
         eb.setColor(Color.GREEN);
 
         // Categories
@@ -146,7 +193,7 @@ public class BrewHandler {
         ).map(
                 BrewHandler::generateReadablePreview
         ).reduce(
-                (a, b) -> String.format("%s\n%s", a, b)
+                (a, b) -> String.format("%s%s", a, b)
         ).orElse("No changes");
 
         eb.addField(
@@ -162,7 +209,7 @@ public class BrewHandler {
         ).map(
                 BrewHandler::generateReadablePreview
         ).reduce(
-                (a, b) -> String.format("%s\n%s", a, b)
+                (a, b) -> String.format("%s%s", a, b)
         ).orElse("No changes");
 
         eb.addField(
@@ -177,7 +224,7 @@ public class BrewHandler {
         ).map(
                 BrewHandler::generateReadablePreview
         ).reduce(
-                (a, b) -> String.format("%s\n%s", a, b)
+                (a, b) -> String.format("%s%s", a, b)
         ).orElse("No changes");
 
         eb.addField(
@@ -188,22 +235,7 @@ public class BrewHandler {
     }
 
     private static String generateReadablePreview(@NonNull ParseActions.ExecutableAction action) {
-        StringBuilder readableData = new StringBuilder();
-
-        for(Map.Entry<ParseActions.ValidDataNames, Object> entry : action.data().entrySet()) {
-            if(
-                    entry.getKey() == ParseActions.ValidDataNames.NAME
-                            || entry.getKey() == ParseActions.ValidDataNames.PERMISSIONS
-                            || entry.getValue().equals("")
-            )
-                continue;
-
-            readableData.append(String.format(
-                    "└ **%s**: %s\n",
-                    entry.getKey().readable,
-                    entry.getValue()
-            ));
-        }
+        StringBuilder readableData = getData(action);
 
         if(action.action() == ParseActions.ValidAction.CREATE) {
             return String.format(
@@ -223,26 +255,102 @@ public class BrewHandler {
         }
     }
 
-    private static DiscordConfig getGuildData(@NonNull Guild guild, @NonNull String prompt) {
+    @NonNull
+    private static ArrayList<ParseActions.ExecutableAction> optimizeRenameActions(
+            @NonNull ArrayList<ParseActions.ExecutableAction> actions
+    ) {
+        ArrayList<ParseActions.ExecutableAction> optimizedActions = new ArrayList<>(actions.size());
+
+        for(ParseActions.ExecutableAction action : actions) {
+            String name = (String) action.data().get(ParseActions.ValidDataNames.NAME);
+            String desc = (String) action.data().get(ParseActions.ValidDataNames.DESCRIPTION);
+            String color = (String) action.data().get(ParseActions.ValidDataNames.COLOR);
+
+            if(name != null && !name.isEmpty() && !name.equals(action.target())) { // Check if name is different
+                optimizedActions.add(action);
+            } else if(name != null && !name.isEmpty()
+                    && (desc != null && !desc.isEmpty())
+                    || (color != null && !color.isEmpty())
+            ) { // If the name is the same, check if description or color is different
+                optimizedActions.add(action);
+            }
+        }
+
+        return optimizedActions;
+    }
+
+    private static StringBuilder getData(ParseActions.ExecutableAction action) {
+        StringBuilder readableData = new StringBuilder();
+
+        for(Map.Entry<ParseActions.ValidDataNames, ?> entry : action.data().entrySet()) {
+            if(
+                    entry.getKey() == ParseActions.ValidDataNames.NAME
+                            || entry.getKey() == ParseActions.ValidDataNames.PERMISSIONS
+                            || entry.getValue().equals("")
+            )
+                continue;
+
+            readableData.append(String.format(
+                    " - **%s**: %s\n",
+                    entry.getKey().readable,
+                    entry.getValue()
+            ));
+        }
+        return readableData;
+    }
+
+    private static DiscordConfig getGuildData(
+            @NonNull Guild guild,
+            @NonNull String prompt,
+            boolean getNsfwChannels
+    ) {
         HashMap<String, DiscordConfig.ConfigItem> categories = new HashMap<>();
         HashMap<String, DiscordConfig.ConfigItem> channels = new HashMap<>();
         HashMap<String, DiscordConfig.ConfigItem> roles = new HashMap<>();
 
-        guild.getCategories().forEach(category -> categories.put(category.getName(), new DiscordConfig.ConfigItem(
-                category.getName(),
-                null,
-                null,
-                null,
-                null,
-                null
-        )));
+        guild.getCategories().forEach(category -> {
+            // Verify the category's name won't get us yeeted
+            if(OpenAIHandler.isContentFlagged(category.getName(), -1, -1, false))
+                return;
+
+            categories.put(category.getName(), new DiscordConfig.ConfigItem(
+                    category.getName(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            ));
+        });
         guild.getChannels(false).forEach(channel -> {
+            String type;
+
             if(channel instanceof CategoryImpl)
+                return;
+
+            if(channel instanceof AbstractStandardGuildMessageChannelImpl<?> chn)
+                if(chn.isNSFW() && !getNsfwChannels)
+                    return;
+
+            if(channel instanceof TextChannelImpl || channel instanceof NewsChannelImpl) {
+                type = "txt";
+            } else if(channel instanceof VoiceChannelImpl) {
+                type = "vc";
+            } else if(channel instanceof ForumChannelImpl) {
+                type = "forum";
+            } else if(channel instanceof StageChannelImpl) {
+                type = "stage";
+            } else {
+                return;
+            }
+
+            // Verify the channel's name won't get us yeeted
+            if(OpenAIHandler.isContentFlagged(channel.getName(), -1, -1, false))
                 return;
 
             channels.put(channel.getName(), new DiscordConfig.ConfigItem(
                     channel.getName(),
-                    (channel instanceof TextChannelImpl) ? null : "vc",
+                    type,
                     null,
                     (channel instanceof TextChannelImpl) ? ((TextChannelImpl) channel).getTopic() : null,
                     null,
@@ -251,6 +359,10 @@ public class BrewHandler {
         });
         guild.getRoles().forEach(role -> {
             if(role.isPublicRole() || role.isManaged())
+                return;
+
+            // Verify the role's name won't get us yeeted
+            if(OpenAIHandler.isContentFlagged(role.getName(), -1, -1, false))
                 return;
 
             roles.put(role.getName(), new DiscordConfig.ConfigItem(
@@ -277,7 +389,11 @@ public class BrewHandler {
         json = json.replaceAll(",\\s*}", "}");
         json = json.replaceAll(",\\s*]", "]");
 
-        // Remove any text befor
+        // Remove any text before the beginning of the JSON
+        json = json.substring(json.indexOf("{"));
+
+        // Remove any text after the end of the JSON
+        json = json.substring(0, json.lastIndexOf("}") + 1);
 
         return json;
     }

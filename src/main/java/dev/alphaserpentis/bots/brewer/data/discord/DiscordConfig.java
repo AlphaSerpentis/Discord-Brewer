@@ -1,4 +1,4 @@
-package dev.alphaserpentis.bots.brewer.data;
+package dev.alphaserpentis.bots.brewer.data.discord;
 
 import io.reactivex.rxjava3.annotations.Nullable;
 
