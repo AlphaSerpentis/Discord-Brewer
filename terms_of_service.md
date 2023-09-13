@@ -2,7 +2,7 @@
 
 *Last Updated: July 28, 2023*
 
-*Effective On: TBD*
+*Effective On: September 13, 2023*
 
 ---
 
