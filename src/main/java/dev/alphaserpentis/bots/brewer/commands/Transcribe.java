@@ -19,7 +19,6 @@ import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.awt.Color;
@@ -42,8 +41,8 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
                         .setUseRatelimits(true)
         );
 
-        addButton("summarize", ButtonStyle.PRIMARY, "Summarize", false);
-        addButton("optout", ButtonStyle.DANGER, "Opt Out", false);
+//        addButton("summarize", ButtonStyle.PRIMARY, "Summarize", false);
+//        addButton("optout", ButtonStyle.DANGER, "Opt Out", false);
     }
 
     @Override
@@ -54,12 +53,12 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
     @Override
     @NonNull
     public Collection<ItemComponent> addButtonsToMessage(@NonNull SlashCommandInteractionEvent event) {
-        if(event.getSubcommandName().equalsIgnoreCase("vc")) {
-            return List.of(
-                    getButton("summarize"),
-                    getButton("optout")
-            );
-        }
+//        if(event.getSubcommandName().equalsIgnoreCase("vc")) {
+//            return List.of(
+//                    getButton("summarize"),
+//                    getButton("optout")
+//            );
+//        }
 
         return List.of();
     }
@@ -80,8 +79,7 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
         if(embedsArray == null) {
             workingEmbed = new EmbedBuilder();
         } else {
-            ratelimitMap.remove(userId);
-            return new CommandResponse<>(isOnlyEphemeral(), embedsArray);
+            return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
         }
 
         // Check rate limit
@@ -109,15 +107,15 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
 
     @Override
     public void updateCommand(@NonNull JDA jda) {
-        SubcommandData vc = new SubcommandData("vc", "(BETA) Join a VC and transcribe the conversations")
-                .addOption(OptionType.CHANNEL, "channel", "The channel to join", true)
-                .addOption(OptionType.INTEGER, "duration", "The duration to transcribe for (in seconds)", true);
+//        SubcommandData vc = new SubcommandData("vc", "(BETA) Join a VC and transcribe the conversations")
+//                .addOption(OptionType.CHANNEL, "channel", "The channel to join", true)
+//                .addOption(OptionType.INTEGER, "duration", "The duration to transcribe for (in seconds)", true);
         SubcommandData url = new SubcommandData("url", "Transcribe an audio file from a URL")
                 .addOption(OptionType.STRING, "url", "The URL of the audio file to transcribe", true);
 
         jda
                 .upsertCommand(getName(), getDescription())
-                .addSubcommands(vc, url)
+                .addSubcommands(url)
                 .queue(r -> setGlobalCommandId(r.getIdLong()));
     }
 

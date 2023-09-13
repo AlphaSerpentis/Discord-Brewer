@@ -65,9 +65,7 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
         if(embedsArray == null) {
             workingEmbed = new EmbedBuilder();
         } else {
-            ratelimitMap.remove(userId);
-
-            return new CommandResponse<>(isOnlyEphemeral(), embedsArray);
+            return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
         }
 
         // Check rate limit

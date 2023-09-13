@@ -45,6 +45,7 @@ public class AcknowledgementHandler {
         File file;
         BufferedReader reader;
         Gson gson = new Gson();
+        InputStream inputStream;
 
         switch(type) {
             case TOS -> file = new File(pathToAcknowledgementsDirectory + "/tos.json");
@@ -56,14 +57,15 @@ public class AcknowledgementHandler {
         if(!file.exists()) {
             ClassLoader classLoader = AcknowledgementHandler.class.getClassLoader();
             switch(type) {
-                case TOS -> file = new File(classLoader.getResource("default/acknowledgement/tos.json").getFile());
-                case PRIVACY_POLICY -> file = new File(classLoader.getResource("default/acknowledgement/privacy_policy.json").getFile());
-                case UPDATES -> file = new File(classLoader.getResource("default/acknowledgement/updates.json").getFile());
+                case TOS -> inputStream = classLoader.getResourceAsStream("default/acknowledgement/tos.json");
+                case PRIVACY_POLICY -> inputStream = classLoader.getResourceAsStream("default/acknowledgement/privacy_policy.json");
+                case UPDATES -> inputStream = classLoader.getResourceAsStream("default/acknowledgement/updates.json");
                 default -> throw new IllegalStateException("Unexpected value: " + type);
             }
+            reader = new BufferedReader(new InputStreamReader(inputStream));
+        } else {
+            reader = new BufferedReader(new FileReader(file));
         }
-
-        reader = new BufferedReader(new FileReader(file));
 
         return gson.fromJson(reader, AcknowledgeThis.class);
     }
