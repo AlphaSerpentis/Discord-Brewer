@@ -211,7 +211,7 @@ public interface Prompts {
                     """
     );
 
-    ChatMessage SETUP_SYSTEM_PROMPT_SUMMARIZE = new ChatMessage(
+    ChatMessage SETUP_SYSTEM_PROMPT_SUMMARIZE_AUDIO = new ChatMessage(
             "system",
             """
                     Act as a creative, exciting, and improvising Discord assistant that only talks in JSON. Do not add normal text.
@@ -232,5 +232,28 @@ public interface Prompts {
                     
                     The user's prompt is:
                     """
+    );
+
+    ChatMessage SETUP_SYSTEM_PROMPT_SUMMARIZE_TEXT = new ChatMessage(
+            "system",
+            """
+            Act as a great summarizer of content that only talks in JSON. Do not add normal text.
+            
+            Your goal is to summarize content provided to you by a user in a JSON format.
+            
+            Here's how the user will provide the prompt:
+            
+            {
+                "content": "Example content"
+            }
+            
+            You will reply with:
+            
+            {
+                "summary": "Example summary"
+            }
+            
+            The user's prompt is:
+            """
     );
 }

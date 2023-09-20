@@ -39,8 +39,8 @@ public class VoiceHandler implements AudioReceiveHandler {
     public void handleEncodedAudio(OpusPacket packet) {
         ByteArrayOutputStream stream = audioStreams.computeIfAbsent(
                 packet.getUserId(), id -> new ByteArrayOutputStream());
-
         byte[] audioData = packet.getAudioData(1.0);
+
         try {
             stream.write(audioData);
             combinedAudioStream.write(audioData);
@@ -51,7 +51,7 @@ public class VoiceHandler implements AudioReceiveHandler {
 
     @NonNull
     public Map<Long, byte[]> getAudioData() throws IOException {
-        Map<Long, byte[]> audioDataMap = new HashMap<>();
+        Map<Long, byte[]> audioDataMap = new HashMap<>(audioStreams.size());
 
         for (Map.Entry<Long, ByteArrayOutputStream> entry : audioStreams.entrySet()) {
             long userId = entry.getKey();
