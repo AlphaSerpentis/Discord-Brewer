@@ -66,27 +66,27 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
     @SuppressWarnings("unchecked")
     @Override
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
-        MessageEmbed[] embedsArray;
         EmbedBuilder workingEmbed;
-        CommandResponse<MessageEmbed> response;
+        CommandResponse<MessageEmbed> rateLimitResponse;
+        MessageEmbed[] embedsArray;
 
         try {
             embedsArray = checkAndHandleAcknowledgement(event);
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        if(embedsArray == null) {
-            workingEmbed = new EmbedBuilder();
-        } else {
+        if(embedsArray != null) {
             return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
         }
 
         // Check rate limit
-        response = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
+        rateLimitResponse = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
 
-        if(response != null)
-            return response;
+        if(rateLimitResponse != null)
+            return rateLimitResponse;
+
+        workingEmbed = new EmbedBuilder();
 
         workingEmbed.setTitle("Transcribe");
         if(event.getSubcommandName().equalsIgnoreCase("vc")) {
@@ -102,7 +102,7 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
             workingEmbed.setDescription("Invalid subcommand!");
         }
 
-        return new CommandResponse<>(workingEmbed.build(), isOnlyEphemeral());
+        return new CommandResponse<>(isOnlyEphemeral(), workingEmbed.build());
     }
 
     @Override

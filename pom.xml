@@ -6,7 +6,7 @@
     <groupId>dev.alphaserpentis.bots</groupId>
     <artifactId>Brewer</artifactId>
     <version>1.3.1</version>
-    <name>Discord Brewer</name>
+    <name>Brew(r)</name>
     <description>A Discord bot for automatically configuring a Discord server using ChatGPT</description>
 
     <developers>

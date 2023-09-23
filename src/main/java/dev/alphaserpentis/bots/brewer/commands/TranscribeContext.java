@@ -40,23 +40,19 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
     @Override
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull MessageContextInteractionEvent event) {
-        MessageEmbed[] embedsArray;
         EmbedBuilder workingEmbed;
+        CommandResponse<MessageEmbed> rateLimitResponse;
         List<Message.Attachment> attachments = tryToGetAudioFiles(event);
         StringBuilder description = new StringBuilder();
-        CommandResponse<MessageEmbed> rateLimitResponse;
+        MessageEmbed[] embedsArray;
 
         try {
             embedsArray = checkAndHandleAcknowledgement(event);
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
-        } catch(NullPointerException ignored) {
-            embedsArray = null;
         }
 
-        if(embedsArray == null) {
-            workingEmbed = new EmbedBuilder();
-        } else {
+        if(embedsArray != null) {
             return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
         }
 
@@ -65,6 +61,8 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
 
         if(rateLimitResponse != null)
             return rateLimitResponse;
+
+        workingEmbed = new EmbedBuilder();
 
         for(Message.Attachment attachment: attachments) {
             AudioTranscriptionResponse response = OpenAIHandler.getAudioTranscription(attachment.getUrl());

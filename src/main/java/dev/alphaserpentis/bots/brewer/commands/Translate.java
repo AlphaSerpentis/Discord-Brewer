@@ -80,7 +80,7 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
             handleTranslateUrl(workingEmbed, event);
         }
 
-        return new CommandResponse<>(workingEmbed.build(), isOnlyEphemeral());
+        return new CommandResponse<>(isOnlyEphemeral(), workingEmbed.build());
     }
 
     @Override

@@ -16,7 +16,7 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,21 +40,19 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
     @Override
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull MessageContextInteractionEvent event) {
-        MessageEmbed[] embedsArray;
         EmbedBuilder workingEmbed;
         List<Message.Attachment> attachments = tryToGetAudioFiles(event);
         StringBuilder description = new StringBuilder();
         CommandResponse<MessageEmbed> rateLimitResponse;
+        MessageEmbed[] embedsArray;
 
         try {
             embedsArray = checkAndHandleAcknowledgement(event);
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        if(embedsArray == null) {
-            workingEmbed = new EmbedBuilder();
-        } else {
+        if(embedsArray != null) {
             return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
         }
 
@@ -63,6 +61,8 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
 
         if(rateLimitResponse != null)
             return rateLimitResponse;
+
+        workingEmbed = new EmbedBuilder();
 
         for(Message.Attachment attachment: attachments) {
             AudioTranslationResponse response = OpenAIHandler.getAudioTranslation(attachment.getUrl());

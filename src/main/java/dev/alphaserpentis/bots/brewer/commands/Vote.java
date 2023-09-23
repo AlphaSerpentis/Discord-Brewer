@@ -46,6 +46,6 @@ public class Vote extends BotCommand<MessageEmbed, SlashCommandInteractionEvent>
         eb.setColor(Color.CYAN);
         eb.setFooter("Thank you for voting for Brewer!", event.getUser().getAvatarUrl());
 
-        return new CommandResponse<>(eb.build(), isOnlyEphemeral());
+        return new CommandResponse<>(isOnlyEphemeral(), eb.build());
     }
 }

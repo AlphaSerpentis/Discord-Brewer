@@ -74,7 +74,7 @@ public class CustomSettings extends Settings {
             }
         }
 
-        return new CommandResponse<>(eb.build(), isOnlyEphemeral());
+        return new CommandResponse<>(isOnlyEphemeral(), eb.build());
     }
 
     @Override

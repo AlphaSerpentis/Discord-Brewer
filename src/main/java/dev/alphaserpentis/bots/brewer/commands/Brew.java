@@ -195,10 +195,10 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
     @Override
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
-        MessageEmbed[] embedsArray;
         EmbedBuilder workingEmbed;
         String prompt;
-        CommandResponse<MessageEmbed> response;
+        CommandResponse<MessageEmbed> rateLimitResponse;
+        MessageEmbed[] embedsArray;
 
         try {
             embedsArray = checkAndHandleAcknowledgement(event);
@@ -206,28 +206,28 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             throw new RuntimeException(e);
         }
 
-        if(embedsArray == null) {
-            workingEmbed = new EmbedBuilder();
-        } else {
+        if(embedsArray != null) {
             return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
         }
 
         // Check rate limit
-        response = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
+        rateLimitResponse = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
 
-        if(response != null)
-            return response;
+        if(rateLimitResponse != null)
+            return rateLimitResponse;
+
+        workingEmbed = new EmbedBuilder();
 
         // Although this *should* be enforced by Discord as it is configured to only show up for users with Administrator
         // permissions, this is just a fallback *just in case*
         if(!isUserAllowedToRunCommand(event.getMember()))
-            return new CommandResponse<>(NO_PERMISSIONS.build(), isOnlyEphemeral());
+            return new CommandResponse<>(isOnlyEphemeral(), NO_PERMISSIONS.build());
 
         // Check if the prompt doesn't get flagged by OpenAI
         prompt = event.getOption("prompt").getAsString();
 
         if(OpenAIHandler.isContentFlagged(prompt, userId, event.getGuild() != null ? event.getGuild().getIdLong() : 0, true))
-            return new CommandResponse<>(PROMPT_REJECTED.build(), isOnlyEphemeral());
+            return new CommandResponse<>(isOnlyEphemeral(), PROMPT_REJECTED.build());
 
         try {
             switch(event.getSubcommandName()) {
@@ -241,7 +241,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             BrewHandler.removeUserSession(userId);
             ratelimitMap.remove(userId);
 
-            return new CommandResponse<>(workingEmbed.build(), isOnlyEphemeral());
+            return new CommandResponse<>(isOnlyEphemeral(), workingEmbed.build());
         } catch(Exception e) {
             BrewHandler.removeUserSession(userId);
             ratelimitMap.remove(userId);
@@ -249,7 +249,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             throw e;
         }
 
-        return new CommandResponse<>(workingEmbed.build(), isOnlyEphemeral());
+        return new CommandResponse<>(isOnlyEphemeral(), workingEmbed.build());
     }
 
     @Override

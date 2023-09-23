@@ -30,7 +30,7 @@ At its core, Brew(r)'s powered by OpenAI.
 - Manage Channels
 - Manage Permissions
 
-[**Invite Brew(r) ☕️ to your server today!**](https://discord.com/api/oauth2/authorize?client_id=1097362340468502548&permissions=268504080&scope=bot)
+[**Invite Brew(r) ☕️ to your server today!**](https://trybrewr.ai/invite)
 
 ## Discord Server
 [ ![Discord Banner 4](https://discordapp.com/api/guilds/590215639785013298/widget.png?style=banner4)][discord-invite]
