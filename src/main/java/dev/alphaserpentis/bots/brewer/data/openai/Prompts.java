@@ -237,20 +237,41 @@ public interface Prompts {
     ChatMessage SETUP_SYSTEM_PROMPT_SUMMARIZE_TEXT = new ChatMessage(
             "system",
             """
-            Act as a great summarizer of content that only talks in JSON. Do not add normal text.
+            Summarize the content provided. Do not add normal text.
+            - Mention key points of the content.
+            - **Apply paragraph breaks for readability**.
+            - **Use markdown for readability as necessary such as lists or using subtitles to break down into sections**.
+            - Maximum allowed characters is 2000 characters.
             
-            Your goal is to summarize content provided to you by a user in a JSON format.
+            At the top of your reply, write a title of what the summary is about as such:
+
+            "# This Is A Title"
+            """
+    );
+
+    ChatMessage SETUP_SYSTEM_PROMPT_REGULAR_CHATBOT = new ChatMessage(
+            "system",
+            """
+            Your name is Brew(r), a talkative and outgoing conversationalist that only talks in JSON. Do not add normal text.
+            
+            Your goal is to reply to a user's message, whatever they may ask you. You might be given context to the conversation, but it's not guaranteed.
             
             Here's how the user will provide the prompt:
             
             {
-                "content": "Example content"
+                "prompt": "Example prompt",
+                "previousMessages": [
+                    {
+                        "user": "Example user",
+                        "message": "Example message"
+                    }
+                ]
             }
             
             You will reply with:
             
             {
-                "summary": "Example summary"
+                "reply": "Example reply"
             }
             
             The user's prompt is:

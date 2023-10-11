@@ -1,10 +1,7 @@
 package dev.alphaserpentis.bots.brewer.commands;
 
-import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
 import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
 import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
-import dev.alphaserpentis.bots.brewer.handler.bot.BrewerServerDataHandler;
-import dev.alphaserpentis.bots.brewer.handler.commands.audio.VoiceHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.coffeecore.commands.ButtonCommand;
 import dev.alphaserpentis.coffeecore.data.bot.CommandResponse;
@@ -12,19 +9,14 @@ import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
-import net.dv8tion.jda.api.managers.AudioManager;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 
 public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent>
@@ -129,53 +121,53 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
         AnalyticsHandler.addUsage(event.getGuild(), ServiceType.TRANSCRIBE_ATTACHMENT);
     }
 
-    private void handleTranscribeVC(@NonNull EmbedBuilder eb, @NonNull SlashCommandInteractionEvent event) throws InterruptedException, IOException {
-        BrewerServerData data = ((BrewerServerDataHandler) core.getServerDataHandler()).getServerData(event.getGuild().getIdLong());
-        VoiceChannel vc = event.getOption("channel").getAsChannel().asVoiceChannel();
-        AudioManager manager = vc.getGuild().getAudioManager();
-        VoiceHandler handler = new VoiceHandler(30);
-        HashMap<Long, byte[]> audioData;
-        byte[] combinedAudio;
-
-        manager.setReceivingHandler(handler);
-        try {
-            manager.openAudioConnection(vc);
-
-            while(handler.canReceiveEncoded()) {
-                Thread.sleep(1000);
-            }
-
-            manager.closeAudioConnection();
-            audioData = (HashMap<Long, byte[]>) handler.getAudioData();
-            combinedAudio = handler.getCombinedAudioData();
-
-            if(audioData.isEmpty()) {
-                eb.setDescription("I was unable to pick up any audio!");
-                eb.setColor(Color.RED);
-            } else {
-                String combinedTranscription = transcribeUser(combinedAudio, 0);
-
-                for(long userId: audioData.keySet()) {
-                    if(!data.isUserOptedOutOfVCTranscription(userId)) {
-
+//    private void handleTranscribeVC(@NonNull EmbedBuilder eb, @NonNull SlashCommandInteractionEvent event) throws InterruptedException, IOException {
+//        BrewerServerData data = ((BrewerServerDataHandler) core.getServerDataHandler()).getServerData(event.getGuild().getIdLong());
+//        VoiceChannel vc = event.getOption("channel").getAsChannel().asVoiceChannel();
+//        AudioManager manager = vc.getGuild().getAudioManager();
+//        VoiceHandler handler = new VoiceHandler(30);
+//        HashMap<Long, byte[]> audioData;
+//        byte[] combinedAudio;
+//
+//        manager.setReceivingHandler(handler);
+//        try {
+//            manager.openAudioConnection(vc);
+//
+//            while(handler.canReceiveEncoded()) {
+//                Thread.sleep(1000);
+//            }
+//
+//            manager.closeAudioConnection();
+//            audioData = (HashMap<Long, byte[]>) handler.getAudioData();
+//            combinedAudio = handler.getCombinedAudioData();
+//
+//            if(audioData.isEmpty()) {
+//                eb.setDescription("I was unable to pick up any audio!");
+//                eb.setColor(Color.RED);
+//            } else {
+//                String combinedTranscription = transcribeUser(combinedAudio, 0);
+//
+//                for(long userId: audioData.keySet()) {
+//                    if(!data.isUserOptedOutOfVCTranscription(userId)) {
+//
 //                        eb.addField(
 //                                vc.getGuild().getMember(UserSnowflake.fromId(userId)).getEffectiveName(),
 //                                transcribeUser(audioData.get(userId), userId),
 //                                false
 //                        );
-                    }
-                }
-            }
-
-            AnalyticsHandler.addUsage(event.getGuild(), ServiceType.TRANSCRIBE_VC);
-        } catch(InsufficientPermissionException ignored) {
-            eb.setDescription("I don't have permission to join that VC!");
-            eb.setColor(Color.RED);
-        }
-    }
-
-    @NonNull
-    private String transcribeUser(@NonNull byte[] audioData, long userId) {
-        return OpenAIHandler.getVoiceTranscription(audioData, Long.toString(userId)).text();
-    }
+//                    }
+//                }
+//            }
+//
+//            AnalyticsHandler.addUsage(event.getGuild(), ServiceType.TRANSCRIBE_VC);
+//        } catch(InsufficientPermissionException ignored) {
+//            eb.setDescription("I don't have permission to join that VC!");
+//            eb.setColor(Color.RED);
+//        }
+//    }
+//
+//    @NonNull
+//    private String transcribeUser(@NonNull byte[] audioData, long userId) {
+//        return OpenAIHandler.getVoiceTranscription(audioData, Long.toString(userId)).text();
+//    }
 }

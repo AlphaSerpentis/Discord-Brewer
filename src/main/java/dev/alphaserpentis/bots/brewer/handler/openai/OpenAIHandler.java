@@ -19,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,6 +38,7 @@ import static com.theokanning.openai.service.OpenAiService.*;
 
 public class OpenAIHandler {
     private static final Logger logger = LoggerFactory.getLogger(OpenAIHandler.class);
+    private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     private static Path flaggedContentDirectory;
     private static Path transcriptionCacheFile;
     private static Path translationCacheFile;
@@ -49,9 +52,8 @@ public class OpenAIHandler {
      * <p>Value: Translation
      */
     private static Map<String, CachedAudio> translationCache = new HashMap<>();
-    private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     public static CustomOpenAiService service;
-    public static final String COMPLETION_MODEL = ChatCompletionModels.GPT_3_5_TURBO.getName();
+    public static final String DEFAULT_COMPLETION_MODEL = ChatCompletionModels.GPT_3_5_TURBO.getName();
 
     public static void init(
             @NonNull String apiKey,
@@ -110,13 +112,32 @@ public class OpenAIHandler {
     }
 
     public static ChatCompletionResult getCompletion(@NonNull ChatMessage system, @NonNull String prompt) {
+        return getCompletion(DEFAULT_COMPLETION_MODEL, system, prompt);
+    }
+
+    public static ChatCompletionResult getCompletion(
+            @NonNull String model,
+            @NonNull ChatMessage system,
+            @NonNull String prompt
+    ) {
+        return getCompletion(model, system, prompt, 0.8, 0., 0.);
+    }
+
+    public static ChatCompletionResult getCompletion(
+            @NonNull String model,
+            @NonNull ChatMessage system,
+            @NonNull String prompt,
+            double temperature,
+            double presencePenalty,
+            double frequencyPenalty
+    ) {
         ChatMessage message = new ChatMessage("user", prompt);
         ChatCompletionRequest.ChatCompletionRequestBuilder builder = ChatCompletionRequest.builder()
-                .model(COMPLETION_MODEL)
+                .model(model)
                 .messages(List.of(system, message))
-                .temperature(0.8)
-                .presencePenalty(0.)
-                .frequencyPenalty(0.);
+                .temperature(temperature)
+                .presencePenalty(presencePenalty)
+                .frequencyPenalty(frequencyPenalty);
 
         return service.createChatCompletion(
                 builder.build()
@@ -246,6 +267,18 @@ public class OpenAIHandler {
     }
 
     private static void writeFlaggedContentToDirectory(@NonNull FlaggedContent content) {
-        flaggedContentDirectory.toFile().mkdirs();
+        try {
+            String fileName = content.userId() + "-" + content.guildId() + "-" + Instant.now().getEpochSecond() + ".txt";
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            BufferedWriter writer = new BufferedWriter(
+                    new FileWriter(flaggedContentDirectory.resolve(fileName).toFile())
+            );
+
+            gson.toJson(content, writer);
+
+            writer.close();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 }

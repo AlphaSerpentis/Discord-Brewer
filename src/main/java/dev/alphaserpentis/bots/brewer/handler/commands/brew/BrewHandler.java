@@ -19,8 +19,9 @@ import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.internal.entities.ForumChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.CategoryImpl;
+import net.dv8tion.jda.internal.entities.channel.concrete.ForumChannelImpl;
+import net.dv8tion.jda.internal.entities.channel.concrete.MediaChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.StageChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.TextChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.VoiceChannelImpl;
@@ -104,30 +105,30 @@ public class BrewHandler {
         ArrayList<ParseActions.ExecutableAction> actions;
         UserSession session;
 
-        AnalyticsHandler.addUsage(event.getGuild(), ServiceType.RENAME);
-
         try {
-            actions = optimizeRenameActions(
-                    generateActions(
-                        Prompts.SETUP_SYSTEM_PROMPT_RENAME,
-                        new GsonBuilder().setPrettyPrinting().create().toJson(
-                                getGuildData(event.getGuild(), prompt, allowNsfwChannelRenames)
-                        ),
-                        ParseActions.ValidAction.EDIT
-                    )
+            actions = generateActions(
+                    Prompts.SETUP_SYSTEM_PROMPT_RENAME,
+                    new GsonBuilder().setPrettyPrinting().create().toJson(
+                            getGuildData(event.getGuild(), prompt, allowNsfwChannelRenames)
+                    ),
+                    ParseActions.ValidAction.EDIT
             );
+
+            optimizeRenameActions(actions);
         } catch(JsonSyntaxException e) {
-            logger.error("JSONSyntaxException thrown in generateCreatePrompt", e);
+            logger.error("JSONSyntaxException thrown in generateRenamePrompt", e);
 
             throw new GenerationException(GenerationException.Type.JSON_EXCEPTION.getDescriptions(), e.getCause());
         } catch(OpenAiHttpException e) {
-            logger.error("OpenAiHttpException thrown in generateCreatePrompt", e);
+            logger.error("OpenAiHttpException thrown in generateRenamePrompt", e);
 
             throw new GenerationException(GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
         } catch(SocketTimeoutException e) {
-            logger.error("SocketTimeoutException thrown in generateCreatePrompt", e);
+            logger.error("SocketTimeoutException thrown in generateRenamePrompt", e);
 
             throw new GenerationException(GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(), e.getCause());
+        } finally {
+            AnalyticsHandler.addUsage(event.getGuild(), ServiceType.RENAME);
         }
 
         previewChangesPage(eb, actions);
@@ -204,8 +205,10 @@ public class BrewHandler {
 
         // Channels
         channelsVal = actions.stream().filter(
-                action -> (action.targetType() == ParseActions.ValidTarget.TEXT_CHANNEL)
-                        || (action.targetType() == ParseActions.ValidTarget.VOICE_CHANNEL)
+                action -> action.targetType() == ParseActions.ValidTarget.TEXT_CHANNEL
+                        || action.targetType() == ParseActions.ValidTarget.VOICE_CHANNEL
+                        || action.targetType() == ParseActions.ValidTarget.FORUM_CHANNEL
+                        || action.targetType() == ParseActions.ValidTarget.STAGE_CHANNEL
         ).map(
                 BrewHandler::generateReadablePreview
         ).reduce(
@@ -237,49 +240,41 @@ public class BrewHandler {
     private static String generateReadablePreview(@NonNull ParseActions.ExecutableAction action) {
         StringBuilder readableData = getData(action);
 
-        if(action.action() == ParseActions.ValidAction.CREATE) {
-            return String.format(
-                    action.action().editableText + "\n%s",
-                    action.target(),
-                    readableData
-            );
-        } else if(action.action() == ParseActions.ValidAction.EDIT) {
-            return String.format(
-                    action.action().editableText + "\n%s",
-                    action.target(),
-                    action.data().get(ParseActions.ValidDataNames.NAME),
-                    readableData
-            );
-        } else {
-            throw new IllegalStateException("Unexpected value: " + action.action());
+        switch(action.action()) {
+            case CREATE -> {
+                return String.format(
+                        action.action().editableText + "\n%s",
+                        action.target(),
+                        readableData
+                );
+            }
+            case EDIT -> {
+                return String.format(
+                        action.action().editableText + "\n%s",
+                        action.target(),
+                        action.data().get(ParseActions.ValidDataNames.NAME),
+                        readableData
+                );
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + action.action());
         }
     }
 
-    @NonNull
-    private static ArrayList<ParseActions.ExecutableAction> optimizeRenameActions(
-            @NonNull ArrayList<ParseActions.ExecutableAction> actions
-    ) {
-        ArrayList<ParseActions.ExecutableAction> optimizedActions = new ArrayList<>(actions.size());
-
-        for(ParseActions.ExecutableAction action : actions) {
+    private static void optimizeRenameActions(@NonNull ArrayList<ParseActions.ExecutableAction> actions) {
+        actions.removeIf(action -> {
             String name = (String) action.data().get(ParseActions.ValidDataNames.NAME);
             String desc = (String) action.data().get(ParseActions.ValidDataNames.DESCRIPTION);
             String color = (String) action.data().get(ParseActions.ValidDataNames.COLOR);
 
-            if(name != null && !name.isEmpty() && !name.equals(action.target())) { // Check if name is different
-                optimizedActions.add(action);
-            } else if(name != null && !name.isEmpty()
-                    && (desc != null && !desc.isEmpty())
-                    || (color != null && !color.isEmpty())
-            ) { // If the name is the same, check if description or color is different
-                optimizedActions.add(action);
-            }
-        }
+            boolean isNameSameOrEmpty = name == null || name.isEmpty() || name.equals(action.target());
+            boolean isDescAndColorEmpty = (desc == null || desc.isEmpty()) && (color == null || color.isEmpty());
 
-        return optimizedActions;
+            return isNameSameOrEmpty && isDescAndColorEmpty;
+        });
     }
 
-    private static StringBuilder getData(ParseActions.ExecutableAction action) {
+
+    private static StringBuilder getData(@NonNull ParseActions.ExecutableAction action) {
         StringBuilder readableData = new StringBuilder();
 
         for(Map.Entry<ParseActions.ValidDataNames, ?> entry : action.data().entrySet()) {
@@ -328,15 +323,14 @@ public class BrewHandler {
             if(channel instanceof CategoryImpl)
                 return;
 
-            if(channel instanceof AbstractStandardGuildMessageChannelImpl<?> chn)
-                if(chn.isNSFW() && !getNsfwChannels)
-                    return;
+            if(channel instanceof AbstractStandardGuildMessageChannelImpl<?> chn && chn.isNSFW() && !getNsfwChannels)
+                return;
 
             if(channel instanceof TextChannelImpl || channel instanceof NewsChannelImpl) {
                 type = "txt";
             } else if(channel instanceof VoiceChannelImpl) {
                 type = "vc";
-            } else if(channel instanceof ForumChannelImpl) {
+            } else if(channel instanceof ForumChannelImpl || channel instanceof MediaChannelImpl) {
                 type = "forum";
             } else if(channel instanceof StageChannelImpl) {
                 type = "stage";

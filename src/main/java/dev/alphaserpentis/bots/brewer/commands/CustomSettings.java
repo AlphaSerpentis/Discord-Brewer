@@ -1,6 +1,7 @@
 package dev.alphaserpentis.bots.brewer.commands;
 
 import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
+import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.bot.BrewerServerDataHandler;
 import dev.alphaserpentis.coffeecore.commands.defaultcommands.Settings;
 import dev.alphaserpentis.coffeecore.data.bot.CommandResponse;
@@ -12,9 +13,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-
-import java.awt.Color;
-import java.io.IOException;
 
 public class CustomSettings extends Settings {
 
@@ -39,38 +37,32 @@ public class CustomSettings extends Settings {
         if(event.getGuild() == null) {
             eb.setDescription("This command can only be used in a server.");
         } else {
-            String subcommandName = event.getSubcommandName();
-            try {
-                switch(subcommandName) {
-                    case "ephemeral" -> {
-                        if(isUserPermissioned(event.getMember())) {
-                            setServerEphemeral(event.getGuild().getIdLong(), eb);
-                        } else {
-                            eb.setDescription(NO_PERMISSIONS);
-                        }
+            switch(event.getSubcommandName()) {
+                case "ephemeral" -> {
+                    if(isUserPermissioned(event.getMember())) {
+                        setServerEphemeral(event.getGuild().getIdLong(), eb);
+                    } else {
+                        eb.setDescription(NO_PERMISSIONS);
                     }
-                    case "opt-out" -> {
-                        if(isUserPermissioned(event.getMember())) {
-                            setServerWideOptOutOfAnalytics(event.getGuild().getIdLong(), eb);
-                        } else {
-                            eb.setDescription(NO_PERMISSIONS);
-                        }
-                    }
-                    case "opt-out-vc" -> setUserDisallowVCListening(
-                            event.getGuild().getIdLong(), event.getMember().getIdLong(), eb
-                    );
-                    case "rename-nsfw-channels" -> {
-                        if(isUserPermissioned(event.getMember())) {
-                            setTryRenamingNsfwChannels(event.getGuild().getIdLong(), eb);
-                        } else {
-                            eb.setDescription(NO_PERMISSIONS);
-                        }
-                    }
-                    default -> eb.setDescription("Invalid subcommand.");
                 }
-            } catch(IOException e) {
-                eb.setColor(Color.RED);
-                eb.setDescription("An error occurred while trying to update the server settings. Please try again later.\n\nIf this issue persists, please reach out to us at https://asrp.dev/discord");
+                case "opt-out" -> {
+                    if(isUserPermissioned(event.getMember())) {
+                        setServerWideOptOutOfAnalytics(event.getGuild().getIdLong(), eb);
+                    } else {
+                        eb.setDescription(NO_PERMISSIONS);
+                    }
+                }
+                case "opt-out-vc" -> setUserDisallowVCListening(
+                        event.getGuild().getIdLong(), event.getMember().getIdLong(), eb
+                );
+                case "rename-nsfw-channels" -> {
+                    if(isUserPermissioned(event.getMember())) {
+                        setTryRenamingNsfwChannels(event.getGuild().getIdLong(), eb);
+                    } else {
+                        eb.setDescription(NO_PERMISSIONS);
+                    }
+                }
+                default -> eb.setDescription("Invalid subcommand.");
             }
         }
 
@@ -103,7 +95,7 @@ public class CustomSettings extends Settings {
         );
     }
 
-    private void setServerEphemeral(long guildId, @NonNull EmbedBuilder eb) throws IOException {
+    private void setServerEphemeral(long guildId, @NonNull EmbedBuilder eb) {
         ServerDataHandler<?> sdh = (ServerDataHandler<?>) core.getServerDataHandler();
         ServerData sd = sdh.getServerData(guildId);
 
@@ -118,19 +110,20 @@ public class CustomSettings extends Settings {
         sdh.updateServerData();
     }
 
-    private void setServerWideOptOutOfAnalytics(long guildId, @NonNull EmbedBuilder eb) throws IOException {
+    private void setServerWideOptOutOfAnalytics(long guildId, @NonNull EmbedBuilder eb) {
         BrewerServerDataHandler sdh = (BrewerServerDataHandler) core.getServerDataHandler();
         BrewerServerData sd = sdh.getServerData(guildId);
         boolean currentSetting = sd.getServerWideOptOutOfAnalytics();
 
         sd.setServerWideOptOutOfAnalytics(!currentSetting);
+        AnalyticsHandler.stopTrackingGuild(guildId);
 
         sdh.updateServerData();
 
         eb.setDescription("Server-wide opt-out of analytics is now " + (!currentSetting ? "enabled" : "disabled"));
     }
 
-    private void setTryRenamingNsfwChannels(long guildId, @NonNull EmbedBuilder eb) throws IOException {
+    private void setTryRenamingNsfwChannels(long guildId, @NonNull EmbedBuilder eb) {
         BrewerServerDataHandler sdh = (BrewerServerDataHandler) core.getServerDataHandler();
         BrewerServerData sd = sdh.getServerData(guildId);
         boolean currentSetting = sd.getTryRenamingNsfwChannels();
@@ -147,7 +140,7 @@ public class CustomSettings extends Settings {
         """.formatted(!currentSetting ? "enabled" : "disabled"));
     }
 
-    private void setUserDisallowVCListening(long guildId, long userId, @NonNull EmbedBuilder eb) throws IOException {
+    private void setUserDisallowVCListening(long guildId, long userId, @NonNull EmbedBuilder eb) {
         BrewerServerDataHandler sdh = (BrewerServerDataHandler) core.getServerDataHandler();
         BrewerServerData sd = sdh.getServerData(guildId);
         boolean isUserOptedOut = sd.isUserOptedOutOfVCTranscription(userId);

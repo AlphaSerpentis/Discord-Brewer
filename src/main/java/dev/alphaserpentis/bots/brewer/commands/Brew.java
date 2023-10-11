@@ -21,7 +21,6 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
-import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
@@ -31,7 +30,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -52,6 +51,8 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             .setDescription(
                     """
                     The prompt you provided was rejected. Ensure that it does not violate the usage policies of OpenAI.
+                    
+                    **Continued violations may result in termination from our services.**
 
                     You can read more about the usage policies of OpenAI here: https://openai.com/policies/usage-policies"""
             )
@@ -127,13 +128,11 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
     public Brew() {
         super(
                 new BotCommandOptions("brew", "Setup your Discord server with a prompt!")
-                        .setCommandType(Command.Type.SLASH)
-                        .setRatelimitLength(180)
                         .setOnlyEmbed(true)
                         .setOnlyEphemeral(false)
-                        .setTypeOfEphemeral(TypeOfEphemeral.DEFAULT)
                         .setDeferReplies(true)
                         .setUseRatelimits(true)
+                        .setRatelimitLength(180)
                         .setCommandVisibility(CommandVisibility.GUILD)
         );
 
@@ -226,7 +225,11 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         // Check if the prompt doesn't get flagged by OpenAI
         prompt = event.getOption("prompt").getAsString();
 
-        if(OpenAIHandler.isContentFlagged(prompt, userId, event.getGuild() != null ? event.getGuild().getIdLong() : 0, true))
+        if(OpenAIHandler.isContentFlagged(
+                prompt,
+                userId,
+                event.getGuild() != null ? event.getGuild().getIdLong() : 0, true
+        ))
             return new CommandResponse<>(isOnlyEphemeral(), PROMPT_REJECTED.build());
 
         try {
@@ -237,7 +240,12 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         } catch(GenerationException e) {
             workingEmbed = new EmbedBuilder(GENERATING_ERROR);
 
-            workingEmbed.setDescription(String.format(GENERATING_ERROR.getDescriptionBuilder().toString(), e.getMessage()));
+            workingEmbed.setDescription(
+                    String.format(
+                            GENERATING_ERROR.getDescriptionBuilder().toString(),
+                            e.getMessage()
+                    )
+            );
             BrewHandler.removeUserSession(userId);
             ratelimitMap.remove(userId);
 
@@ -365,7 +373,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                     eb.setDescription(
                             String.format(
                                     POST_EXECUTION_NO_ERROR.getDescriptionBuilder().toString(),
-                                    "\n\nIf you're enjoying the bot, do please vote for Brewer! You can do so by clicking [here](https://top.gg/bot/819650039680575488/vote) or by running </vote:" + voteCommandId + ">."
+                                    "\n\nIf you're enjoying the bot, do please vote for Brew(r)! You can do so by clicking [here](https://top.gg/bot/819650039680575488/vote) or by running </vote:" + voteCommandId + ">."
                             )
                     );
 

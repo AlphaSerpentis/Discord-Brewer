@@ -8,6 +8,8 @@ package dev.alphaserpentis.bots.brewer.data.brewer;
 public enum ServiceType {
     CREATE(5, 10),
     RENAME(5, 10),
+    SUMMARIZE(10, 25),
+    SUMMARIZE_CONTEXT(10, 25),
     TRANSCRIBE_ATTACHMENT(1800, 6000),
     TRANSCRIBE_VC(1000, 3000),
     TRANSLATE_ATTACHMENT(1800, 6000),

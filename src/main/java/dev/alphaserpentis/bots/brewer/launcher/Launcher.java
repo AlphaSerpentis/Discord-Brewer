@@ -3,7 +3,7 @@ package dev.alphaserpentis.bots.brewer.launcher;
 import com.google.gson.reflect.TypeToken;
 import dev.alphaserpentis.bots.brewer.commands.Brew;
 import dev.alphaserpentis.bots.brewer.commands.CustomSettings;
-import dev.alphaserpentis.bots.brewer.commands.Summarize;
+import dev.alphaserpentis.bots.brewer.commands.SummarizeContext;
 import dev.alphaserpentis.bots.brewer.commands.Transcribe;
 import dev.alphaserpentis.bots.brewer.commands.TranscribeContext;
 import dev.alphaserpentis.bots.brewer.commands.Translate;
@@ -114,7 +114,7 @@ public class Launcher {
                 new TranscribeContext(),
                 new Translate(),
                 new TranslateContext(),
-                new Summarize()
+                new SummarizeContext()
         );
     }
 

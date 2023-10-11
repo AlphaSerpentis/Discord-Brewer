@@ -54,24 +54,21 @@ public class BrewerServerDataHandler extends ServerDataHandler<BrewerServerData>
     }
 
     @Override
+    protected void handleServerDataException(@NonNull Exception e) {
+        logger.error("Failed to update server data file.", e);
+    }
+
+    @Override
     public void onGuildJoin(@NonNull GuildJoinEvent event) {
         serverDataHashMap.put(event.getGuild().getIdLong(), createNewServerData());
-        try {
-            updateServerData();
-        } catch (IOException e) {
-            logger.error("Failed to update server data file.", e);
-        }
+        updateServerData();
     }
 
     @Override
     public void onGuildLeave(@NonNull GuildLeaveEvent event) {
         serverDataHashMap.remove(event.getGuild().getIdLong());
         AnalyticsHandler.stopTrackingGuild(event.getGuild().getIdLong());
-        try {
-            updateServerData();
-        } catch (IOException e) {
-            logger.error("Failed to update server data file.", e);
-        }
+        updateServerData();
     }
 
     public void resetAcknowledgements(

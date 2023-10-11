@@ -17,9 +17,7 @@ import java.util.ArrayList;
 public class AcknowledgementHandler {
     private static Path pathToAcknowledgementsDirectory;
 
-    public static void init(
-            Path pathToAcknowledgementsDirectory
-    ) {
+    public static void init(@NonNull Path pathToAcknowledgementsDirectory) {
         AcknowledgementHandler.pathToAcknowledgementsDirectory = pathToAcknowledgementsDirectory;
     }
 

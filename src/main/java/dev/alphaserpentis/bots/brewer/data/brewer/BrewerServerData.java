@@ -51,6 +51,14 @@ public class BrewerServerData extends ServerData {
         this.paidTier = paidTier;
     }
 
+    public void addUserIntoVCTranscriptionOptOut(long userId) {
+        userDisallowVCTranscriptions.put(userId, true);
+    }
+
+    public void removeUserFromVCTranscriptionOptOut(long userId) {
+        userDisallowVCTranscriptions.remove(userId);
+    }
+
     public boolean getTryRenamingNsfwChannels() {
         return tryRenamingNsfwChannels;
     }
@@ -78,13 +86,4 @@ public class BrewerServerData extends ServerData {
     public boolean isUserOptedOutOfVCTranscription(long userId) {
         return userDisallowVCTranscriptions.getOrDefault(userId, false);
     }
-
-    public void addUserIntoVCTranscriptionOptOut(long userId) {
-        userDisallowVCTranscriptions.put(userId, true);
-    }
-
-    public void removeUserFromVCTranscriptionOptOut(long userId) {
-        userDisallowVCTranscriptions.remove(userId);
-    }
-
 }

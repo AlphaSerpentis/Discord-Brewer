@@ -15,6 +15,8 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -23,6 +25,8 @@ import java.util.List;
 
 public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextInteractionEvent>
         implements AcknowledgeableCommand<MessageContextInteractionEvent> {
+
+    private static final Logger logger = LoggerFactory.getLogger(TranscribeContext.class);
 
     public TranscribeContext() {
         super(
@@ -42,13 +46,14 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull MessageContextInteractionEvent event) {
         EmbedBuilder workingEmbed;
         CommandResponse<MessageEmbed> rateLimitResponse;
-        List<Message.Attachment> attachments = tryToGetAudioFiles(event);
         StringBuilder description = new StringBuilder();
         MessageEmbed[] embedsArray;
 
         try {
             embedsArray = checkAndHandleAcknowledgement(event);
         } catch (IOException e) {
+            logger.error("Failed to check and handle acknowledgement", e);
+
             throw new RuntimeException(e);
         }
 
@@ -64,7 +69,7 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
 
         workingEmbed = new EmbedBuilder();
 
-        for(Message.Attachment attachment: attachments) {
+        for(Message.Attachment attachment: tryToGetAudioFiles(event)) {
             AudioTranscriptionResponse response = OpenAIHandler.getAudioTranscription(attachment.getUrl());
 
             if(response.isCached()) {
