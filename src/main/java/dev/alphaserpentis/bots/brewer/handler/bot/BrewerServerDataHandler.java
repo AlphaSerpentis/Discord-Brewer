@@ -30,17 +30,17 @@ public class BrewerServerDataHandler extends ServerDataHandler<BrewerServerData>
             @NonNull Path path,
             @NonNull TypeToken<Map<Long, BrewerServerData>> typeToken,
             @NonNull JsonDeserializer<Map<Long, BrewerServerData>> jsonDeserializer,
-            boolean resetAcknowledgementsForToS,
-            boolean resetAcknowledgementsForPrivacyPolicy,
-            boolean resetAcknowledgementsForNewUpdates
+            boolean resetTosAcknowledgement,
+            boolean resetPrivacyPolicyAcknowledgement,
+            boolean resetUpdateAcknowledgement
     ) throws IOException {
         super(path, typeToken, jsonDeserializer);
-        boolean updateFile = resetAcknowledgementsForToS || resetAcknowledgementsForPrivacyPolicy || resetAcknowledgementsForNewUpdates;
+        var updateFile = resetTosAcknowledgement || resetPrivacyPolicyAcknowledgement || resetUpdateAcknowledgement;
 
         resetAcknowledgements(
-                resetAcknowledgementsForToS,
-                resetAcknowledgementsForPrivacyPolicy,
-                resetAcknowledgementsForNewUpdates
+                resetTosAcknowledgement,
+                resetPrivacyPolicyAcknowledgement,
+                resetUpdateAcknowledgement
         );
 
         if(updateFile) {
@@ -71,21 +71,14 @@ public class BrewerServerDataHandler extends ServerDataHandler<BrewerServerData>
         updateServerData();
     }
 
-    public void resetAcknowledgements(
-            boolean tos,
-            boolean privacyPolicy,
-            boolean newUpdates
-    ) {
-        for(BrewerServerData serverData: serverDataHashMap.values()) {
-            if(tos) {
+    public void resetAcknowledgements(boolean tos, boolean privacyPolicy, boolean newUpdates) {
+        serverDataHashMap.values().forEach(serverData -> {
+            if(tos)
                 serverData.setAcknowledgedNewTos(false);
-            }
-            if(privacyPolicy) {
+            if(privacyPolicy)
                 serverData.setAcknowledgedNewPrivacyPolicy(false);
-            }
-            if(newUpdates) {
+            if(newUpdates)
                 serverData.setAcknowledgedNewUpdates(false);
-            }
-        }
+        });
     }
 }

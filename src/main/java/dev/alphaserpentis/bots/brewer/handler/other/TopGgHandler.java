@@ -33,7 +33,7 @@ public class TopGgHandler {
     }
 
     public static void setServerCount() {
-        final ContainerHelper container = new ContainerHelper(Launcher.core.getActiveContainer());
+        final var container = new ContainerHelper(Launcher.core.getActiveContainer());
         dblApi.setStats(container.getGuilds().size());
     }
 

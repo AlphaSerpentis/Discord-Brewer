@@ -26,7 +26,7 @@ public class AcknowledgementHandler {
 
         for(int i = 0; i < types.size(); i++) {
             AcknowledgeThis acknowledgement = tryToReadAcknowledgementFile(types.get(i));
-            EmbedBuilder embedBuilder = new EmbedBuilder();
+            var embedBuilder = new EmbedBuilder();
 
             embedBuilder.setTitle(acknowledgement.title());
             embedBuilder.setDescription(acknowledgement.description());

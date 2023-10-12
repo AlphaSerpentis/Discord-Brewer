@@ -102,7 +102,7 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
 //        SubcommandData vc = new SubcommandData("vc", "(BETA) Join a VC and transcribe the conversations")
 //                .addOption(OptionType.CHANNEL, "channel", "The channel to join", true)
 //                .addOption(OptionType.INTEGER, "duration", "The duration to transcribe for (in seconds)", true);
-        SubcommandData url = new SubcommandData("url", "Transcribe an audio file from a URL")
+        var url = new SubcommandData("url", "Transcribe an audio file from a URL")
                 .addOption(OptionType.STRING, "url", "The URL of the audio file to transcribe", true);
 
         jda

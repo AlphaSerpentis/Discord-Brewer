@@ -44,7 +44,7 @@ public class Launcher {
     public static CoffeeCore core;
 
     public static void main(String[] args) throws IOException {
-        Dotenv dotenv = Dotenv.load();
+        var dotenv = Dotenv.load();
 
         buildAndConfigureCore(dotenv);
         initializeHandlers(dotenv);
@@ -52,7 +52,7 @@ public class Launcher {
     }
 
     private static void buildAndConfigureCore(@NonNull Dotenv dotenv) throws IOException {
-        AboutInformation about = new AboutInformation(
+        var about = new AboutInformation(
                 """
                 Brew(r) is your open-source assistant, stirring up innovation in your Discord server with OpenAI's ChatGPT. Just prompt it, and watch as it brews new roles, categories, and channels, or even renames the existing ones!
                 
@@ -71,7 +71,7 @@ public class Launcher {
                 true
         );
 
-        CoffeeCoreBuilder<?> builder = new CoffeeCoreBuilder<>()
+        var builder = new CoffeeCoreBuilder<>()
                 .setSettings(
                         new BotSettings(
                                 Long.parseLong(dotenv.get("BOT_OWNER_ID")),
@@ -137,13 +137,13 @@ public class Launcher {
 
     private static void setEnvAcknowledgementsBackToFalse() {
         try {
-            FileReader fileReader = new FileReader(".env");
-            List<String> lines = getLines(fileReader);
+            var fileReader = new FileReader(".env");
+            var lines = getLines(fileReader);
 
             fileReader.close();
 
-            FileWriter fileWriter = new FileWriter(".env");
-            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            var fileWriter = new FileWriter(".env");
+            var bufferedWriter = new BufferedWriter(fileWriter);
 
             for (String outputLine : lines) {
                 bufferedWriter.write(outputLine);
@@ -159,9 +159,8 @@ public class Launcher {
     }
 
     private static List<String> getLines(FileReader fileReader) throws IOException {
-        BufferedReader bufferedReader = new BufferedReader(fileReader);
-
-        List<String> lines = new ArrayList<>();
+        var bufferedReader = new BufferedReader(fileReader);
+        var lines = new ArrayList<String>();
         String line;
 
         while ((line = bufferedReader.readLine()) != null) {

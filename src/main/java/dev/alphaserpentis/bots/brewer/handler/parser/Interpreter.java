@@ -87,7 +87,7 @@ public class Interpreter {
         ArrayList<GuildChannel> channels = null;
         ArrayList<Role> roles = null;
         OriginalState originalState = null;
-        final ArrayList<String> messages = new ArrayList<>();
+        final var messages = new ArrayList<String>();
         boolean completeSuccess = true;
 
         if(validAction == ParseActions.ValidAction.CREATE) {
@@ -103,7 +103,7 @@ public class Interpreter {
                     case CATEGORY -> {
                         switch(action.action()) {
                             case CREATE -> {
-                                Category category = createCategory(action, guild);
+                                var category = createCategory(action, guild);
                                 channels.add(category);
                             }
                             case EDIT -> originalState.originalCategoryData.putAll(editCategory(
@@ -118,7 +118,7 @@ public class Interpreter {
                     case TEXT_CHANNEL -> {
                         switch(action.action()) {
                             case CREATE -> {
-                                TextChannel channel = createTextChannel(action, guild);
+                                var channel = createTextChannel(action, guild);
                                 channels.add(channel);
                             }
                             case EDIT -> originalState.originalTextChannelData.putAll(editTextChannel(
@@ -133,7 +133,7 @@ public class Interpreter {
                     case VOICE_CHANNEL -> {
                         switch(action.action()) {
                             case CREATE -> {
-                                VoiceChannel channel = createVoiceChannel(action, guild);
+                                var channel = createVoiceChannel(action, guild);
                                 channels.add(channel);
                             }
                             case EDIT -> originalState.originalVoiceChannelData.putAll(editVoiceChannel(
@@ -148,7 +148,7 @@ public class Interpreter {
                     case FORUM_CHANNEL -> {
                         switch(action.action()) {
                             case CREATE -> {
-                                ForumChannel channel = createForumChannel(action, guild);
+                                var channel = createForumChannel(action, guild);
                                 channels.add(channel);
                             }
                             case EDIT -> originalState.originalForumChannelData.putAll(editForumChannel(
@@ -163,7 +163,7 @@ public class Interpreter {
                     case STAGE_CHANNEL -> {
                         switch(action.action()) {
                             case CREATE -> {
-                                StageChannel channel = createStageChannel(action, guild);
+                                var channel = createStageChannel(action, guild);
                                 channels.add(channel);
                             }
                             case EDIT -> originalState.originalStageChannelData.putAll(editStageChannel(
@@ -178,7 +178,7 @@ public class Interpreter {
                     case ROLE -> {
                         switch(action.action()) {
                             case CREATE -> {
-                                Role role = createRole(action, guild);
+                                var role = createRole(action, guild);
                                 roles.add(role);
                             }
                             case EDIT -> originalState.originalRoleData.putAll(editRole(
@@ -222,22 +222,22 @@ public class Interpreter {
 
     @NonNull
     public static InterpreterResult deleteAllChanges(@NonNull UserSession session) {
-        ArrayList<String> messages = new ArrayList<>();
+        var messages = new ArrayList<String>();
         ParseActions.ValidAction action = session.getAction();
 
         switch(action) {
             case CREATE -> {
-                ArrayList<GuildChannel> channels = session.getInterpreterResult().channels();
-                ArrayList<Role> roles = session.getInterpreterResult().roles();
+                var channels = session.getInterpreterResult().channels();
+                var roles = session.getInterpreterResult().roles();
 
-                for(GuildChannel channel: channels) {
+                for(var channel: channels) {
                     try {
                         channel.delete().completeAfter(1, TimeUnit.SECONDS);
                     } catch (InsufficientPermissionException e) {
                         messages.add(e.getMessage());
                     }
                 }
-                for(Role role: roles) {
+                for(var role: roles) {
                     try {
                         role.delete().completeAfter(1, TimeUnit.SECONDS);
                     } catch (InsufficientPermissionException e) {
@@ -254,8 +254,8 @@ public class Interpreter {
                 );
             }
             case EDIT -> {
-                Guild guild = session.getJDA().getGuildById(session.getGuildId());
-                OriginalState originalState = session.getInterpreterResult().originalState();
+                var guild = session.getJDA().getGuildById(session.getGuildId());
+                var originalState = session.getInterpreterResult().originalState();
 
                 if(guild == null) {
                     return new InterpreterResult(
@@ -266,7 +266,7 @@ public class Interpreter {
 
                 for(long categoryId: originalState.originalCategoryData().keySet()) {
                     try {
-                        Category category = guild.getCategoryById(categoryId);
+                        var category = guild.getCategoryById(categoryId);
 
                         if(category == null)
                             throw new DiscordEntityException("Category not found. Category ID: " + categoryId);
@@ -280,7 +280,7 @@ public class Interpreter {
                 }
                 for(long textChannelId: originalState.originalTextChannelData().keySet()) {
                     try {
-                        TextChannel channel = guild.getTextChannelById(textChannelId);
+                        var channel = guild.getTextChannelById(textChannelId);
 
                         if(channel == null)
                             throw new DiscordEntityException("Text channel not found. Text channel ID: " + textChannelId);
@@ -298,7 +298,7 @@ public class Interpreter {
                 }
                 for(long voiceChannelId: originalState.originalVoiceChannelData().keySet()) {
                     try {
-                        VoiceChannel channel = guild.getVoiceChannelById(voiceChannelId);
+                        var channel = guild.getVoiceChannelById(voiceChannelId);
 
                         if(channel == null)
                             throw new DiscordEntityException("Voice channel not found. Voice channel ID: " + voiceChannelId);
@@ -312,7 +312,7 @@ public class Interpreter {
                 }
                 for(long roleId: originalState.originalRoleData().keySet()) {
                     try {
-                        Role role = guild.getRoleById(roleId);
+                        var role = guild.getRoleById(roleId);
 
                         if(role == null)
                             throw new DiscordEntityException("Role not found. Role ID: " + roleId);
@@ -343,7 +343,7 @@ public class Interpreter {
             @NonNull ParseActions.ExecutableAction action,
             @NonNull Guild guild
     ) {
-        Category category = guild.createCategory(
+        var category = guild.createCategory(
                 action.data().get(NAME).toString()
         ).completeAfter(1, TimeUnit.SECONDS);
 
@@ -353,24 +353,25 @@ public class Interpreter {
                 return category;
             }
 
-            ArrayList<DiscordConfig.ConfigItem.Permission> permsData =
-                    (ArrayList<DiscordConfig.ConfigItem.Permission>) action.data().get(PERMISSIONS);
+            var permsData = (ArrayList<DiscordConfig.ConfigItem.Permission>) action.data().get(PERMISSIONS);
 
-            for(DiscordConfig.ConfigItem.Permission perm: permsData) {
+            for(var perm: permsData) {
                 try {
                     List<Role> roles = guild.getRolesByName(perm.role(), true);
+                    String allowed = perm.allow() == null ? "0" : perm.allow();
+                    String denied = perm.deny() == null ? "0" : perm.deny();
 
                     if(perm.role().equalsIgnoreCase("@everyone") || perm.role().equalsIgnoreCase("everyone")) {
                         category.upsertPermissionOverride(guild.getPublicRole())
-                                .setAllowed(Long.parseLong(perm.allow()))
-                                .setDenied(Long.parseLong(perm.deny()))
+                                .setAllowed(Long.parseLong(allowed))
+                                .setDenied(Long.parseLong(denied))
                                 .completeAfter(1, TimeUnit.SECONDS);
                     } else if(!roles.isEmpty()) {
-                        Role role = roles.get(0);
+                        var role = roles.get(0);
 
                         category.upsertPermissionOverride(role)
-                                .setAllowed(Long.parseLong(perm.allow()))
-                                .setDenied(Long.parseLong(perm.deny()))
+                                .setAllowed(Long.parseLong(allowed))
+                                .setDenied(Long.parseLong(denied))
                                 .completeAfter(1, TimeUnit.SECONDS);
                     }
                 } catch(InsufficientPermissionException ignored) {}
@@ -385,7 +386,7 @@ public class Interpreter {
             @NonNull ParseActions.ExecutableAction action,
             @NonNull Guild guild
     ) {
-        TextChannel channel = guild.createTextChannel(
+        var channel = guild.createTextChannel(
                 action.data().get(NAME).toString()
         ).completeAfter(1, TimeUnit.SECONDS);
 
@@ -396,10 +397,9 @@ public class Interpreter {
                 return channel;
             }
 
-            ArrayList<DiscordConfig.ConfigItem.Permission> permsData =
-                    (ArrayList<DiscordConfig.ConfigItem.Permission>) action.data().get(PERMISSIONS);
+            var permsData = (ArrayList<DiscordConfig.ConfigItem.Permission>) action.data().get(PERMISSIONS);
 
-            for(DiscordConfig.ConfigItem.Permission perm: permsData) {
+            for(var perm: permsData) {
                 try {
                     List<Role> roles = guild.getRolesByName(perm.role(), true);
                     String allowed = perm.allow() == null ? "0" : perm.allow();
@@ -411,7 +411,7 @@ public class Interpreter {
                                 .setDenied(Long.parseLong(denied))
                                 .completeAfter(1, TimeUnit.SECONDS);
                     } else if(!roles.isEmpty()) {
-                        Role role = roles.get(0);
+                        var role = roles.get(0);
 
                         channel.upsertPermissionOverride(role)
                                 .setAllowed(Long.parseLong(allowed))
@@ -449,7 +449,7 @@ public class Interpreter {
             @NonNull ParseActions.ExecutableAction action,
             @NonNull Guild guild
     ) {
-        VoiceChannel channel = guild
+        var channel = guild
                 .createVoiceChannel(
                         action.data().get(NAME).toString()
                 ).completeAfter(1, TimeUnit.SECONDS);
@@ -459,10 +459,9 @@ public class Interpreter {
                 return channel;
             }
 
-            ArrayList<DiscordConfig.ConfigItem.Permission> permsData =
-                    (ArrayList<DiscordConfig.ConfigItem.Permission>) action.data().get(PERMISSIONS);
+            var permsData = (ArrayList<DiscordConfig.ConfigItem.Permission>) action.data().get(PERMISSIONS);
 
-            for(DiscordConfig.ConfigItem.Permission perm: permsData) {
+            for(var perm: permsData) {
                 try {
                     List<Role> roles = guild.getRolesByName(perm.role(), true);
                     String allowed = perm.allow() == null ? "0" : perm.allow();
@@ -477,7 +476,7 @@ public class Interpreter {
                                 .setDenied(Long.parseLong(denied))
                                 .completeAfter(1, TimeUnit.SECONDS);
                     } else if(!roles.isEmpty()) {
-                        Role role = roles.get(0);
+                        var role = roles.get(0);
 
                         channel.upsertPermissionOverride(role)
                                 .setAllowed(Long.parseLong(allowed))
@@ -511,8 +510,11 @@ public class Interpreter {
     }
 
     @SuppressWarnings("unchecked")
-    private static ForumChannel createForumChannel(@NonNull ParseActions.ExecutableAction action, @NonNull Guild guild) {
-        ForumChannel channel = guild
+    private static ForumChannel createForumChannel(
+            @NonNull ParseActions.ExecutableAction action,
+            @NonNull Guild guild
+    ) {
+        var channel = guild
                 .createForumChannel(
                         action.data().get(NAME).toString()
                 ).completeAfter(1, TimeUnit.SECONDS);
@@ -522,10 +524,9 @@ public class Interpreter {
                 return channel;
             }
 
-            ArrayList<DiscordConfig.ConfigItem.Permission> permsData =
-                    (ArrayList<DiscordConfig.ConfigItem.Permission>) action.data().get(PERMISSIONS);
+            var permsData = (ArrayList<DiscordConfig.ConfigItem.Permission>) action.data().get(PERMISSIONS);
 
-            for(DiscordConfig.ConfigItem.Permission perm: permsData) {
+            for(var perm: permsData) {
                 try {
                     List<Role> roles = guild.getRolesByName(perm.role(), true);
                     String allowed = perm.allow() == null ? "0" : perm.allow();
@@ -540,7 +541,7 @@ public class Interpreter {
                                 .setDenied(Long.parseLong(denied))
                                 .completeAfter(1, TimeUnit.SECONDS);
                     } else if(!roles.isEmpty()) {
-                        Role role = roles.get(0);
+                        var role = roles.get(0);
 
                         channel.upsertPermissionOverride(role)
                                 .setAllowed(Long.parseLong(allowed))
@@ -581,7 +582,7 @@ public class Interpreter {
             @NonNull ParseActions.ExecutableAction action,
             @NonNull Guild guild
     ) {
-        StageChannel channel = guild
+        var channel = guild
                 .createStageChannel(
                         action.data().get(NAME).toString()
                 ).completeAfter(1, TimeUnit.SECONDS);
@@ -591,10 +592,9 @@ public class Interpreter {
                 return channel;
             }
 
-            ArrayList<DiscordConfig.ConfigItem.Permission> permsData =
-                    (ArrayList<DiscordConfig.ConfigItem.Permission>) action.data().get(PERMISSIONS);
+            var permsData = (ArrayList<DiscordConfig.ConfigItem.Permission>) action.data().get(PERMISSIONS);
 
-            for(DiscordConfig.ConfigItem.Permission perm: permsData) {
+            for(var perm: permsData) {
                 try {
                     List<Role> roles = guild.getRolesByName(perm.role(), true);
                     String allowed = perm.allow() == null ? "0" : perm.allow();
@@ -609,7 +609,7 @@ public class Interpreter {
                                 .setDenied(Long.parseLong(denied))
                                 .completeAfter(1, TimeUnit.SECONDS);
                     } else if(!roles.isEmpty()) {
-                        Role role = roles.get(0);
+                        var role = roles.get(0);
 
                         channel.upsertPermissionOverride(role)
                                 .setAllowed(Long.parseLong(allowed))

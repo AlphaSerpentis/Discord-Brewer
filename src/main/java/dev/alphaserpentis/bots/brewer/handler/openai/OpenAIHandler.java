@@ -61,9 +61,9 @@ public class OpenAIHandler {
             @NonNull Path transcriptionCacheFile,
             @NonNull Path translationCacheFile
     ) {
-        ObjectMapper mapper = defaultObjectMapper();
-        OkHttpClient client = defaultClient(apiKey, Duration.ofSeconds(180));
-        Retrofit retrofit = defaultRetrofit(client, mapper);
+        var mapper = defaultObjectMapper();
+        var client = defaultClient(apiKey, Duration.ofSeconds(180));
+        var retrofit = defaultRetrofit(client, mapper);
 
         service = new CustomOpenAiService(retrofit.create(CustomOpenAiApi.class));
         OpenAIHandler.flaggedContentDirectory = flaggedContentDirectory;
@@ -131,8 +131,8 @@ public class OpenAIHandler {
             double presencePenalty,
             double frequencyPenalty
     ) {
-        ChatMessage message = new ChatMessage("user", prompt);
-        ChatCompletionRequest.ChatCompletionRequestBuilder builder = ChatCompletionRequest.builder()
+        var message = new ChatMessage("user", prompt);
+        var builder = ChatCompletionRequest.builder()
                 .model(model)
                 .messages(List.of(system, message))
                 .temperature(temperature)
@@ -145,7 +145,7 @@ public class OpenAIHandler {
     }
 
     public static AudioTranscriptionResponse getAudioTranscription(@NonNull String audioUrl) {
-        String fileName = audioUrl.substring(audioUrl.lastIndexOf('/') + 1);
+        var fileName = audioUrl.substring(audioUrl.lastIndexOf('/') + 1);
         byte[] audioBytes;
         String hash;
 
@@ -190,7 +190,7 @@ public class OpenAIHandler {
     }
 
     public static AudioTranslationResponse getAudioTranslation(@NonNull String audioUrl) {
-        String fileName = audioUrl.substring(audioUrl.lastIndexOf('/') + 1);
+        var fileName = audioUrl.substring(audioUrl.lastIndexOf('/') + 1);
         byte[] audioBytes;
         String hash;
 

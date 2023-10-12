@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.entities.Activity;
 
 public class StatusHandler {
     public static void init(@NonNull CoffeeCore core) {
-         final ContainerHelper helper = new ContainerHelper(core.getActiveContainer());
+         final var helper = new ContainerHelper(core.getActiveContainer());
 
          helper.setActivity(Activity.playing("with your roles!"));
     }

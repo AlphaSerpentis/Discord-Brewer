@@ -30,7 +30,7 @@ public class CustomSettings extends Settings {
     @Override
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
-        EmbedBuilder eb = new EmbedBuilder();
+        var eb = new EmbedBuilder();
 
         eb.setTitle("Server Settings");
 
@@ -71,19 +71,19 @@ public class CustomSettings extends Settings {
 
     @Override
     public void updateCommand(@NonNull JDA jda) {
-        SubcommandData ephemeral = new SubcommandData(
+        var ephemeral = new SubcommandData(
                 "ephemeral",
                 "Toggle whether the bot's responses are ephemeral"
         );
-        SubcommandData optOutOfAnalytics = new SubcommandData(
+        var optOutOfAnalytics = new SubcommandData(
                 "opt-out",
                 "Toggle to opt out of analytics for this server"
         );
-        SubcommandData optOutOfTranscriptions = new SubcommandData(
+        var optOutOfTranscriptions = new SubcommandData(
                 "opt-out-vc",
                 "(USER ONLY) Toggle to opt out of VC listening for this server"
         );
-        SubcommandData tryRenamingNsfwChannels = new SubcommandData(
+        var tryRenamingNsfwChannels = new SubcommandData(
                 "rename-nsfw-channels",
                 "Toggle whether the bot should try to rename NSFW channels"
         );

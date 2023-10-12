@@ -23,6 +23,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
@@ -149,13 +150,14 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         InteractionHook hook = event.deferEdit().complete();
 
         if(userSession == null) {
-            EmbedBuilder eb = new EmbedBuilder(USER_SESSION_NOT_FOUND);
+            var eb = new EmbedBuilder(USER_SESSION_NOT_FOUND);
+            long guildCommandId = getGuildCommandId(event.getGuild());
 
             eb.setDescription(
                     String.format(
                             USER_SESSION_NOT_FOUND.getDescriptionBuilder().toString(),
-                            getGuildCommandId(event.getGuild()),
-                            getGuildCommandId(event.getGuild())
+                            guildCommandId,
+                            guildCommandId
                     )
             );
 
@@ -262,11 +264,23 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
 
     @Override
     public void updateCommand(@NonNull Guild guild) {
-        SubcommandData create = new SubcommandData("create", "Create new roles/categories/channels with a prompt!")
-                .addOption(OptionType.STRING, "prompt", "Describe a theme, style, or the specifics of what you want!", true);
-        SubcommandData rename = new SubcommandData("rename", "Rename your preexisting server's channels, roles, and categories!")
-                .addOption(OptionType.STRING, "prompt", "Describe a theme, style, or the specifics of what you want!", true);
-        SlashCommandData cmdData = ((SlashCommandData) getJDACommandData(getCommandType(), getName(), getDescription()))
+        var promptOptionData = new OptionData(
+                OptionType.STRING,
+                "prompt",
+                "Describe a theme, style, or the specifics of what you want!",
+                true
+        );
+        var create = new SubcommandData(
+                "create",
+                "Create new roles/categories/channels with a prompt!"
+        )
+                .addOptions(promptOptionData);
+        var rename = new SubcommandData(
+                "rename",
+                "Rename your preexisting server's channels, roles, and categories!"
+        )
+                .addOptions(promptOptionData);
+        var cmdData = ((SlashCommandData) getJDACommandData(getCommandType(), getName(), getDescription()))
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                 .addSubcommands(create, rename);
@@ -285,7 +299,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             @NonNull InteractionHook hook
     ) {
         ChatMessage chatMessage;
-        EmbedBuilder eb = new EmbedBuilder();
+        var eb = new EmbedBuilder();
 
         if(userSession.getType() == UserSession.UserSessionType.NEW_BREW) {
             chatMessage = Prompts.SETUP_SYSTEM_PROMPT_CREATE;
@@ -365,7 +379,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
 
         try {
             if(result.completeSuccess()) {
-                EmbedBuilder eb = new EmbedBuilder(POST_EXECUTION_NO_ERROR);
+                var eb = new EmbedBuilder(POST_EXECUTION_NO_ERROR);
 
                 if(!VoteHandler.isUserInRemindedMap(event.getUser().getIdLong())) {
                     long voteCommandId = core.getCommandsHandler().getCommand("vote").getGlobalCommandId();
@@ -393,10 +407,8 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                         getButton("revert")
                 ).queue();
             } else {
-                String errorMessages = String.join("\n", result.messages());
-                EmbedBuilder eb = new EmbedBuilder(POST_EXECUTION_ERROR);
-
-                MessageEmbed errorEmbed = eb
+                var errorMessages = String.join("\n", result.messages());
+                var errorEmbed = new EmbedBuilder(POST_EXECUTION_ERROR)
                         .setDescription(
                                 String.format(
                                         POST_EXECUTION_ERROR.getDescriptionBuilder().toString(),
@@ -438,10 +450,8 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                     REVERTED_NO_ERROR.build()
             ).queue();
         } else {
-            String errorMessages = String.join("\n", result.messages());
-            EmbedBuilder eb = new EmbedBuilder(REVERTED_ERROR);
-
-            MessageEmbed errorEmbed = eb
+            var errorMessages = String.join("\n", result.messages());
+            var errorEmbed = new EmbedBuilder(REVERTED_ERROR)
                     .setDescription(
                             String.format(
                                     REVERTED_ERROR.getDescriptionBuilder().toString(),

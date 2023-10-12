@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -48,9 +49,8 @@ public class AnalyticsHandler {
             return;
         }
 
-        if(serverAnalytics.get(guild.getIdLong()) == null) {
-            if(!generateAnalytics(guild.getIdLong()))
-                return;
+        if(serverAnalytics.get(guild.getIdLong()) == null && !generateAnalytics(guild.getIdLong())) {
+            return;
         }
 
         Analytics analytics = serverAnalytics.get(guild.getIdLong());
@@ -62,13 +62,14 @@ public class AnalyticsHandler {
     /**
      * Generates analytics for a guild
      * @param guildId ID of the guild to generate analytics for
-     * @return true if analytics were generated, false if the guild opted out of analytics
+     * @return true if analytics were generated, false if the guild opted out of analytics or guild was not found
      */
     public static boolean generateAnalytics(long guildId) {
         BrewerServerData serverData = (BrewerServerData) Launcher.core.getServerDataHandler().getServerData(guildId);
         Guild guild;
         Analytics analytics;
         int snapshotUserCount;
+        long epochSecond;
         long snapshotAgeOfServer;
         long snapshotBotAgeInServer;
 
@@ -76,12 +77,18 @@ public class AnalyticsHandler {
             return false;
         }
 
-        guild = Launcher.core.getShardManager().getGuildById(guildId);
+        try {
+            guild = Objects.requireNonNull(Launcher.core.getShardManager().getGuildById(guildId));
+        } catch(NullPointerException e) {
+            logger.error("Failed to get guild with ID " + guildId, e);
+            return false;
+        }
 
         // Take snapshot of the server
+        epochSecond = Instant.now().getEpochSecond();
         snapshotUserCount = guild.retrieveMetaData().complete().getApproximateMembers();
-        snapshotAgeOfServer = (Instant.now().getEpochSecond() - guild.getTimeCreated().toInstant().getEpochSecond());
-        snapshotBotAgeInServer = Instant.now().getEpochSecond() - guild.getSelfMember().getTimeJoined().toInstant().getEpochSecond();
+        snapshotAgeOfServer = epochSecond - guild.getTimeCreated().toInstant().getEpochSecond();
+        snapshotBotAgeInServer = epochSecond  - guild.getSelfMember().getTimeJoined().toInstant().getEpochSecond();
 
         // Set analytics
         analytics = new Analytics(
@@ -100,9 +107,9 @@ public class AnalyticsHandler {
      * Dumps analytics to the analytics directory.
      */
     public static void dumpAnalytics() throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(analyticsDirectory.toFile()));
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         ArrayList<Analytics> anonymizedAnalytics = new ArrayList<>(serverAnalytics.values());
-        BufferedWriter writer = new BufferedWriter(new FileWriter(analyticsDirectory.toFile()));
 
         gson.toJson(anonymizedAnalytics, writer);
 

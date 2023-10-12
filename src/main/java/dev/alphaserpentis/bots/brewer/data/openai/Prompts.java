@@ -13,7 +13,7 @@ public interface Prompts {
                     Old names and descriptions will be given for context on what the categories, channels, and roles are for.
                     
                     What you can do:
-                    - Rename the name, desc, color fields pertaining to the prompt as see fit. Additional fields may apply to channels with a "desc" field and roles with a "color" field.
+                    - Rename the name, desc, color fields pertaining to the prompt. Additional fields may apply to channels with a "desc" field and roles with a "color" field.
                     
                     You must not:
                     - modify the prompt.
@@ -21,11 +21,12 @@ public interface Prompts {
                     
                     You must:
                     - Remove a category, channel, or role from the JSON array if you changed nothing about it for optimization.
+                    - New names, descriptions, and colors must be related to the prompt.
                     
                     The user will provide you with a JSON prompt that looks like this:
                     
                     {
-                        "categories": [
+                        "cats": [
                             "DON'T MODIFY": {
                                 "name": "{{OLD NAME}}"
                             },
@@ -58,29 +59,27 @@ public interface Prompts {
                     Return the data in a valid JSON in a similar fashion as shown below:
                                         
                     {
-                        "categories": [
+                        "cats": [
                             "OLD NAME": {
-                                "name": "{{NEW NAME RELATED TO THE PROMPT}}"
+                                "name": "{{NEW NAME}}"
                             }
                         ],
                         "channels": [
                             "OLD NAME": {
-                                "name": "{{NEW NAME RELATED TO THE PROMPT}}",
-                                "desc": "{{NEW DESCRIPTION RELATED TO THE PROMPT}}"
+                                "name": "{{NEW NAME}}",
+                                "desc": "{{NEW DESCRIPTION}}"
                             },
                             "OLD NAME": {
-                                "name": "{{NEW NAME RELATED TO THE PROMPT}}"
+                                "name": "{{NEW NAME}}"
                             }
                         ],
                         "roles": [
                             "OLD NAME": {
-                                "name": "{{NEW NAME RELATED TO THE PROMPT}}",
-                                "color": "{{NEW COLOR RELATED TO THE PROMPT}}"
+                                "name": "{{NEW NAME}}",
+                                "color": "{{NEW COLOR}}"
                             }
                         ]
                     }
-                    
-                    The user's prompt is: Rename the name, desc, and color with a theme based on 
                     """
     );
 
@@ -118,14 +117,14 @@ public interface Prompts {
                             "2": {
                                 "name": "Example Role 2",
                                 "color": "#00ff00",
-                                "perms": [
+                                "perm": [
                                     {
                                         "allow": "800"
                                     }
                                 ]
                             }
                         ],
-                        "categories": [
+                        "cats": [
                             "1": {
                                 "name": "Example Category"
                             },
@@ -138,7 +137,7 @@ public interface Prompts {
                                 "name": "Example Channel",
                                 "type": "txt",
                                 "desc": "Example Description",
-                                "perms": [
+                                "perm": [
                                     {
                                         "role": "Example Role",
                                         "allow": "800",
@@ -150,7 +149,7 @@ public interface Prompts {
                                 "name": "Example Channel 2",
                                 "type": "vc",
                                 "desc": "Example Description 2",
-                                "perms": [
+                                "perm": [
                                     {
                                         "role": "Example Role",
                                         "allow": "800",
@@ -174,7 +173,7 @@ public interface Prompts {
                             "1": {
                                 "name": "{{NEW NAME}}",
                                 "color": "{{NEW COLOR}}",
-                                "perms": [
+                                "perm": [
                                     {
                                         "allow": "{{PERMISSIONS}}",
                                         "deny": "{{PERMISSIONS}}"
@@ -182,7 +181,7 @@ public interface Prompts {
                                 ]
                             }
                         },
-                        "categories": {
+                        "cats": {
                             "1": {
                                 "name": "{{NEW NAME}}"
                             },
@@ -196,7 +195,7 @@ public interface Prompts {
                                 "type": "{{CHANNEL TYPE}}",
                                 "cat": {{CATEGORY NAME}},
                                 "desc": "{{NEW DESCRIPTION}}",
-                                "perms": [
+                                "perm": [
                                     {
                                         "role": "{{ROLE NAME}}",
                                         "allow": "{{PERMISSIONS}}",
@@ -206,8 +205,6 @@ public interface Prompts {
                             }
                         }
                     }
-                    
-                    The user's prompt is:
                     """
     );
 

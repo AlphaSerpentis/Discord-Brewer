@@ -69,15 +69,24 @@ public class BrewHandler {
         } catch(JsonSyntaxException e) {
             logger.error("JSONSyntaxException thrown in generateCreatePrompt", e);
 
-            throw new GenerationException(GenerationException.Type.JSON_EXCEPTION.getDescriptions(), e.getCause());
+            throw new GenerationException(
+                    GenerationException.Type.JSON_EXCEPTION.getDescriptions(),
+                    e.getCause()
+            );
         } catch(OpenAiHttpException e) {
             logger.error("OpenAiHttpException thrown in generateCreatePrompt", e);
 
-            throw new GenerationException(GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
+            throw new GenerationException(
+                    GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(),
+                    e.getCause()
+            );
         } catch(SocketTimeoutException e) {
             logger.error("SocketTimeoutException thrown in generateCreatePrompt", e);
 
-            throw new GenerationException(GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(), e.getCause());
+            throw new GenerationException(
+                    GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(),
+                    e.getCause()
+            );
         }
 
         previewChangesPage(eb, actions);
@@ -118,15 +127,24 @@ public class BrewHandler {
         } catch(JsonSyntaxException e) {
             logger.error("JSONSyntaxException thrown in generateRenamePrompt", e);
 
-            throw new GenerationException(GenerationException.Type.JSON_EXCEPTION.getDescriptions(), e.getCause());
+            throw new GenerationException(
+                    GenerationException.Type.JSON_EXCEPTION.getDescriptions(),
+                    e.getCause()
+            );
         } catch(OpenAiHttpException e) {
             logger.error("OpenAiHttpException thrown in generateRenamePrompt", e);
 
-            throw new GenerationException(GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(), e.getCause());
+            throw new GenerationException(
+                    GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(),
+                    e.getCause()
+            );
         } catch(SocketTimeoutException e) {
             logger.error("SocketTimeoutException thrown in generateRenamePrompt", e);
 
-            throw new GenerationException(GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(), e.getCause());
+            throw new GenerationException(
+                    GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(),
+                    e.getCause()
+            );
         } finally {
             AnalyticsHandler.addUsage(event.getGuild(), ServiceType.RENAME);
         }
@@ -151,7 +169,7 @@ public class BrewHandler {
             @NonNull String prompt,
             @NonNull ParseActions.ValidAction action
     ) throws SocketTimeoutException {
-        Gson gson = new Gson();
+        var gson = new Gson();
         String result = OpenAIHandler.getCompletion(
                 system,
                 prompt
@@ -174,22 +192,22 @@ public class BrewHandler {
             @NonNull EmbedBuilder eb,
             @NonNull ArrayList<ParseActions.ExecutableAction> actions
     ) {
-        final String TOO_LONG = "... (too long to show)";
-        String categoriesVal, channelsVal, rolesVal;
+        final var TOO_LONG = "... (too long to show)";
+        String catsVal, chnsVal, rolesVal;
 
         eb.setTitle("Preview Changes");
         eb.setDescription("""
-                Here is a preview of the changes that will be made to your server. Please confirm that you want to make these changes.
+                A preview of the changes that will be made to your server. Please confirm that you want to make these changes.
 
                 If you want to regenerate with the same prompt, click on the "☕ New Brew" button.
                 
-                **Notice**: Permissions are omitted from this preview. If the bot doesn't have sufficient permissions to make the changes, it will not set permissions!
+                **Notice**: Permissions are omitted from this preview. If Brew(r) doesn't have sufficient permissions to make the changes, it will not set permissions!
                 """);
         eb.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
         eb.setColor(Color.GREEN);
 
         // Categories
-        categoriesVal = actions.stream().filter(
+        catsVal = actions.stream().filter(
                 action -> action.targetType() == ParseActions.ValidTarget.CATEGORY
         ).map(
                 BrewHandler::generateReadablePreview
@@ -199,12 +217,12 @@ public class BrewHandler {
 
         eb.addField(
                 "Categories",
-                categoriesVal.length() > 1024 ? categoriesVal.substring(0, 1024 - TOO_LONG.length()) + TOO_LONG : categoriesVal,
+                catsVal.length() > 1024 ? catsVal.substring(0, 1024 - TOO_LONG.length()) + TOO_LONG : catsVal,
                 false
         );
 
         // Channels
-        channelsVal = actions.stream().filter(
+        chnsVal = actions.stream().filter(
                 action -> action.targetType() == ParseActions.ValidTarget.TEXT_CHANNEL
                         || action.targetType() == ParseActions.ValidTarget.VOICE_CHANNEL
                         || action.targetType() == ParseActions.ValidTarget.FORUM_CHANNEL
@@ -217,7 +235,7 @@ public class BrewHandler {
 
         eb.addField(
                 "Channels",
-                channelsVal.length() > 1024 ? channelsVal.substring(0, 1024 - TOO_LONG.length()) + TOO_LONG : channelsVal,
+                chnsVal.length() > 1024 ? chnsVal.substring(0, 1024 - TOO_LONG.length()) + TOO_LONG : chnsVal,
                 false
         );
 
@@ -262,10 +280,9 @@ public class BrewHandler {
 
     private static void optimizeRenameActions(@NonNull ArrayList<ParseActions.ExecutableAction> actions) {
         actions.removeIf(action -> {
-            String name = (String) action.data().get(ParseActions.ValidDataNames.NAME);
-            String desc = (String) action.data().get(ParseActions.ValidDataNames.DESCRIPTION);
-            String color = (String) action.data().get(ParseActions.ValidDataNames.COLOR);
-
+            var name = (String) action.data().get(ParseActions.ValidDataNames.NAME);
+            var desc = (String) action.data().get(ParseActions.ValidDataNames.DESCRIPTION);
+            var color = (String) action.data().get(ParseActions.ValidDataNames.COLOR);
             boolean isNameSameOrEmpty = name == null || name.isEmpty() || name.equals(action.target());
             boolean isDescAndColorEmpty = (desc == null || desc.isEmpty()) && (color == null || color.isEmpty());
 
@@ -275,7 +292,7 @@ public class BrewHandler {
 
 
     private static StringBuilder getData(@NonNull ParseActions.ExecutableAction action) {
-        StringBuilder readableData = new StringBuilder();
+        var readableData = new StringBuilder();
 
         for(Map.Entry<ParseActions.ValidDataNames, ?> entry : action.data().entrySet()) {
             if(
@@ -320,11 +337,11 @@ public class BrewHandler {
         guild.getChannels(false).forEach(channel -> {
             String type;
 
-            if(channel instanceof CategoryImpl)
-                return;
-
-            if(channel instanceof AbstractStandardGuildMessageChannelImpl<?> chn && chn.isNSFW() && !getNsfwChannels)
-                return;
+            if(
+                    channel instanceof CategoryImpl
+                            || channel instanceof AbstractStandardGuildMessageChannelImpl<?> chn && chn.isNSFW()
+                            && !getNsfwChannels && OpenAIHandler.isContentFlagged(channel.getName(), -1, -1, false)
+            ) return;
 
             if(channel instanceof TextChannelImpl || channel instanceof NewsChannelImpl) {
                 type = "txt";
@@ -338,25 +355,17 @@ public class BrewHandler {
                 return;
             }
 
-            // Verify the channel's name won't get us yeeted
-            if(OpenAIHandler.isContentFlagged(channel.getName(), -1, -1, false))
-                return;
-
             channels.put(channel.getName(), new DiscordConfig.ConfigItem(
                     channel.getName(),
                     type,
                     null,
-                    (channel instanceof TextChannelImpl) ? ((TextChannelImpl) channel).getTopic() : null,
+                    (channel instanceof TextChannelImpl txt) ? txt.getTopic() : null,
                     null,
                     null
             ));
         });
         guild.getRoles().forEach(role -> {
-            if(role.isPublicRole() || role.isManaged())
-                return;
-
-            // Verify the role's name won't get us yeeted
-            if(OpenAIHandler.isContentFlagged(role.getName(), -1, -1, false))
+            if(role.isPublicRole() || role.isManaged() && OpenAIHandler.isContentFlagged(role.getName(), -1, -1, false))
                 return;
 
             roles.put(role.getName(), new DiscordConfig.ConfigItem(

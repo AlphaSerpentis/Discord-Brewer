@@ -46,7 +46,7 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull MessageContextInteractionEvent event) {
         EmbedBuilder workingEmbed;
         CommandResponse<MessageEmbed> rateLimitResponse;
-        StringBuilder description = new StringBuilder();
+        var description = new StringBuilder();
         MessageEmbed[] embedsArray;
 
         try {

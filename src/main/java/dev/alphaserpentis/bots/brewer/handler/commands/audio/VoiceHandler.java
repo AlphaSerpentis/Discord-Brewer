@@ -24,7 +24,7 @@ public class VoiceHandler implements AudioReceiveHandler {
     private final ByteArrayOutputStream combinedAudioStream = new ByteArrayOutputStream();
 
     public VoiceHandler(int seconds) {
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+        var executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.schedule(() -> {
             receiving = false;
         }, seconds, TimeUnit.SECONDS);
@@ -71,16 +71,16 @@ public class VoiceHandler implements AudioReceiveHandler {
     @NonNull
     private byte[] transcodeToWav(@NonNull byte[] pcmData) throws IOException {
         try(
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            AudioInputStream audioInputStream = new AudioInputStream(
-                    new ByteArrayInputStream(pcmData),
-                    OUTPUT_FORMAT,
-                    pcmData.length / 2 / OUTPUT_FORMAT.getChannels()
-            );
-            AudioInputStream waveStream = AudioSystem.getAudioInputStream(
-                    AudioFormat.Encoding.PCM_SIGNED,
-                    audioInputStream
-            )
+                var outputStream = new ByteArrayOutputStream();
+                var audioInputStream = new AudioInputStream(
+                        new ByteArrayInputStream(pcmData),
+                        OUTPUT_FORMAT,
+                        pcmData.length / 2 / OUTPUT_FORMAT.getChannels()
+                );
+                AudioInputStream waveStream = AudioSystem.getAudioInputStream(
+                        AudioFormat.Encoding.PCM_SIGNED,
+                        audioInputStream
+                )
         ) {
             AudioSystem.write(waveStream, AudioFileFormat.Type.WAVE, outputStream);
             return outputStream.toByteArray();

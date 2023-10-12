@@ -85,7 +85,7 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
 
     @Override
     public void updateCommand(@NonNull JDA jda) {
-        SubcommandData url = new SubcommandData("url", "Translate an audio file from a URL")
+        var url = new SubcommandData("url", "Translate an audio file from a URL")
                 .addOption(OptionType.STRING, "url", "The URL to the audio file", true);
 
         jda

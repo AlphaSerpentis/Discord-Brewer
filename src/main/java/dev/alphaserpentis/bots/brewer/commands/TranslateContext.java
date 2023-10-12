@@ -42,7 +42,7 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull MessageContextInteractionEvent event) {
         EmbedBuilder workingEmbed;
         List<Message.Attachment> attachments = tryToGetAudioFiles(event);
-        StringBuilder description = new StringBuilder();
+        var description = new StringBuilder();
         CommandResponse<MessageEmbed> rateLimitResponse;
         MessageEmbed[] embedsArray;
 

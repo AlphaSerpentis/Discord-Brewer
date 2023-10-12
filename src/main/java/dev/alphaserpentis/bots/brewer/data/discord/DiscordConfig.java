@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public record DiscordConfig(
-        Map<String, ConfigItem> categories,
+        Map<String, ConfigItem> cats,
         Map<String, ConfigItem> channels,
         Map<String, ConfigItem> roles,
         String prompt
@@ -16,7 +16,7 @@ public record DiscordConfig(
             @Nullable String type,
             @Nullable String cat,
             @Nullable String desc,
-            @Nullable ArrayList<Permission> perms,
+            @Nullable ArrayList<Permission> perm,
             @Nullable String color
     ) {
 
@@ -47,19 +47,19 @@ public record DiscordConfig(
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Categories:\n");
-        for (Map.Entry<String, ConfigItem> entry : categories.entrySet()) {
+        for(Map.Entry<String, ConfigItem> entry : cats.entrySet()) {
             sb.append(String.format("  %s:\n", entry.getKey()));
             sb.append(entry.getValue().toString());
             sb.append("\n");
         }
         sb.append("Channels:\n");
-        for (Map.Entry<String, ConfigItem> entry : channels.entrySet()) {
+        for(Map.Entry<String, ConfigItem> entry : channels.entrySet()) {
             sb.append(String.format("  %s:\n", entry.getKey()));
             sb.append(entry.getValue().toString());
             sb.append("\n");
         }
         sb.append("Roles:\n");
-        for (Map.Entry<String, ConfigItem> entry : roles.entrySet()) {
+        for(Map.Entry<String, ConfigItem> entry : roles.entrySet()) {
             sb.append(String.format("  %s:\n", entry.getKey()));
             sb.append(entry.getValue().toString());
             sb.append("\n");

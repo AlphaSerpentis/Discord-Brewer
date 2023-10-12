@@ -33,9 +33,9 @@ public class CustomOpenAiService extends OpenAiService {
 
     @NonNull
     public AudioTranscriptionResponse createAudioTranscription(@NonNull AudioTranscriptionRequest request) {
-        String extension = request.name().substring(request.name().lastIndexOf('.') + 1);
-        RequestBody audio = RequestBody.create(MediaType.parse("audio/" + extension), request.audioBytes());
-        MultipartBody.Builder builder = new MultipartBody.Builder()
+        var extension = request.name().substring(request.name().lastIndexOf('.') + 1);
+        var audio = RequestBody.create(MediaType.parse("audio/" + extension), request.audioBytes());
+        var builder = new MultipartBody.Builder()
                 .setType(MediaType.get("multipart/form-data"))
                 .addFormDataPart("model", request.model())
                 .addFormDataPart("file", request.name(), audio);
@@ -57,9 +57,9 @@ public class CustomOpenAiService extends OpenAiService {
 
     @NonNull
     public AudioTranslationResponse createAudioTranslation(@NonNull AudioTranslationRequest request) {
-        String extension = request.name().substring(request.name().lastIndexOf('.') + 1);
-        RequestBody audio = RequestBody.create(MediaType.parse("audio/" + extension), request.audioBytes());
-        MultipartBody.Builder builder = new MultipartBody.Builder()
+        var extension = request.name().substring(request.name().lastIndexOf('.') + 1);
+        var audio = RequestBody.create(MediaType.parse("audio/" + extension), request.audioBytes());
+        var builder = new MultipartBody.Builder()
                 .setType(MediaType.get("multipart/form-data"))
                 .addFormDataPart("model", request.model())
                 .addFormDataPart("file", request.name(), audio);

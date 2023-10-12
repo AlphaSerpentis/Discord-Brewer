@@ -15,7 +15,7 @@ import static dev.alphaserpentis.bots.brewer.handler.openai.CustomOpenAiService.
 public class AudioHandler {
     public static byte[] readUrlStream(@NonNull String url) throws IOException {
         InputStream in = new URL(url).openConnection().getInputStream();
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        var buffer = new ByteArrayOutputStream();
         int nRead;
         byte[] data = new byte[16384];
 
@@ -38,7 +38,7 @@ public class AudioHandler {
      */
     public static String hashAudioBytes(@NonNull byte[] bytes) throws NoSuchAlgorithmException {
         byte[] hash = MessageDigest.getInstance("SHA3-256").digest(bytes);
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
 
         for(byte b: hash) {
             sb.append(String.format("%02x", b));
