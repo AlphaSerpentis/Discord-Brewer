@@ -52,7 +52,7 @@ public class SummarizeContext extends BotCommand<MessageEmbed, MessageContextInt
 
         try {
             embedsArray = checkAndHandleAcknowledgement(event);
-        } catch (IOException e) {
+        } catch(IOException e) {
             logger.error("Failed to check and handle acknowledgement", e);
 
             throw new RuntimeException(e);

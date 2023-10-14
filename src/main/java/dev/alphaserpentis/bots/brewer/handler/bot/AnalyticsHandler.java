@@ -1,6 +1,5 @@
 package dev.alphaserpentis.bots.brewer.handler.bot;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.alphaserpentis.bots.brewer.data.brewer.Analytics;
 import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
@@ -45,15 +44,11 @@ public class AnalyticsHandler {
     }
 
     public static void addUsage(@Nullable Guild guild, @NonNull ServiceType type) {
-        if(guild == null) {
+        if(guild == null || (serverAnalytics.get(guild.getIdLong()) == null && !generateAnalytics(guild.getIdLong()))) {
             return;
         }
 
-        if(serverAnalytics.get(guild.getIdLong()) == null && !generateAnalytics(guild.getIdLong())) {
-            return;
-        }
-
-        Analytics analytics = serverAnalytics.get(guild.getIdLong());
+        var analytics = serverAnalytics.get(guild.getIdLong());
 
         analytics.getUsagePerServiceType().putIfAbsent(type, 0);
         analytics.getUsagePerServiceType().put(type, analytics.getUsagePerServiceType().get(type) + 1);
@@ -65,7 +60,7 @@ public class AnalyticsHandler {
      * @return true if analytics were generated, false if the guild opted out of analytics or guild was not found
      */
     public static boolean generateAnalytics(long guildId) {
-        BrewerServerData serverData = (BrewerServerData) Launcher.core.getServerDataHandler().getServerData(guildId);
+        var serverData = (BrewerServerData) Launcher.core.getServerDataHandler().getServerData(guildId);
         Guild guild;
         Analytics analytics;
         int snapshotUserCount;
@@ -107,9 +102,9 @@ public class AnalyticsHandler {
      * Dumps analytics to the analytics directory.
      */
     public static void dumpAnalytics() throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(analyticsDirectory.toFile()));
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        ArrayList<Analytics> anonymizedAnalytics = new ArrayList<>(serverAnalytics.values());
+        var writer = new BufferedWriter(new FileWriter(analyticsDirectory.toFile()));
+        var gson = new GsonBuilder().setPrettyPrinting().create();
+        var anonymizedAnalytics = new ArrayList<>(serverAnalytics.values());
 
         gson.toJson(anonymizedAnalytics, writer);
 

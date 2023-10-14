@@ -96,9 +96,6 @@ public interface Prompts {
                     - Create roles. They must have a name and hex colors.
                     - Configure permissions for channels, categories, and roles you create. The configuration should specify the target (channel, role, server) and the permissions to set. Use bit sets to specify the permissions.
                     
-                    You may:
-                    - Add emojis into the name or title of the channel, category, or role, although not always necessary unless it's a part of the prompt.
-                    
                     You must:
                     - Configure server-wide notifications to be set to mentions only.
                     - Add as many channels, roles, and categories that is reasonable for the prompt. If the prompt is concise, expand on it to make it more interesting.

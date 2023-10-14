@@ -1,7 +1,6 @@
 package dev.alphaserpentis.bots.brewer.commands;
 
 import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
-import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionResponse;
 import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.CustomOpenAiService;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
@@ -70,7 +69,7 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
         workingEmbed = new EmbedBuilder();
 
         for(Message.Attachment attachment: tryToGetAudioFiles(event)) {
-            AudioTranscriptionResponse response = OpenAIHandler.getAudioTranscription(attachment.getUrl());
+            var response = OpenAIHandler.getAudioTranscription(attachment.getUrl());
 
             if(response.isCached()) {
                 description.append("# Cached Transcription of ").append(attachment.getFileName()).append("\n");
@@ -108,12 +107,11 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
 
     @NonNull
     private List<Message.Attachment> tryToGetAudioFiles(@NonNull MessageContextInteractionEvent event) {
-        ArrayList<Message.Attachment> attachments = new ArrayList<>(event.getTarget().getAttachments());
+        var attachments = new ArrayList<>(event.getTarget().getAttachments());
 
         attachments.removeIf(
-                attachment -> attachment.getDuration() == 0 && CustomOpenAiService.SUPPORTED_EXTENSIONS.stream().noneMatch(
-                        extension -> attachment.getFileName().endsWith(extension)
-                )
+                attachment -> attachment.getDuration() == 0 && CustomOpenAiService.SUPPORTED_EXTENSIONS.stream()
+                        .noneMatch(extension -> attachment.getFileName().endsWith(extension))
         );
 
         return attachments;

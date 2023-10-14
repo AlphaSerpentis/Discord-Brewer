@@ -73,10 +73,7 @@ public class ParseActions {
     }
 
     @NonNull
-    public static ArrayList<ExecutableAction> parseActions(
-            @NonNull DiscordConfig config,
-            @NonNull ValidAction action
-    ) {
+    public static ArrayList<ExecutableAction> parseActions(@NonNull DiscordConfig config, @NonNull ValidAction action) {
         ArrayList<ExecutableAction> actions = new ArrayList<>();
 
         if(config.roles() != null)
@@ -123,8 +120,8 @@ public class ParseActions {
 
 
                 if(item.type() != null) {
-                    if(item.type().equalsIgnoreCase("vc")) {
-                        actions.add(new ExecutableAction(
+                    switch(item.type().toLowerCase()) {
+                        case "vc" -> actions.add(new ExecutableAction(
                                 ValidTarget.VOICE_CHANNEL,
                                 action == ValidAction.CREATE ? item.name() : entry.getKey(),
                                 action,
@@ -134,8 +131,7 @@ public class ParseActions {
                                         ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(item.perm(), "")
                                 )
                         ));
-                    } else if(item.type().equalsIgnoreCase("txt")) {
-                        actions.add(new ExecutableAction(
+                        case "txt" -> actions.add(new ExecutableAction(
                                 ValidTarget.TEXT_CHANNEL,
                                 action == ValidAction.CREATE ? item.name() : entry.getKey(),
                                 action,
@@ -146,8 +142,7 @@ public class ParseActions {
                                         ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(item.perm(), "")
                                 )
                         ));
-                    } else if(item.type().equalsIgnoreCase("forum")) {
-                        actions.add(new ExecutableAction(
+                        case "forum" -> actions.add(new ExecutableAction(
                                 ValidTarget.FORUM_CHANNEL,
                                 action == ValidAction.CREATE ? item.name() : entry.getKey(),
                                 action,
@@ -157,8 +152,7 @@ public class ParseActions {
                                         ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(item.perm(), "")
                                 )
                         ));
-                    } else if(item.type().equalsIgnoreCase("stage")) {
-                        actions.add(new ExecutableAction(
+                        case "stage" -> actions.add(new ExecutableAction(
                                 ValidTarget.STAGE_CHANNEL,
                                 action == ValidAction.CREATE ? item.name() : entry.getKey(),
                                 action,

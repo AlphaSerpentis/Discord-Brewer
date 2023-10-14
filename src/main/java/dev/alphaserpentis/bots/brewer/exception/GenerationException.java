@@ -6,8 +6,8 @@ package dev.alphaserpentis.bots.brewer.exception;
 public class GenerationException extends RuntimeException {
     public enum Type {
         JSON_EXCEPTION ("JSON Exception (Potentially bad JSON by ChatGPT)"),
-        TIMEOUT_EXCEPTION ("Timeout Exception (ChatGPT API timed out)"),
-        OVERLOADED_EXCEPTION ("Overloaded Exception (ChatGPT API is overloaded)"),
+        TIMEOUT_EXCEPTION ("Timeout Exception (OpenAI API timed out)"),
+        OVERLOADED_EXCEPTION ("Overloaded Exception (OpenAI API is overloaded)"),
         FILE_TOO_LARGE_OPENAI_MAX("File too large! Please upload something smaller"),
         FILE_TOO_LARGE_NON_PREMIUM("File too large! Please upload something smaller or upgrade to our Mercury tier!");
 

@@ -1,6 +1,5 @@
 package dev.alphaserpentis.bots.brewer.handler.openai;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -11,13 +10,15 @@ import com.theokanning.openai.moderation.ModerationRequest;
 import com.theokanning.openai.moderation.ModerationResult;
 import dev.alphaserpentis.bots.brewer.data.brewer.CachedAudio;
 import dev.alphaserpentis.bots.brewer.data.brewer.FlaggedContent;
-import dev.alphaserpentis.bots.brewer.data.openai.*;
+import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionRequest;
+import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionResponse;
+import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationRequest;
+import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationResponse;
+import dev.alphaserpentis.bots.brewer.data.openai.ChatCompletionModels;
 import dev.alphaserpentis.bots.brewer.handler.commands.audio.AudioHandler;
 import io.reactivex.rxjava3.annotations.NonNull;
-import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import retrofit2.Retrofit;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -34,7 +35,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static com.theokanning.openai.service.OpenAiService.*;
+import static com.theokanning.openai.service.OpenAiService.defaultClient;
+import static com.theokanning.openai.service.OpenAiService.defaultObjectMapper;
+import static com.theokanning.openai.service.OpenAiService.defaultRetrofit;
 
 public class OpenAIHandler {
     private static final Logger logger = LoggerFactory.getLogger(OpenAIHandler.class);

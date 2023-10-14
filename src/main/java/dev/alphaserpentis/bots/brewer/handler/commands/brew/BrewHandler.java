@@ -1,6 +1,5 @@
 package dev.alphaserpentis.bots.brewer.handler.commands.brew;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.theokanning.openai.OpenAiHttpException;
@@ -169,7 +168,7 @@ public class BrewHandler {
             @NonNull String prompt,
             @NonNull ParseActions.ValidAction action
     ) throws SocketTimeoutException {
-        var gson = new Gson();
+        var gson = new GsonBuilder().serializeNulls().create();
         String result = OpenAIHandler.getCompletion(
                 system,
                 prompt

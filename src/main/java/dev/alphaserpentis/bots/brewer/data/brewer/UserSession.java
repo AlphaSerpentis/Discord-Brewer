@@ -10,8 +10,7 @@ import java.util.ArrayList;
 public class UserSession {
     public enum UserSessionType {
         NEW_BREW,
-        RENAME,
-        NAME_SUGGESTIONS
+        RENAME
     }
 
     private final String prompt;

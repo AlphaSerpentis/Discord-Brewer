@@ -40,14 +40,14 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Brew.class);
-    private static final EmbedBuilder NO_PERMISSIONS = new EmbedBuilder()
+    private final EmbedBuilder NO_PERMISSIONS = new EmbedBuilder()
             .setTitle("No Permissions")
             .setDescription("""
                     You do not have the required permissions to run this command.
 
                     Must be the server owner or have `Administrator` permissions.""")
             .setColor(Color.RED);
-    private static final EmbedBuilder PROMPT_REJECTED = new EmbedBuilder()
+    private final EmbedBuilder PROMPT_REJECTED = new EmbedBuilder()
             .setTitle("Prompt Rejected")
             .setDescription(
                     """
@@ -58,18 +58,18 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                     You can read more about the usage policies of OpenAI here: https://openai.com/policies/usage-policies"""
             )
             .setColor(Color.RED);
-    private static final EmbedBuilder BREWING_UP = new EmbedBuilder()
+    private final EmbedBuilder BREWING_UP = new EmbedBuilder()
             .setTitle("Brewing Up")
             .setDescription("""
             Brewing up your server...
             
             **This may take a while due to rate limits.**""")
             .setColor(Color.ORANGE);
-    private static final EmbedBuilder GENERATING_NEW_BREW = new EmbedBuilder()
+    private final EmbedBuilder GENERATING_NEW_BREW = new EmbedBuilder()
             .setTitle("Generating New Brew")
             .setDescription("Generating a new brew...")
             .setColor(Color.ORANGE);
-    private static final EmbedBuilder GENERATING_ERROR = new EmbedBuilder()
+    private final EmbedBuilder GENERATING_ERROR = new EmbedBuilder()
             .setTitle("Error Generating Brew")
             .setDescription("""
                     An error occurred while generating a brew.
@@ -78,24 +78,25 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                     
                     Report this over at https://brewr.ai/discord
                     
-                    Error Message: %s""")
+                    Error Message:
+                    %s""")
             .setColor(Color.RED);
-    private static final EmbedBuilder CANCELLED = new EmbedBuilder()
+    private final EmbedBuilder CANCELLED = new EmbedBuilder()
             .setTitle("Cancelled")
             .setDescription("Cancelled the current session.")
             .setColor(Color.RED);
-    private static final EmbedBuilder REVERTING = new EmbedBuilder()
+    private final EmbedBuilder REVERTING = new EmbedBuilder()
             .setTitle("Reverting")
             .setDescription("""
             Reverting the changes made to the server...
             
             **This may take a while due to Discord rate limits.**""")
             .setColor(Color.ORANGE);
-    private static final EmbedBuilder POST_EXECUTION_NO_ERROR = new EmbedBuilder()
+    private final EmbedBuilder POST_EXECUTION_NO_ERROR = new EmbedBuilder()
             .setTitle("Server Brewed Up!")
             .setDescription("The server has been successfully brewed up!%s")
             .setColor(Color.GREEN);
-    private static final EmbedBuilder POST_EXECUTION_ERROR = new EmbedBuilder()
+    private final EmbedBuilder POST_EXECUTION_ERROR = new EmbedBuilder()
             .setTitle("Server Brew Attempted")
             .setDescription("""
                     A brew was attempted, but there were errors.
@@ -104,23 +105,23 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                     
                     Report this over at https://brewr.ai/discord
                     
-                    Error Message: %s""")
+                    Error Message:
+                    %s""")
             .setColor(Color.ORANGE);
-    private static final EmbedBuilder REVERTED_NO_ERROR = new EmbedBuilder()
+    private final EmbedBuilder REVERTED_NO_ERROR = new EmbedBuilder()
             .setTitle("Reverted")
             .setDescription("Reverted the changes made to the server.")
             .setColor(Color.GREEN);
-
-    private static final EmbedBuilder REVERTED_ERROR = new EmbedBuilder()
+    private final EmbedBuilder REVERTED_ERROR = new EmbedBuilder()
             .setTitle("Reverted?")
             .setDescription("""
-                    Reverted the changes made to the server (maybe), but there were errors.
+                    Brew(r) attempted to revert the changes made, but might not have been able to. See below for more details.
                     
                     Report this over at https://brewr.ai/discord
                     
-                    Error Message: %s""")
+                    Error Message:
+                    %s""")
             .setColor(Color.ORANGE);
-
     private final EmbedBuilder USER_SESSION_NOT_FOUND = new EmbedBuilder()
             .setTitle("User Session Not Found")
             .setDescription("You do not have an active session. Run </brew create:%d> or </brew rename:%d> to start a new session.")
@@ -145,9 +146,9 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
 
     @Override
     public void runButtonInteraction(@NonNull ButtonInteractionEvent event) {
-        final UserSession userSession = BrewHandler.getUserSession(event.getUser().getIdLong());
-        final String buttonId = event.getComponentId().substring(getName().length() + 1);
-        InteractionHook hook = event.deferEdit().complete();
+        final var userSession = BrewHandler.getUserSession(event.getUser().getIdLong());
+        final var buttonId = event.getComponentId().substring(getName().length() + 1);
+        var hook = event.deferEdit().complete();
 
         if(userSession == null) {
             var eb = new EmbedBuilder(USER_SESSION_NOT_FOUND);
@@ -243,15 +244,12 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             workingEmbed = new EmbedBuilder(GENERATING_ERROR);
 
             workingEmbed.setDescription(
-                    String.format(
-                            GENERATING_ERROR.getDescriptionBuilder().toString(),
-                            e.getMessage()
-                    )
+                    String.format(GENERATING_ERROR.getDescriptionBuilder().toString(), e.getMessage())
             );
             BrewHandler.removeUserSession(userId);
             ratelimitMap.remove(userId);
 
-            return new CommandResponse<>(isOnlyEphemeral(), workingEmbed.build());
+            return new CommandResponse<>(isOnlyEphemeral(), true, workingEmbed.build());
         } catch(Exception e) {
             BrewHandler.removeUserSession(userId);
             ratelimitMap.remove(userId);
@@ -273,13 +271,11 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         var create = new SubcommandData(
                 "create",
                 "Create new roles/categories/channels with a prompt!"
-        )
-                .addOptions(promptOptionData);
+        ).addOptions(promptOptionData);
         var rename = new SubcommandData(
                 "rename",
                 "Rename your preexisting server's channels, roles, and categories!"
-        )
-                .addOptions(promptOptionData);
+        ).addOptions(promptOptionData);
         var cmdData = ((SlashCommandData) getJDACommandData(getCommandType(), getName(), getDescription()))
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
@@ -294,10 +290,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         return member.hasPermission(Permission.ADMINISTRATOR);
     }
 
-    private void onBrewButtonClick(
-            @NonNull UserSession userSession,
-            @NonNull InteractionHook hook
-    ) {
+    private void onBrewButtonClick(@NonNull UserSession userSession, @NonNull InteractionHook hook) {
         ChatMessage chatMessage;
         var eb = new EmbedBuilder();
 
@@ -308,9 +301,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         }
 
         hook.editOriginalComponents()
-                .setEmbeds(
-                        GENERATING_NEW_BREW.build()
-                )
+                .setEmbeds(GENERATING_NEW_BREW.build())
                 .queue();
 
         try {
@@ -328,9 +319,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             hook
                     .editOriginalComponents()
                     .setEmbeds(eb.build())
-                    .setActionRow(
-                            getButton("brew")
-                    )
+                    .setActionRow(getButton("brew"))
                     .queue();
 
             LOGGER.error("Error while generating brew", e);
@@ -342,20 +331,13 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             hook
                     .editOriginalComponents()
                     .setEmbeds(eb.build())
-                    .setActionRow(
-                            getButton("confirm"),
-                            getButton("cancel")
-                    )
+                    .setActionRow(getButton("confirm"), getButton("cancel"))
                     .queue();
         } else {
             hook
                     .editOriginalComponents()
                     .setEmbeds(eb.build())
-                    .setActionRow(
-                            getButton("brew"),
-                            getButton("confirm"),
-                            getButton("cancel")
-                    )
+                    .setActionRow(getButton("brew"), getButton("confirm"), getButton("cancel"))
                     .queue();
         }
 
@@ -394,10 +376,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                     VoteHandler.addUserToRemindedMap(event.getUser().getIdLong());
                 } else {
                     eb.setDescription(
-                            String.format(
-                                    POST_EXECUTION_NO_ERROR.getDescriptionBuilder().toString(),
-                                    ""
-                            )
+                            String.format(POST_EXECUTION_NO_ERROR.getDescriptionBuilder().toString(), "")
                     );
                 }
 
@@ -410,10 +389,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                 var errorMessages = String.join("\n", result.messages());
                 var errorEmbed = new EmbedBuilder(POST_EXECUTION_ERROR)
                         .setDescription(
-                                String.format(
-                                        POST_EXECUTION_ERROR.getDescriptionBuilder().toString(),
-                                        errorMessages
-                                )
+                                String.format(POST_EXECUTION_ERROR.getDescriptionBuilder().toString(), errorMessages)
                         )
                         .build();
 
@@ -428,10 +404,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         }
     }
 
-    private void onCancelButtonClick(
-            @NonNull InteractionHook hook,
-            @NonNull ButtonInteractionEvent event
-    ) {
+    private void onCancelButtonClick(@NonNull InteractionHook hook, @NonNull ButtonInteractionEvent event) {
         hook.editOriginalComponents().setEmbeds(CANCELLED.build()).queue();
         BrewHandler.removeUserSession(event.getUser().getIdLong());
     }
@@ -441,28 +414,31 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             @NonNull InteractionHook hook,
             @NonNull ButtonInteractionEvent event
     ) {
+        Interpreter.InterpreterResult result;
         hook.editOriginalComponents().setEmbeds(REVERTING.build()).complete();
 
-        Interpreter.InterpreterResult result = Interpreter.deleteAllChanges(userSession);
+        try {
+            result = Interpreter.deleteAllChanges(userSession);
+        } catch(Exception e) {
+            var errorEmbed = new EmbedBuilder(REVERTED_ERROR)
+                    .setDescription(String.format(REVERTED_ERROR.getDescriptionBuilder().toString(), e.getMessage()))
+                    .build();
+
+            LOGGER.error("Error while reverting changes", e);
+            hook.editOriginalComponents().setEmbeds(errorEmbed).queue();
+            return;
+        }
 
         if(result.completeSuccess()) {
-            hook.editOriginalEmbeds(
-                    REVERTED_NO_ERROR.build()
-            ).queue();
+            hook.editOriginalEmbeds(REVERTED_NO_ERROR.build()).queue();
         } else {
             var errorMessages = String.join("\n", result.messages());
             var errorEmbed = new EmbedBuilder(REVERTED_ERROR)
-                    .setDescription(
-                            String.format(
-                                    REVERTED_ERROR.getDescriptionBuilder().toString(),
-                                    errorMessages
-                            )
-                    )
+                    .setDescription(String.format(REVERTED_ERROR.getDescriptionBuilder().toString(), errorMessages))
                     .build();
 
-            hook.editOriginalEmbeds(
-                    errorEmbed
-            ).queue();
+            LOGGER.error("Error while reverting changes\n\n%s".formatted(errorMessages));
+            hook.editOriginalEmbeds(errorEmbed).queue();
         }
 
         BrewHandler.removeUserSession(event.getUser().getIdLong());

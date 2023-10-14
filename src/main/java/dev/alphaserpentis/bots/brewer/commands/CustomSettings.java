@@ -10,6 +10,8 @@ import dev.alphaserpentis.coffeecore.handler.api.discord.servers.ServerDataHandl
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
@@ -20,7 +22,7 @@ public class CustomSettings extends Settings {
             """
             You do not have permission to use this subcommand.
             
-            You must have the `Manage Server` or `Administrator` permission to use this subcommand.
+            You must have the `Administrator` permission to use this subcommand.
             """;
 
     public CustomSettings() {
@@ -93,6 +95,11 @@ public class CustomSettings extends Settings {
         ).queue(
                 (cmd) -> setGlobalCommandId(cmd.getIdLong())
         );
+    }
+
+    @Override
+    public boolean isUserPermissioned(@NonNull Member member) {
+        return member.hasPermission(Permission.ADMINISTRATOR);
     }
 
     private void setServerEphemeral(long guildId, @NonNull EmbedBuilder eb) {
