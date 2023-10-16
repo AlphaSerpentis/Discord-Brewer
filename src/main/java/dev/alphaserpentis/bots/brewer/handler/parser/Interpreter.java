@@ -40,34 +40,25 @@ public class Interpreter {
     private static final Logger LOGGER = LoggerFactory.getLogger(Interpreter.class);
 
     public record InterpreterResult(
-            boolean completeSuccess,
-            @Nullable ArrayList<String> messages,
+            @NonNull ArrayList<String> messages,
             @Nullable ArrayList<GuildChannel> channels,
             @Nullable ArrayList<Role> roles,
             @Nullable OriginalState originalState
     ) {
-        public InterpreterResult(
-                boolean completeSuccess,
-                @Nullable ArrayList<String> messages
-        ) {
-            this(completeSuccess, messages, null, null, null);
+        public InterpreterResult(@NonNull ArrayList<String> messages) {
+            this(messages, null, null, null);
+        }
+
+        public InterpreterResult(@NonNull ArrayList<String> messages, @NonNull OriginalState originalState) {
+            this(messages, null, null, originalState);
         }
 
         public InterpreterResult(
-                boolean completeSuccess,
-                @Nullable ArrayList<String> messages,
+                @NonNull ArrayList<String> messages,
                 @Nullable ArrayList<GuildChannel> channels,
                 @Nullable ArrayList<Role> roles
         ) {
-            this(completeSuccess, messages, channels, roles, null);
-        }
-
-        public InterpreterResult(
-                boolean completeSuccess,
-                @Nullable ArrayList<String> messages,
-                @NonNull OriginalState originalState
-        ) {
-            this(completeSuccess, messages, null, null, originalState);
+            this(messages, channels, roles, null);
         }
     }
 
@@ -91,6 +82,13 @@ public class Interpreter {
         }
     }
 
+    /**
+     * Interprets and executes the actions
+     * @param actions The actions to execute
+     * @param validAction The type of action to execute (THIS MUST MATCH THE ACTIONS' ACTION TYPE)
+     * @param guild The guild to execute the actions on
+     * @return The result of the execution
+     */
     @NonNull
     public static InterpreterResult interpretAndExecute(
             @NonNull ArrayList<ParseActions.ExecutableAction> actions,
@@ -111,59 +109,68 @@ public class Interpreter {
 
         for(ParseActions.ExecutableAction action : actions) {
             try {
+                if(action.action() != validAction)
+                    throw new IllegalArgumentException("validAction does not match action.action()");
+
                 switch(action.targetType()) {
                     case CATEGORY -> {
-                        switch(action.action()) {
+                        switch(validAction) {
                             case CREATE -> channels.add(createCategory(action, guild));
                             case EDIT -> originalState.originalCategoryData.putAll(editCategory(
                                     action,
                                     guild.getCategoriesByName(action.target(), true).get(0)
                             ));
+                            default -> throw new IllegalArgumentException("Invalid action type");
                         }
                     }
                     case TEXT_CHANNEL -> {
-                        switch(action.action()) {
+                        switch(validAction) {
                             case CREATE -> channels.add(createTextChannel(action, guild));
                             case EDIT -> originalState.originalTextChannelData.putAll(editTextChannel(
                                     action,
                                     guild.getTextChannelsByName(action.target(), true).get(0)
                             ));
+                            default -> throw new IllegalArgumentException("Invalid action type");
                         }
                     }
                     case VOICE_CHANNEL -> {
-                        switch(action.action()) {
+                        switch(validAction) {
                             case CREATE -> channels.add(createVoiceChannel(action, guild));
                             case EDIT -> originalState.originalVoiceChannelData.putAll(editVoiceChannel(
                                     action,
                                     guild.getVoiceChannelsByName(action.target(), true).get(0)
                             ));
+                            default -> throw new IllegalArgumentException("Invalid action type");
                         }
                     }
                     case FORUM_CHANNEL -> {
-                        switch(action.action()) {
+                        switch(validAction) {
                             case CREATE -> channels.add(createForumChannel(action, guild));
                             case EDIT -> originalState.originalForumChannelData.putAll(editForumChannel(
                                     action,
                                     guild.getForumChannelsByName(action.target(), true).get(0)
                             ));
+                            default -> throw new IllegalArgumentException("Invalid action type");
                         }
                     }
                     case STAGE_CHANNEL -> {
-                        switch(action.action()) {
+                        switch(validAction) {
                             case CREATE -> channels.add(createStageChannel(action, guild));
                             case EDIT -> originalState.originalStageChannelData.putAll(editStageChannel(
                                     action,
                                     guild.getStageChannelsByName(action.target(), true).get(0)
                             ));
+                            default -> throw new IllegalArgumentException("Invalid action type");
                         }
                     }
                     case ROLE -> {
-                        switch(action.action()) {
+                        switch(validAction) {
                             case CREATE -> roles.add(createRole(action, guild));
                             case EDIT -> originalState.originalRoleData.putAll(editRole(
                                     action,
                                     guild.getRolesByName(action.target(), true).get(0)
                             ));
+                            default -> throw new IllegalArgumentException("Invalid action type");
                         }
                     }
                     default -> throw new IllegalArgumentException("Invalid target type");
@@ -176,19 +183,10 @@ public class Interpreter {
 
         switch(validAction) {
             case CREATE -> {
-                return new InterpreterResult(
-                        messages.isEmpty(),
-                        messages,
-                        channels,
-                        roles
-                );
+                return new InterpreterResult(messages, channels, roles);
             }
             case EDIT -> {
-                return new InterpreterResult(
-                        messages.isEmpty(),
-                        messages,
-                        originalState
-                );
+                return new InterpreterResult(messages, originalState);
             }
             default -> throw new IllegalArgumentException("Invalid action type");
         }
@@ -213,13 +211,7 @@ public class Interpreter {
                 if(!restActions.isEmpty())
                     RestAction.allOf(restActions).complete();
 
-                return new InterpreterResult(
-                        messages.isEmpty(),
-                        messages,
-                        null,
-                        null,
-                        null
-                );
+                return new InterpreterResult(messages, null, null, null);
             }
             case EDIT -> {
                 var guild = session.getJDA().getGuildById(session.getGuildId());
@@ -228,70 +220,57 @@ public class Interpreter {
 
                 if(guild == null) {
                     return new InterpreterResult(
-                            false,
                             new ArrayList<>(List.of("Guild not found. Guild ID: " + session.getGuildId()))
                     );
                 }
 
-                for(long categoryId: originalState.originalCategoryData().keySet()) {
+                for(long catId: originalState.originalCategoryData().keySet()) { // Categories
                     try {
-                        var category = guild.getCategoryById(categoryId);
-
-                        if(category == null)
-                            throw new DiscordEntityException("Category not found. Category ID: " + categoryId);
+                        var cat = checkDiscordEntity(guild.getCategoryById(catId), "Category", catId);
 
                         restActions.add(
-                                category.getManager().setName(
-                                        originalState.originalCategoryData().get(categoryId).get("name")
-                                ).onErrorMap(e -> captureError(e, messages))
-                        );
-                    } catch (Exception e) {
-                        messages.add(e.getMessage());
-                    }
-                }
-                for(long textChannelId: originalState.originalTextChannelData().keySet()) {
-                    try {
-                        var channel = guild.getTextChannelById(textChannelId);
-
-                        if(channel == null)
-                            throw new DiscordEntityException("Text channel not found. Text channel ID: " + textChannelId);
-
-                        restActions.add(
-                                channel.getManager().setName(
-                                        originalState.originalTextChannelData().get(textChannelId).get("name")
-                                ).onErrorMap(e -> captureError(e, messages))
-                        );
-                        restActions.add(
-                                channel.getManager().setTopic(
-                                        originalState.originalTextChannelData().get(textChannelId).get("desc")
+                                cat.getManager().setName(
+                                        originalState.originalCategoryData().get(catId).get("name")
                                 ).onErrorMap(e -> captureError(e, messages))
                         );
                     } catch(Exception e) {
                         messages.add(e.getMessage());
                     }
                 }
-                for(long voiceChannelId: originalState.originalVoiceChannelData().keySet()) {
+                for(long txtChnlId: originalState.originalTextChannelData().keySet()) { // Text channels
                     try {
-                        var channel = guild.getVoiceChannelById(voiceChannelId);
-
-                        if(channel == null)
-                            throw new DiscordEntityException("Voice channel not found. Voice channel ID: " + voiceChannelId);
+                        var chnl = checkDiscordEntity(guild.getTextChannelById(txtChnlId), "Text channel", txtChnlId);
 
                         restActions.add(
-                                channel.getManager().setName(
-                                        originalState.originalVoiceChannelData().get(voiceChannelId).get("name")
+                                chnl.getManager().setName(
+                                        originalState.originalTextChannelData().get(txtChnlId).get("name")
+                                ).onErrorMap(e -> captureError(e, messages))
+                        );
+                        restActions.add(
+                                chnl.getManager().setTopic(
+                                        originalState.originalTextChannelData().get(txtChnlId).get("desc")
                                 ).onErrorMap(e -> captureError(e, messages))
                         );
                     } catch(Exception e) {
                         messages.add(e.getMessage());
                     }
                 }
-                for(long roleId: originalState.originalRoleData().keySet()) {
+                for(long vcChnlId: originalState.originalVoiceChannelData().keySet()) { // Voice channels
                     try {
-                        var role = guild.getRoleById(roleId);
+                        var chnl = checkDiscordEntity(guild.getVoiceChannelById(vcChnlId), "Voice channel", vcChnlId);
 
-                        if(role == null)
-                            throw new DiscordEntityException("Role not found. Role ID: " + roleId);
+                        restActions.add(
+                                chnl.getManager().setName(
+                                        originalState.originalVoiceChannelData().get(vcChnlId).get("name")
+                                ).onErrorMap(e -> captureError(e, messages))
+                        );
+                    } catch(Exception e) {
+                        messages.add(e.getMessage());
+                    }
+                }
+                for(long roleId: originalState.originalRoleData().keySet()) { // Roles
+                    try {
+                        var role = checkDiscordEntity(guild.getRoleById(roleId), "Role", roleId);
 
                         restActions.add(
                                 role.getManager().setName(
@@ -311,10 +290,7 @@ public class Interpreter {
                 if(!restActions.isEmpty())
                     RestAction.allOf(restActions).complete();
 
-                return new InterpreterResult(
-                        messages.isEmpty(),
-                        messages
-                );
+                return new InterpreterResult(messages);
             }
             default -> throw new IllegalArgumentException("Invalid action type");
         }
@@ -434,7 +410,7 @@ public class Interpreter {
             @NonNull ParseActions.ExecutableAction action,
             @NonNull Category category
     ) {
-        final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+        final HashMap<Long, HashMap<String, String>> result = new HashMap<>(1);
 
         result.put(
                 category.getIdLong(),
@@ -453,7 +429,7 @@ public class Interpreter {
             @NonNull ParseActions.ExecutableAction action,
             @NonNull TextChannel channel
     ) {
-        final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+        final HashMap<Long, HashMap<String, String>> result = new HashMap<>(1);
 
         result.put(
                 channel.getIdLong(),
@@ -476,7 +452,7 @@ public class Interpreter {
             @NonNull ParseActions.ExecutableAction action,
             @NonNull VoiceChannel channel
     ) {
-        final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+        final HashMap<Long, HashMap<String, String>> result = new HashMap<>(1);
 
         result.put(
                 channel.getIdLong(),
@@ -495,7 +471,7 @@ public class Interpreter {
             @NonNull ParseActions.ExecutableAction action,
             @NonNull ForumChannel channel
     ) {
-        final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+        final HashMap<Long, HashMap<String, String>> result = new HashMap<>(1);
 
         result.put(
                 channel.getIdLong(),
@@ -514,7 +490,7 @@ public class Interpreter {
             @NonNull ParseActions.ExecutableAction action,
             @NonNull StageChannel channel
     ) {
-        final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+        final HashMap<Long, HashMap<String, String>> result = new HashMap<>(1);
 
         result.put(
                 channel.getIdLong(),
@@ -535,7 +511,7 @@ public class Interpreter {
     ) {
         var nameData = action.data().get(NAME);
         var colorData = action.data().get(COLOR);
-        final HashMap<Long, HashMap<String, String>> result = new HashMap<>();
+        final HashMap<Long, HashMap<String, String>> result = new HashMap<>(1);
         final Color color = role.getColor();
 
         result.put(
@@ -632,5 +608,12 @@ public class Interpreter {
     private static <T> T captureError(@NonNull Throwable e, @NonNull List<String> messages) {
         messages.add(e.getMessage());
         return null;
+    }
+
+    @NonNull
+    private static <T> T checkDiscordEntity(@Nullable T entity, @NonNull String name, long id) {
+        if(entity == null)
+            throw new DiscordEntityException("%s not found. ID: %d".formatted(name, id));
+        return entity;
     }
 }

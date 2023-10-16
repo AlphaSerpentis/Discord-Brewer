@@ -14,10 +14,12 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent>
         implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
@@ -33,7 +35,7 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
                         .setUseRatelimits(true)
         );
 
-//        addButton("summarize", ButtonStyle.PRIMARY, "Summarize", false);
+        addButton("summarize", ButtonStyle.PRIMARY, "Summarize", false);
 //        addButton("optout", ButtonStyle.DANGER, "Opt Out", false);
     }
 
@@ -52,7 +54,7 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
 //            );
 //        }
 
-        return List.of();
+        return List.of(getButton("summarize"));
     }
 
     @SuppressWarnings("unchecked")
@@ -79,12 +81,12 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
             return rateLimitResponse;
 
         workingEmbed = new EmbedBuilder();
-
-        workingEmbed.setTitle("Transcribe");
         if(event.getSubcommandName().equalsIgnoreCase("vc")) {
             try {
 //                handleTranscribeVC(eb, event);
-                workingEmbed.setDescription("VC transcription is currently not available. We'll update you when it is!");
+                workingEmbed.setDescription(
+                        "VC transcription is currently not available. We'll update you when it is!"
+                );
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -99,7 +101,7 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
 
     @Override
     public void updateCommand(@NonNull JDA jda) {
-//        SubcommandData vc = new SubcommandData("vc", "(BETA) Join a VC and transcribe the conversations")
+//        var vc = new SubcommandData("vc", "(BETA) Join a VC and transcribe the conversations")
 //                .addOption(OptionType.CHANNEL, "channel", "The channel to join", true)
 //                .addOption(OptionType.INTEGER, "duration", "The duration to transcribe for (in seconds)", true);
         var url = new SubcommandData("url", "Transcribe an audio file from a URL")
@@ -112,11 +114,14 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
     }
 
     private void handleTranscribeUrl(@NonNull EmbedBuilder eb, @NonNull SlashCommandInteractionEvent event) {
-        eb.setDescription(
-                OpenAIHandler.getAudioTranscription(
-                        event.getOption("url").getAsString()
-                ).text()
-        );
+        var url = Objects.requireNonNull(event.getOption("url")).getAsString();
+        var response = OpenAIHandler.getAudioTranscription(url);
+
+        if(response.isCached()) {
+            eb.setDescription("# Cached Transcription\n" + response.text());
+        } else {
+            eb.setDescription("# Transcription\n" + response.text());
+        }
 
         AnalyticsHandler.addUsage(event.getGuild(), ServiceType.TRANSCRIBE_ATTACHMENT);
     }

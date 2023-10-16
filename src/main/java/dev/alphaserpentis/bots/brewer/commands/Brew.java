@@ -180,9 +180,11 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
     public Collection<ItemComponent> addButtonsToMessage(@NonNull SlashCommandInteractionEvent event) {
         final UserSession userSession = BrewHandler.getUserSession(event.getUser().getIdLong());
 
-        if(userSession == null)
-            return List.of();
-        else if(event.getName().equals(getName()) && userSession.getInteractionToken().equals(event.getToken())) {
+        if(
+                userSession != null
+                        && event.getName().equals(getName())
+                        && userSession.getInteractionToken().equals(event.getToken())
+        ) {
             return List.of(
                     getButton("brew"),
                     getButton("confirm"),
@@ -360,7 +362,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         userSession.setInterpreterResult(result);
 
         try {
-            if(result.completeSuccess()) {
+            if(result.messages().isEmpty()) {
                 var eb = new EmbedBuilder(POST_EXECUTION_NO_ERROR);
 
                 if(!VoteHandler.isUserInRemindedMap(event.getUser().getIdLong())) {
@@ -380,11 +382,10 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                     );
                 }
 
-                hook.editOriginalEmbeds(
-                        eb.build()
-                ).setActionRow(
-                        getButton("revert")
-                ).queue();
+                hook
+                        .editOriginalEmbeds(eb.build())
+                        .setActionRow(getButton("revert"))
+                        .queue();
             } else {
                 var errorMessages = String.join("\n", result.messages());
                 var errorEmbed = new EmbedBuilder(POST_EXECUTION_ERROR)
@@ -429,7 +430,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             return;
         }
 
-        if(result.completeSuccess()) {
+        if(result.messages().isEmpty()) {
             hook.editOriginalEmbeds(REVERTED_NO_ERROR.build()).queue();
         } else {
             var errorMessages = String.join("\n", result.messages());
