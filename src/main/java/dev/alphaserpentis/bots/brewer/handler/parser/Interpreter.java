@@ -64,18 +64,18 @@ public class Interpreter {
 
     /**
      * Stores the original state of the guild before edits were made
-     * @param originalCategoryData The original data of the categories
-     * @param originalTextChannelData The original data of the text channels
-     * @param originalVoiceChannelData The original data of the voice channels
-     * @param originalRoleData The original data of the roles.
+     * @param categoryData The original data of the categories
+     * @param textChannelData The original data of the text channels
+     * @param voiceChannelData The original data of the voice channels
+     * @param roleData The original data of the roles.
      */
     public record OriginalState(
-            @NonNull HashMap<Long, HashMap<String, String>> originalCategoryData,
-            @NonNull HashMap<Long, HashMap<String, String>> originalTextChannelData,
-            @NonNull HashMap<Long, HashMap<String, String>> originalVoiceChannelData,
-            @NonNull HashMap<Long, HashMap<String, String>> originalForumChannelData,
-            @NonNull HashMap<Long, HashMap<String, String>> originalStageChannelData,
-            @NonNull HashMap<Long, HashMap<String, String>> originalRoleData
+            @NonNull HashMap<Long, HashMap<String, String>> categoryData,
+            @NonNull HashMap<Long, HashMap<String, String>> textChannelData,
+            @NonNull HashMap<Long, HashMap<String, String>> voiceChannelData,
+            @NonNull HashMap<Long, HashMap<String, String>> forumChannelData,
+            @NonNull HashMap<Long, HashMap<String, String>> stageChannelData,
+            @NonNull HashMap<Long, HashMap<String, String>> roleData
     ) {
         public OriginalState() {
             this(new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>());
@@ -116,7 +116,7 @@ public class Interpreter {
                     case CATEGORY -> {
                         switch(validAction) {
                             case CREATE -> channels.add(createCategory(action, guild));
-                            case EDIT -> originalState.originalCategoryData.putAll(editCategory(
+                            case EDIT -> originalState.categoryData.putAll(editCategory(
                                     action,
                                     guild.getCategoriesByName(action.target(), true).get(0)
                             ));
@@ -126,7 +126,7 @@ public class Interpreter {
                     case TEXT_CHANNEL -> {
                         switch(validAction) {
                             case CREATE -> channels.add(createTextChannel(action, guild));
-                            case EDIT -> originalState.originalTextChannelData.putAll(editTextChannel(
+                            case EDIT -> originalState.textChannelData.putAll(editTextChannel(
                                     action,
                                     guild.getTextChannelsByName(action.target(), true).get(0)
                             ));
@@ -136,7 +136,7 @@ public class Interpreter {
                     case VOICE_CHANNEL -> {
                         switch(validAction) {
                             case CREATE -> channels.add(createVoiceChannel(action, guild));
-                            case EDIT -> originalState.originalVoiceChannelData.putAll(editVoiceChannel(
+                            case EDIT -> originalState.voiceChannelData.putAll(editVoiceChannel(
                                     action,
                                     guild.getVoiceChannelsByName(action.target(), true).get(0)
                             ));
@@ -146,7 +146,7 @@ public class Interpreter {
                     case FORUM_CHANNEL -> {
                         switch(validAction) {
                             case CREATE -> channels.add(createForumChannel(action, guild));
-                            case EDIT -> originalState.originalForumChannelData.putAll(editForumChannel(
+                            case EDIT -> originalState.forumChannelData.putAll(editForumChannel(
                                     action,
                                     guild.getForumChannelsByName(action.target(), true).get(0)
                             ));
@@ -156,7 +156,7 @@ public class Interpreter {
                     case STAGE_CHANNEL -> {
                         switch(validAction) {
                             case CREATE -> channels.add(createStageChannel(action, guild));
-                            case EDIT -> originalState.originalStageChannelData.putAll(editStageChannel(
+                            case EDIT -> originalState.stageChannelData.putAll(editStageChannel(
                                     action,
                                     guild.getStageChannelsByName(action.target(), true).get(0)
                             ));
@@ -166,7 +166,7 @@ public class Interpreter {
                     case ROLE -> {
                         switch(validAction) {
                             case CREATE -> roles.add(createRole(action, guild));
-                            case EDIT -> originalState.originalRoleData.putAll(editRole(
+                            case EDIT -> originalState.roleData.putAll(editRole(
                                     action,
                                     guild.getRolesByName(action.target(), true).get(0)
                             ));
@@ -224,62 +224,62 @@ public class Interpreter {
                     );
                 }
 
-                for(long catId: originalState.originalCategoryData().keySet()) { // Categories
+                for(long catId: originalState.categoryData().keySet()) { // Categories
                     try {
                         var cat = checkDiscordEntity(guild.getCategoryById(catId), "Category", catId);
 
                         restActions.add(
                                 cat.getManager().setName(
-                                        originalState.originalCategoryData().get(catId).get("name")
+                                        originalState.categoryData().get(catId).get("name")
                                 ).onErrorMap(e -> captureError(e, messages))
                         );
                     } catch(Exception e) {
                         messages.add(e.getMessage());
                     }
                 }
-                for(long txtChnlId: originalState.originalTextChannelData().keySet()) { // Text channels
+                for(long txtChnlId: originalState.textChannelData().keySet()) { // Text channels
                     try {
                         var chnl = checkDiscordEntity(guild.getTextChannelById(txtChnlId), "Text channel", txtChnlId);
 
                         restActions.add(
                                 chnl.getManager().setName(
-                                        originalState.originalTextChannelData().get(txtChnlId).get("name")
+                                        originalState.textChannelData().get(txtChnlId).get("name")
                                 ).onErrorMap(e -> captureError(e, messages))
                         );
                         restActions.add(
                                 chnl.getManager().setTopic(
-                                        originalState.originalTextChannelData().get(txtChnlId).get("desc")
+                                        originalState.textChannelData().get(txtChnlId).get("desc")
                                 ).onErrorMap(e -> captureError(e, messages))
                         );
                     } catch(Exception e) {
                         messages.add(e.getMessage());
                     }
                 }
-                for(long vcChnlId: originalState.originalVoiceChannelData().keySet()) { // Voice channels
+                for(long vcChnlId: originalState.voiceChannelData().keySet()) { // Voice channels
                     try {
                         var chnl = checkDiscordEntity(guild.getVoiceChannelById(vcChnlId), "Voice channel", vcChnlId);
 
                         restActions.add(
                                 chnl.getManager().setName(
-                                        originalState.originalVoiceChannelData().get(vcChnlId).get("name")
+                                        originalState.voiceChannelData().get(vcChnlId).get("name")
                                 ).onErrorMap(e -> captureError(e, messages))
                         );
                     } catch(Exception e) {
                         messages.add(e.getMessage());
                     }
                 }
-                for(long roleId: originalState.originalRoleData().keySet()) { // Roles
+                for(long roleId: originalState.roleData().keySet()) { // Roles
                     try {
                         var role = checkDiscordEntity(guild.getRoleById(roleId), "Role", roleId);
 
                         restActions.add(
                                 role.getManager().setName(
-                                        originalState.originalRoleData().get(roleId).get("name")
+                                        originalState.roleData().get(roleId).get("name")
                                 ).onErrorMap(e -> captureError(e, messages))
                         );
                         restActions.add(
                                 role.getManager().setColor(
-                                        Color.decode(originalState.originalRoleData().get(roleId).get("color"))
+                                        Color.decode(originalState.roleData().get(roleId).get("color"))
                                 ).onErrorMap(e -> captureError(e, messages))
                         );
                     } catch(Exception e) {
@@ -312,10 +312,7 @@ public class Interpreter {
     }
 
     @SuppressWarnings("unchecked")
-    private static TextChannel createTextChannel(
-            @NonNull ParseActions.ExecutableAction action,
-            @NonNull Guild guild
-    ) {
+    private static TextChannel createTextChannel(@NonNull ParseActions.ExecutableAction action, @NonNull Guild guild) {
         var data = action.data();
         var channel = guild.createTextChannel(data.get(NAME).toString()).completeAfter(1, TimeUnit.SECONDS);
         var permsData = data.get(PERMISSIONS);

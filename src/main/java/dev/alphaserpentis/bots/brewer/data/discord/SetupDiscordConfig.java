@@ -10,10 +10,10 @@ public record SetupDiscordConfig(List<ConfigItem> data) {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (ConfigItem record: data) {
+        for(ConfigItem record: data) {
             sb.append(String.format("Action: %s %s\n", record.action(), record.target()));
             Map<String, Object> recordData = record.data();
-            for (Map.Entry<String, Object> entry : recordData.entrySet()) {
+            for(Map.Entry<String, Object> entry : recordData.entrySet()) {
                 sb.append(String.format("  %s: %s\n", entry.getKey(), entry.getValue()));
             }
             sb.append("\n");

@@ -35,7 +35,7 @@
         <dependency>
             <groupId>dev.alphaserpentis</groupId>
             <artifactId>CoffeeCore</artifactId>
-            <version>0.5.1-alpha-SNAPSHOT</version>
+            <version>0.6.0-alpha-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.theokanning.openai-gpt3-java</groupId>
@@ -43,14 +43,9 @@
             <version>0.16.0</version>
         </dependency>
         <dependency>
-            <groupId>org.discordbots</groupId>
-            <artifactId>DBL-Java-Library</artifactId>
-            <version>2.1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20230618</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.7</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
@@ -63,14 +58,19 @@
             <version>2.15.1</version>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.7</version>
+            <groupId>org.discordbots</groupId>
+            <artifactId>DBL-Java-Library</artifactId>
+            <version>2.1.2</version>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>2.0.7</version>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20230618</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.0.0</version>
         </dependency>
     </dependencies>
 

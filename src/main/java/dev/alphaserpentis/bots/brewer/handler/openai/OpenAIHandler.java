@@ -7,7 +7,6 @@ import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.moderation.ModerationRequest;
-import com.theokanning.openai.moderation.ModerationResult;
 import dev.alphaserpentis.bots.brewer.data.brewer.CachedAudio;
 import dev.alphaserpentis.bots.brewer.data.brewer.FlaggedContent;
 import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionRequest;
@@ -15,13 +14,12 @@ import dev.alphaserpentis.bots.brewer.data.openai.AudioTranscriptionResponse;
 import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationRequest;
 import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationResponse;
 import dev.alphaserpentis.bots.brewer.data.openai.ChatCompletionModels;
+import dev.alphaserpentis.bots.brewer.handler.bot.ModerationHandler;
 import dev.alphaserpentis.bots.brewer.handler.commands.audio.AudioHandler;
 import io.reactivex.rxjava3.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +40,6 @@ import static com.theokanning.openai.service.OpenAiService.defaultRetrofit;
 public class OpenAIHandler {
     private static final Logger logger = LoggerFactory.getLogger(OpenAIHandler.class);
     private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    private static Path flaggedContentDirectory;
     private static Path transcriptionCacheFile;
     private static Path translationCacheFile;
     /**
@@ -60,7 +57,6 @@ public class OpenAIHandler {
 
     public static void init(
             @NonNull String apiKey,
-            @NonNull Path flaggedContentDirectory,
             @NonNull Path transcriptionCacheFile,
             @NonNull Path translationCacheFile
     ) {
@@ -69,7 +65,6 @@ public class OpenAIHandler {
         var retrofit = defaultRetrofit(client, mapper);
 
         service = new CustomOpenAiService(retrofit.create(CustomOpenAiApi.class));
-        OpenAIHandler.flaggedContentDirectory = flaggedContentDirectory;
         OpenAIHandler.transcriptionCacheFile = transcriptionCacheFile;
         OpenAIHandler.translationCacheFile = translationCacheFile;
 
@@ -82,9 +77,9 @@ public class OpenAIHandler {
         executorService.scheduleAtFixedRate(
                 () -> {
                     try {
-                        writeCachesToFile();
                         checkCachesForExpired();
-                    } catch (IOException e) {
+                        writeCachesToFile();
+                    } catch(IOException e) {
                         logger.error(e.getMessage(), e);
                     }
                 },
@@ -100,16 +95,16 @@ public class OpenAIHandler {
      * @return {@code true} if the content is flagged, {@code false} otherwise.
      */
     public static boolean isContentFlagged(@NonNull String content, long userId, long guildId, boolean logIfFlagged) {
-        ModerationResult req = service.createModeration(
+        var req = service.createModeration(
                 new ModerationRequest(
                         content,
                         "text-moderation-stable"
                 )
         );
-        boolean isFlagged = req.getResults().get(0).isFlagged();
+        var isFlagged = req.getResults().get(0).isFlagged();
 
         if(isFlagged && logIfFlagged)
-            writeFlaggedContentToDirectory(new FlaggedContent(userId, guildId, content));
+            ModerationHandler.writeFlaggedContentToDirectory(new FlaggedContent(userId, guildId, content));
 
         return isFlagged;
     }
@@ -155,7 +150,7 @@ public class OpenAIHandler {
         try {
             audioBytes = AudioHandler.readUrlStream(audioUrl);
             hash = AudioHandler.hashAudioBytes(audioBytes);
-        } catch (IOException | NoSuchAlgorithmException e) {
+        } catch(IOException | NoSuchAlgorithmException e) {
             logger.error(e.getMessage(), e);
 
             throw new RuntimeException(e);
@@ -200,7 +195,7 @@ public class OpenAIHandler {
         try {
             audioBytes = AudioHandler.readUrlStream(audioUrl);
             hash = AudioHandler.hashAudioBytes(audioBytes);
-        } catch (IOException | NoSuchAlgorithmException e) {
+        } catch(IOException | NoSuchAlgorithmException e) {
             logger.error(e.getMessage(), e);
 
             throw new RuntimeException(e);
@@ -229,11 +224,7 @@ public class OpenAIHandler {
 
     public static AudioTranslationResponse getAudioTranslation(@NonNull byte[] audioBytes, @NonNull String name) {
         return service.createAudioTranslation(
-                new AudioTranslationRequest(
-                        "whisper-1",
-                        name + ".wav",
-                        audioBytes
-                )
+                new AudioTranslationRequest("whisper-1", name + ".wav", audioBytes)
         );
     }
 
@@ -267,21 +258,5 @@ public class OpenAIHandler {
 
         transcriptionCache.entrySet().removeIf(entry -> entry.getValue().expirationTime() < now);
         translationCache.entrySet().removeIf(entry -> entry.getValue().expirationTime() < now);
-    }
-
-    private static void writeFlaggedContentToDirectory(@NonNull FlaggedContent content) {
-        try {
-            String fileName = content.userId() + "-" + content.guildId() + "-" + Instant.now().getEpochSecond() + ".txt";
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            BufferedWriter writer = new BufferedWriter(
-                    new FileWriter(flaggedContentDirectory.resolve(fileName).toFile())
-            );
-
-            gson.toJson(content, writer);
-
-            writer.close();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        }
     }
 }

@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionE
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @param <E> The type of the event
@@ -25,20 +26,18 @@ public interface AcknowledgeableCommand<E extends GenericCommandInteractionEvent
      * @return
      */
     default MessageEmbed[] checkAndHandleAcknowledgement(@NonNull E event) throws IOException {
-        BrewerServerData serverData = getServerData(event.getGuild().getIdLong());
+        BrewerServerData serverData = getServerData(Objects.requireNonNull(event.getGuild()).getIdLong());
 
-        if(serverData == null) {
+        if(serverData == null)
             return null;
-        }
 
         List<AcknowledgeThis.Type> typesToAcknowledge = getTypesToAcknowledge(serverData);
 
-        if(typesToAcknowledge.isEmpty()) {
+        if(typesToAcknowledge.isEmpty())
             return null;
-        }
 
         Launcher.core.getServerDataHandler().updateServerData();
-        return AcknowledgementHandler.getAcknowledgementEmbeds((ArrayList<AcknowledgeThis.Type>) typesToAcknowledge);
+        return AcknowledgementHandler.getAcknowledgementEmbeds(typesToAcknowledge);
     }
 
     /**

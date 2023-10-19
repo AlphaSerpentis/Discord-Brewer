@@ -3,6 +3,7 @@ package dev.alphaserpentis.bots.brewer.commands;
 import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
 import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationResponse;
 import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
+import dev.alphaserpentis.bots.brewer.handler.bot.ModerationHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.coffeecore.commands.ButtonCommand;
 import dev.alphaserpentis.coffeecore.data.bot.CommandResponse;
@@ -19,6 +20,7 @@ import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent>
         implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
@@ -54,7 +56,10 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
         MessageEmbed[] embedsArray;
         EmbedBuilder workingEmbed;
+        EmbedBuilder serverCheckEmbed;
+        EmbedBuilder userCheckEmbed;
         CommandResponse<MessageEmbed> response;
+        long guildId;
 
         try {
             embedsArray = checkAndHandleAcknowledgement(event);
@@ -73,6 +78,17 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
 
         if(response != null)
             return response;
+
+        // Check if user/guild is restricted
+        guildId = event.getGuild() == null ? 0 : event.getGuild().getIdLong();
+
+        serverCheckEmbed = ModerationHandler.isRestricted(guildId, true);
+        if(serverCheckEmbed != null)
+            return new CommandResponse<>(isOnlyEphemeral(), serverCheckEmbed.build());
+
+        userCheckEmbed = ModerationHandler.isRestricted(event.getUser().getIdLong(), false);
+        if(userCheckEmbed != null)
+            return new CommandResponse<>(isOnlyEphemeral(), userCheckEmbed.build());
 
         workingEmbed.setTitle("Translate");
 

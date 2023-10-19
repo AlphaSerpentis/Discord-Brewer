@@ -100,7 +100,7 @@ If you ran the command recently, click on the **Revert** button that appears on 
 #### The permissions are wrong/don't make sense!
 Brew(r) might skip the permissions creation process if it is unable to add them (e.g., insufficient permissions). If it does add them, it might not be up-to-date with current available permissions. Due to the nature of ChatGPT 3.5 Turbo (the model Brew(r) will use by default), it may not generate accurate permissions. This is a known issue and will be tweaked over time.
 
-#### Brewer didn't rename my NSFW channels?
+#### Brew(r) didn't rename my NSFW channels?
 Brew(r) by default will not rename NSFW channels due to OpenAI's restrictions. You need to toggle this in the settings command.
 
 This won't affect Brew(r) from skipping a channel if the name is deemed too inappropriate.
@@ -112,5 +112,5 @@ There are two things that could have happened:
 2. An unhandled error occurred. If you don't believe the first issue is the case, do please report it!
 
 ## Dependencies
-- Coffee Core (0.5.0-alpha)
+- Coffee Core (0.6.0-alpha)
 - OpenAI-Java Service (0.16.0)

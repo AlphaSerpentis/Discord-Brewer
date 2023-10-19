@@ -2,6 +2,7 @@ package dev.alphaserpentis.bots.brewer.commands;
 
 import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
 import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
+import dev.alphaserpentis.bots.brewer.handler.bot.ModerationHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.coffeecore.commands.ButtonCommand;
 import dev.alphaserpentis.coffeecore.data.bot.CommandResponse;
@@ -61,8 +62,11 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
     @Override
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
         EmbedBuilder workingEmbed;
+        EmbedBuilder serverCheckEmbed;
+        EmbedBuilder userCheckEmbed;
         CommandResponse<MessageEmbed> rateLimitResponse;
         MessageEmbed[] embedsArray;
+        long guildId;
 
         try {
             embedsArray = checkAndHandleAcknowledgement(event);
@@ -79,6 +83,17 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
 
         if(rateLimitResponse != null)
             return rateLimitResponse;
+
+        // Check if user/guild is restricted
+        guildId = event.getGuild() == null ? 0 : event.getGuild().getIdLong();
+
+        serverCheckEmbed = ModerationHandler.isRestricted(guildId, true);
+        if(serverCheckEmbed != null)
+            return new CommandResponse<>(isOnlyEphemeral(), serverCheckEmbed.build());
+
+        userCheckEmbed = ModerationHandler.isRestricted(event.getUser().getIdLong(), false);
+        if(userCheckEmbed != null)
+            return new CommandResponse<>(isOnlyEphemeral(), userCheckEmbed.build());
 
         workingEmbed = new EmbedBuilder();
         if(event.getSubcommandName().equalsIgnoreCase("vc")) {

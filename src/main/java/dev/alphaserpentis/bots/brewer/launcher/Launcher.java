@@ -9,10 +9,12 @@ import dev.alphaserpentis.bots.brewer.commands.TranscribeContext;
 import dev.alphaserpentis.bots.brewer.commands.Translate;
 import dev.alphaserpentis.bots.brewer.commands.TranslateContext;
 import dev.alphaserpentis.bots.brewer.commands.Vote;
+import dev.alphaserpentis.bots.brewer.commands.admin.Admin;
 import dev.alphaserpentis.bots.brewer.data.serialization.BrewerServerDataDeserializer;
 import dev.alphaserpentis.bots.brewer.executor.CustomExecutors;
 import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.bot.BrewerServerDataHandler;
+import dev.alphaserpentis.bots.brewer.handler.bot.ModerationHandler;
 import dev.alphaserpentis.bots.brewer.handler.commands.AcknowledgementHandler;
 import dev.alphaserpentis.bots.brewer.handler.discord.StatusHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
@@ -114,25 +116,25 @@ public class Launcher {
                 new TranscribeContext(),
                 new Translate(),
                 new TranslateContext(),
-                new SummarizeContext()
+                new SummarizeContext(),
+                new Admin(Long.parseLong(dotenv.get("BOT_OWNER_GUILD_ID")))
         );
     }
 
     private static void initializeHandlers(@NonNull Dotenv dotenv) {
         OpenAIHandler.init(
                 dotenv.get("OPENAI_API_KEY"),
-                Path.of(dotenv.get("FLAGGED_CONTENT_DIRECTORY")),
                 Path.of(dotenv.get("TRANSCRIPTION_CACHE_PATH")),
                 Path.of(dotenv.get("TRANSLATION_CACHE_PATH"))
         );
+        ModerationHandler.init(
+                Path.of(dotenv.get("FLAGGED_CONTENT_DIRECTORY")),
+                Path.of(dotenv.get("RESTRICTED_IDS_PATH"))
+        );
         StatusHandler.init(core);
         TopGgHandler.init(dotenv.get("TOPGG_API_KEY"), core.getSelfUser().getId());
-        AcknowledgementHandler.init(
-                Path.of(dotenv.get("ACKNOWLEDGEMENTS_PATH"))
-        );
-        AnalyticsHandler.init(
-                Path.of(dotenv.get("ANALYTICS_PATH"))
-        );
+        AcknowledgementHandler.init(Path.of(dotenv.get("ACKNOWLEDGEMENTS_PATH")));
+        AnalyticsHandler.init(Path.of(dotenv.get("ANALYTICS_PATH")));
     }
 
     private static void setEnvAcknowledgementsBackToFalse() {
@@ -145,7 +147,7 @@ public class Launcher {
             var fileWriter = new FileWriter(".env");
             var bufferedWriter = new BufferedWriter(fileWriter);
 
-            for (String outputLine : lines) {
+            for(String outputLine : lines) {
                 bufferedWriter.write(outputLine);
                 bufferedWriter.newLine();
             }
@@ -153,7 +155,7 @@ public class Launcher {
             bufferedWriter.flush();
             fileWriter.close();
 
-        } catch (IOException e) {
+        } catch(IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -163,12 +165,12 @@ public class Launcher {
         var lines = new ArrayList<String>();
         String line;
 
-        while ((line = bufferedReader.readLine()) != null) {
-            if (line.startsWith("RESET_ACKNOWLEDGEMENT_TOS")) {
+        while((line = bufferedReader.readLine()) != null) {
+            if(line.startsWith("RESET_ACKNOWLEDGEMENT_TOS")) {
                 lines.add("RESET_ACKNOWLEDGEMENT_TOS=false");
-            } else if (line.startsWith("RESET_ACKNOWLEDGEMENT_PRIVACY")) {
+            } else if(line.startsWith("RESET_ACKNOWLEDGEMENT_PRIVACY")) {
                 lines.add("RESET_ACKNOWLEDGEMENT_PRIVACY=false");
-            } else if (line.startsWith("RESET_ACKNOWLEDGEMENT_UPDATES")) {
+            } else if(line.startsWith("RESET_ACKNOWLEDGEMENT_UPDATES")) {
                 lines.add("RESET_ACKNOWLEDGEMENT_UPDATES=false");
             } else {
                 lines.add(line);

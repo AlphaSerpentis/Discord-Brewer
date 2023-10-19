@@ -3,6 +3,7 @@ package dev.alphaserpentis.bots.brewer.commands;
 import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
 import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationResponse;
 import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
+import dev.alphaserpentis.bots.brewer.handler.bot.ModerationHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.CustomOpenAiService;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.coffeecore.commands.BotCommand;
@@ -20,6 +21,7 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInteractionEvent>
         implements AcknowledgeableCommand<MessageContextInteractionEvent> {
@@ -41,10 +43,13 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull MessageContextInteractionEvent event) {
         EmbedBuilder workingEmbed;
+        EmbedBuilder serverCheckEmbed;
+        EmbedBuilder userCheckEmbed;
         List<Message.Attachment> attachments = tryToGetAudioFiles(event);
         var description = new StringBuilder();
         CommandResponse<MessageEmbed> rateLimitResponse;
         MessageEmbed[] embedsArray;
+        long guildId;
 
         try {
             embedsArray = checkAndHandleAcknowledgement(event);
@@ -61,6 +66,17 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
 
         if(rateLimitResponse != null)
             return rateLimitResponse;
+
+        // Check if user/guild is restricted
+        guildId = event.getGuild() == null ? 0 : event.getGuild().getIdLong();
+
+        serverCheckEmbed = ModerationHandler.isRestricted(guildId, true);
+        if(serverCheckEmbed != null)
+            return new CommandResponse<>(isOnlyEphemeral(), serverCheckEmbed.build());
+
+        userCheckEmbed = ModerationHandler.isRestricted(event.getUser().getIdLong(), false);
+        if(userCheckEmbed != null)
+            return new CommandResponse<>(isOnlyEphemeral(), userCheckEmbed.build());
 
         workingEmbed = new EmbedBuilder();
 

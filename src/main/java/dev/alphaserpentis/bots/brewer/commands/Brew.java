@@ -5,6 +5,7 @@ import com.theokanning.openai.completion.chat.ChatMessage;
 import dev.alphaserpentis.bots.brewer.data.brewer.UserSession;
 import dev.alphaserpentis.bots.brewer.data.openai.Prompts;
 import dev.alphaserpentis.bots.brewer.exception.GenerationException;
+import dev.alphaserpentis.bots.brewer.handler.bot.ModerationHandler;
 import dev.alphaserpentis.bots.brewer.handler.commands.brew.BrewHandler;
 import dev.alphaserpentis.bots.brewer.handler.commands.vote.VoteHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
@@ -35,6 +36,7 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent>
         implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
@@ -200,9 +202,12 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
         EmbedBuilder workingEmbed;
+        EmbedBuilder serverCheckEmbed;
+        EmbedBuilder userCheckEmbed;
         String prompt;
         CommandResponse<MessageEmbed> rateLimitResponse;
         MessageEmbed[] embedsArray;
+        long guildId;
 
         try {
             embedsArray = checkAndHandleAcknowledgement(event);
@@ -210,9 +215,8 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             throw new RuntimeException(e);
         }
 
-        if(embedsArray != null) {
+        if(embedsArray != null)
             return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
-        }
 
         // Check rate limit
         rateLimitResponse = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
@@ -220,20 +224,32 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         if(rateLimitResponse != null)
             return rateLimitResponse;
 
+        // Check if user/guild is restricted
+        guildId = Objects.requireNonNull(event.getGuild()).getIdLong();
+
+        serverCheckEmbed = ModerationHandler.isRestricted(guildId, true);
+        if(serverCheckEmbed != null)
+            return new CommandResponse<>(isOnlyEphemeral(), serverCheckEmbed.build());
+
+        userCheckEmbed = ModerationHandler.isRestricted(event.getUser().getIdLong(), false);
+        if(userCheckEmbed != null)
+            return new CommandResponse<>(isOnlyEphemeral(), userCheckEmbed.build());
+
         workingEmbed = new EmbedBuilder();
 
-        // Although this *should* be enforced by Discord as it is configured to only show up for users with Administrator
-        // permissions, this is just a fallback *just in case*
-        if(!isUserAllowedToRunCommand(event.getMember()))
+        // Although this *should* be enforced by Discord as it is configured to only show up for users with
+        // Administrator permissions, this is just a fallback *just in case*
+        if(!isUserAllowedToRunCommand(Objects.requireNonNull(event.getMember())))
             return new CommandResponse<>(isOnlyEphemeral(), NO_PERMISSIONS.build());
 
         // Check if the prompt doesn't get flagged by OpenAI
-        prompt = event.getOption("prompt").getAsString();
+        prompt = Objects.requireNonNull(event.getOption("prompt")).getAsString();
 
         if(OpenAIHandler.isContentFlagged(
                 prompt,
                 userId,
-                event.getGuild() != null ? event.getGuild().getIdLong() : 0, true
+                event.getGuild() != null ? event.getGuild().getIdLong() : 0,
+                true
         ))
             return new CommandResponse<>(isOnlyEphemeral(), PROMPT_REJECTED.build());
 
@@ -283,9 +299,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                 .addSubcommands(create, rename);
 
-        guild
-                .upsertCommand(cmdData)
-                .queue();
+        guild.upsertCommand(cmdData).queue();
     }
 
     private boolean isUserAllowedToRunCommand(@NonNull Member member) {
@@ -377,15 +391,10 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
 
                     VoteHandler.addUserToRemindedMap(event.getUser().getIdLong());
                 } else {
-                    eb.setDescription(
-                            String.format(POST_EXECUTION_NO_ERROR.getDescriptionBuilder().toString(), "")
-                    );
+                    eb.setDescription(String.format(POST_EXECUTION_NO_ERROR.getDescriptionBuilder().toString(), ""));
                 }
 
-                hook
-                        .editOriginalEmbeds(eb.build())
-                        .setActionRow(getButton("revert"))
-                        .queue();
+                hook.editOriginalEmbeds(eb.build()).setActionRow(getButton("revert")).queue();
             } else {
                 var errorMessages = String.join("\n", result.messages());
                 var errorEmbed = new EmbedBuilder(POST_EXECUTION_ERROR)
@@ -394,13 +403,9 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                         )
                         .build();
 
-                hook.editOriginalEmbeds(
-                        errorEmbed
-                ).setActionRow(
-                        getButton("revert")
-                ).queue();
+                hook.editOriginalEmbeds(errorEmbed).setActionRow(getButton("revert")).queue();
             }
-        } catch (Exception ignored) {
+        } catch(Exception ignored) {
             BrewHandler.removeUserSession(event.getUser().getIdLong());
         }
     }
