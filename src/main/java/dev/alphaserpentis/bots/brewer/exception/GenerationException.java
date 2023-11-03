@@ -9,7 +9,8 @@ public class GenerationException extends RuntimeException {
         TIMEOUT_EXCEPTION ("Timeout Exception (OpenAI API timed out)"),
         OVERLOADED_EXCEPTION ("Overloaded Exception (OpenAI API is overloaded)"),
         FILE_TOO_LARGE_OPENAI_MAX("File too large! Please upload something smaller"),
-        FILE_TOO_LARGE_NON_PREMIUM("File too large! Please upload something smaller or upgrade to our Mercury tier!");
+        FILE_TOO_LARGE_NON_PREMIUM("File too large! Please upload something smaller or upgrade to our Mercury tier!"),
+        FILE_EMPTY("Brew(r) was unable to find a video/audio file! Make sure there's a video or audio present in the webpage!");
 
         private final String descriptions;
 
@@ -29,6 +30,10 @@ public class GenerationException extends RuntimeException {
 
     public GenerationException(String message) {
         super(message);
+    }
+
+    public GenerationException(Type type) {
+        super(type.getDescriptions());
     }
 
     public GenerationException(String message, Throwable cause) {

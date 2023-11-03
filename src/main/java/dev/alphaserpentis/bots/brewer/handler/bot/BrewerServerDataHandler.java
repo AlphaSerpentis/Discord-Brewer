@@ -35,17 +35,12 @@ public class BrewerServerDataHandler extends ServerDataHandler<BrewerServerData>
             boolean resetUpdateAcknowledgement
     ) throws IOException {
         super(path, typeToken, jsonDeserializer);
-        var updateFile = resetTosAcknowledgement || resetPrivacyPolicyAcknowledgement || resetUpdateAcknowledgement;
 
         resetAcknowledgements(
                 resetTosAcknowledgement,
                 resetPrivacyPolicyAcknowledgement,
                 resetUpdateAcknowledgement
         );
-
-        if(updateFile) {
-            updateServerData();
-        }
     }
 
     @Override

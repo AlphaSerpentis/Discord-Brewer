@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionE
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -18,14 +19,15 @@ import java.util.Objects;
  * @param <E> The type of the event
  */
 public interface AcknowledgeableCommand<E extends GenericCommandInteractionEvent> {
+    HashSet<Long> blockAddingButtonsToUser = new HashSet<>();
 
     /**
      * Checks if a guild has acknowledged any changes to the TOS/Privacy Policy/bot updates.
      *
      * @param event The event to check.
-     * @return
+     * @return An array of embeds to send, or null if no acknowledgement is needed.
      */
-    default MessageEmbed[] checkAndHandleAcknowledgement(@NonNull E event) throws IOException {
+    default MessageEmbed[] checkAndHandleAcknowledgement(@NonNull E event, boolean addBlocking) throws IOException {
         BrewerServerData serverData = getServerData(Objects.requireNonNull(event.getGuild()).getIdLong());
 
         if(serverData == null)
@@ -37,6 +39,10 @@ public interface AcknowledgeableCommand<E extends GenericCommandInteractionEvent
             return null;
 
         Launcher.core.getServerDataHandler().updateServerData();
+
+        if(addBlocking)
+            blockAddingButtonsToUser.add(event.getUser().getIdLong());
+
         return AcknowledgementHandler.getAcknowledgementEmbeds(typesToAcknowledge);
     }
 
@@ -73,6 +79,10 @@ public interface AcknowledgeableCommand<E extends GenericCommandInteractionEvent
         }
 
         return typesToAcknowledge;
+    }
+
+    default boolean checkAndRemoveUser(long userId) {
+        return blockAddingButtonsToUser.remove(userId);
     }
 }
 

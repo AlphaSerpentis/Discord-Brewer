@@ -1,7 +1,6 @@
 package dev.alphaserpentis.bots.brewer.commands;
 
 import com.google.gson.JsonSyntaxException;
-import com.theokanning.openai.completion.chat.ChatMessage;
 import dev.alphaserpentis.bots.brewer.data.brewer.UserSession;
 import dev.alphaserpentis.bots.brewer.data.openai.Prompts;
 import dev.alphaserpentis.bots.brewer.exception.GenerationException;
@@ -182,19 +181,13 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
     public Collection<ItemComponent> addButtonsToMessage(@NonNull SlashCommandInteractionEvent event) {
         final UserSession userSession = BrewHandler.getUserSession(event.getUser().getIdLong());
 
-        if(
+        return (
                 userSession != null
                         && event.getName().equals(getName())
                         && userSession.getInteractionToken().equals(event.getToken())
-        ) {
-            return List.of(
-                    getButton("brew"),
-                    getButton("confirm"),
-                    getButton("cancel")
-            );
-        }
-
-        return List.of();
+        )
+                ? List.of(getButton("brew"), getButton("confirm"), getButton("cancel"))
+                : List.of();
     }
 
     @SuppressWarnings("unchecked")
@@ -210,7 +203,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         long guildId;
 
         try {
-            embedsArray = checkAndHandleAcknowledgement(event);
+            embedsArray = checkAndHandleAcknowledgement(event, true);
         } catch(IOException e) {
             throw new RuntimeException(e);
         }
@@ -257,6 +250,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             switch(event.getSubcommandName()) {
                 case "create" -> BrewHandler.generateCreatePrompt(workingEmbed, prompt, event);
                 case "rename" -> BrewHandler.generateRenamePrompt(workingEmbed, prompt, event);
+                default -> throw new IllegalStateException("Unexpected value: " + event.getSubcommandName());
             }
         } catch(GenerationException e) {
             workingEmbed = new EmbedBuilder(GENERATING_ERROR);
@@ -307,14 +301,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
     }
 
     private void onBrewButtonClick(@NonNull UserSession userSession, @NonNull InteractionHook hook) {
-        ChatMessage chatMessage;
-        var eb = new EmbedBuilder();
-
-        if(userSession.getType() == UserSession.UserSessionType.NEW_BREW) {
-            chatMessage = Prompts.SETUP_SYSTEM_PROMPT_CREATE;
-        } else {
-            chatMessage = Prompts.SETUP_SYSTEM_PROMPT_RENAME;
-        }
+        EmbedBuilder eb = null;
 
         hook.editOriginalComponents()
                 .setEmbeds(GENERATING_NEW_BREW.build())
@@ -323,7 +310,9 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         try {
             userSession.setActionsToExecute(
                     BrewHandler.generateActions(
-                            chatMessage,
+                            (userSession.getType() == UserSession.UserSessionType.NEW_BREW)
+                                    ? Prompts.SETUP_SYSTEM_PROMPT_CREATE
+                                    : Prompts.SETUP_SYSTEM_PROMPT_RENAME,
                             userSession.getPrompt(),
                             userSession.getAction()
                     )
@@ -339,6 +328,8 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                     .queue();
 
             LOGGER.error("Error while generating brew", e);
+        } finally {
+            if(eb == null) eb = new EmbedBuilder();
         }
 
         BrewHandler.previewChangesPage(eb, userSession.getActionsToExecute());

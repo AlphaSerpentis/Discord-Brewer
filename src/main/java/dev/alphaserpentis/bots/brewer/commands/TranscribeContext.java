@@ -22,7 +22,6 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextInteractionEvent>
         implements AcknowledgeableCommand<MessageContextInteractionEvent> {
@@ -33,6 +32,7 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
         super(
                 new BotCommandOptions()
                         .setName("Transcribe Attachments")
+                        .setHelpDescription("Transcribe audio files to text")
                         .setCommandType(Command.Type.MESSAGE)
                         .setOnlyEmbed(true)
                         .setDeferReplies(true)
@@ -54,7 +54,7 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
         long guildId;
 
         try {
-            embedsArray = checkAndHandleAcknowledgement(event);
+            embedsArray = checkAndHandleAcknowledgement(event, false);
         } catch (IOException e) {
             logger.error("Failed to check and handle acknowledgement", e);
 

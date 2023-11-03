@@ -3,6 +3,7 @@ package dev.alphaserpentis.bots.brewer.commands;
 import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
 import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.bot.ModerationHandler;
+import dev.alphaserpentis.bots.brewer.handler.commands.summarize.SummarizeHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.coffeecore.commands.ButtonCommand;
 import dev.alphaserpentis.coffeecore.data.bot.CommandResponse;
@@ -17,6 +18,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -42,7 +44,25 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
 
     @Override
     public void runButtonInteraction(@NonNull ButtonInteractionEvent event) {
+        final var buttonId = event.getComponentId().substring(getName().length() + 1);
+        final var hook = event.deferReply(true).complete();
 
+        if(buttonId.equals("summarize")) {
+            var response = SummarizeHandler.generateSummarization(
+                    event.getMessage().getEmbeds().get(0).getDescription()
+            );
+
+            hook.sendMessageEmbeds(
+                    new EmbedBuilder()
+                            .setDescription(response)
+                            .setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord")
+                            .setColor(Color.GREEN)
+                            .build()
+            ).complete();
+            AnalyticsHandler.addUsage(event.getGuild(), ServiceType.SUMMARIZE_ATTACHMENT);
+        } else {
+            throw new IllegalStateException("Unknown button ID: " + buttonId);
+        }
     }
 
     @Override
@@ -54,8 +74,7 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
 //                    getButton("optout")
 //            );
 //        }
-
-        return List.of(getButton("summarize"));
+        return checkAndRemoveUser(event.getUser().getIdLong()) ? List.of() : List.of(getButton("summarize"));
     }
 
     @SuppressWarnings("unchecked")
@@ -69,7 +88,7 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
         long guildId;
 
         try {
-            embedsArray = checkAndHandleAcknowledgement(event);
+            embedsArray = checkAndHandleAcknowledgement(event, true);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -96,7 +115,9 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
             return new CommandResponse<>(isOnlyEphemeral(), userCheckEmbed.build());
 
         workingEmbed = new EmbedBuilder();
-        if(event.getSubcommandName().equalsIgnoreCase("vc")) {
+        workingEmbed.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
+
+        if(Objects.requireNonNull(event.getSubcommandName()).equalsIgnoreCase("vc")) {
             try {
 //                handleTranscribeVC(eb, event);
                 workingEmbed.setDescription(
@@ -129,14 +150,14 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
     }
 
     private void handleTranscribeUrl(@NonNull EmbedBuilder eb, @NonNull SlashCommandInteractionEvent event) {
-        var url = Objects.requireNonNull(event.getOption("url")).getAsString();
-        var response = OpenAIHandler.getAudioTranscription(url);
+        var response = OpenAIHandler.getAudioTranscription(
+                Objects.requireNonNull(event.getOption("url")).getAsString()
+        );
 
-        if(response.isCached()) {
+        if(response.isCached())
             eb.setDescription("# Cached Transcription\n" + response.text());
-        } else {
+        else
             eb.setDescription("# Transcription\n" + response.text());
-        }
 
         AnalyticsHandler.addUsage(event.getGuild(), ServiceType.TRANSCRIBE_ATTACHMENT);
     }

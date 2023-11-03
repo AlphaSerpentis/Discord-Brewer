@@ -4,6 +4,7 @@ import dev.alphaserpentis.bots.brewer.data.brewer.ServiceType;
 import dev.alphaserpentis.bots.brewer.data.openai.AudioTranslationResponse;
 import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.bot.ModerationHandler;
+import dev.alphaserpentis.bots.brewer.handler.commands.summarize.SummarizeHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.coffeecore.commands.ButtonCommand;
 import dev.alphaserpentis.coffeecore.data.bot.CommandResponse;
@@ -16,7 +17,9 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -36,18 +39,36 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
                         .setUseRatelimits(true)
         );
 
-//        addButton("summarize", ButtonStyle.PRIMARY, "Summarize", false);
+        addButton("summarize", ButtonStyle.PRIMARY, "Summarize", false);
     }
 
     @Override
     public void runButtonInteraction(@NonNull ButtonInteractionEvent event) {
+        final var buttonId = event.getComponentId().substring(getName().length() + 1);
+        final var hook = event.deferReply(true).complete();
 
+        if(buttonId.equals("summarize")) {
+            var response = SummarizeHandler.generateSummarization(
+                    event.getMessage().getEmbeds().get(0).getDescription()
+            );
+
+            hook.sendMessageEmbeds(
+                    new EmbedBuilder()
+                            .setDescription(response)
+                            .setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord")
+                            .setColor(Color.GREEN)
+                            .build()
+            ).complete();
+            AnalyticsHandler.addUsage(event.getGuild(), ServiceType.SUMMARIZE_ATTACHMENT);
+        } else {
+            throw new IllegalStateException("Unknown button ID: " + buttonId);
+        }
     }
 
     @Override
     @NonNull
     public Collection<ItemComponent> addButtonsToMessage(@NonNull SlashCommandInteractionEvent event) {
-        return List.of();
+        return checkAndRemoveUser(event.getUser().getIdLong()) ? List.of() : List.of(getButton("summarize"));
     }
 
     @SuppressWarnings("unchecked")
@@ -62,14 +83,12 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
         long guildId;
 
         try {
-            embedsArray = checkAndHandleAcknowledgement(event);
+            embedsArray = checkAndHandleAcknowledgement(event, true);
         } catch(IOException e) {
             throw new RuntimeException(e);
         }
 
-        if(embedsArray == null) {
-            workingEmbed = new EmbedBuilder();
-        } else {
+        if(embedsArray != null) {
             return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
         }
 
@@ -90,9 +109,10 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
         if(userCheckEmbed != null)
             return new CommandResponse<>(isOnlyEphemeral(), userCheckEmbed.build());
 
-        workingEmbed.setTitle("Translate");
+        workingEmbed = new EmbedBuilder();
+        workingEmbed.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
 
-        if(event.getSubcommandName().equalsIgnoreCase("url")) {
+        if(Objects.requireNonNull(event.getSubcommandName()).equalsIgnoreCase("url")) {
             handleTranslateUrl(workingEmbed, event);
         }
 
@@ -112,14 +132,13 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
 
     private void handleTranslateUrl(@NonNull EmbedBuilder eb, @NonNull SlashCommandInteractionEvent event) {
         AudioTranslationResponse response = OpenAIHandler.getAudioTranslation(
-                event.getOption("url").getAsString()
+                Objects.requireNonNull(event.getOption("url")).getAsString()
         );
 
-        if(response.isCached()) {
-            eb.setTitle("Cached Translation");
-        }
-
-        eb.setDescription(response.text());
+        if(response.isCached())
+            eb.setDescription("# Cached Translation\n" + response.text());
+        else
+            eb.setDescription("# Translation\n" + response.text());
 
         AnalyticsHandler.addUsage(event.getGuild(), ServiceType.TRANSLATE_ATTACHMENT);
     }

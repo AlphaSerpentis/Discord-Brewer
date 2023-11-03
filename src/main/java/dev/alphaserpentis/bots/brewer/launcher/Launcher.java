@@ -16,6 +16,7 @@ import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.bot.BrewerServerDataHandler;
 import dev.alphaserpentis.bots.brewer.handler.bot.ModerationHandler;
 import dev.alphaserpentis.bots.brewer.handler.commands.AcknowledgementHandler;
+import dev.alphaserpentis.bots.brewer.handler.commands.audio.AudioHandler;
 import dev.alphaserpentis.bots.brewer.handler.discord.StatusHandler;
 import dev.alphaserpentis.bots.brewer.handler.openai.OpenAIHandler;
 import dev.alphaserpentis.bots.brewer.handler.other.TopGgHandler;
@@ -30,6 +31,8 @@ import io.github.cdimascio.dotenv.Dotenv;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.Color;
 import java.io.BufferedReader;
@@ -42,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Launcher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Launcher.class);
 
     public static CoffeeCore core;
 
@@ -51,19 +55,19 @@ public class Launcher {
         buildAndConfigureCore(dotenv);
         initializeHandlers(dotenv);
         setEnvAcknowledgementsBackToFalse();
+
+        LOGGER.info("Bot initialized");
     }
 
     private static void buildAndConfigureCore(@NonNull Dotenv dotenv) throws IOException {
         var about = new AboutInformation(
                 """
-                Brew(r) is your open-source assistant, stirring up innovation in your Discord server with OpenAI's ChatGPT. Just prompt it, and watch as it brews new roles, categories, and channels, or even renames the existing ones!
-                
-                Now with transcription and translation abilities!
+                Brew(r) is your AI assistant powered by OpenAI's ChatGPT and Whisper! Spice up your server with something new, transcribe or translate videos, and more!
                 
                 [**Invite Brew(r) to Your Server!**](https://brewr.ai/invite)
-                [**GitHub**](https://github.com/AlphaSerpentis/Discord-Brewer)
+                [**Source Code**](https://github.com/AlphaSerpentis/Discord-Brewer)
                 [**Discord Server**](https://brewr.ai/discord)
-                [**TOS**](https://brewr.ai/tos)
+                [**Terms of Service**](https://brewr.ai/tos)
                 [**Privacy Policy**](https://brewr.ai/privacy_policy)
                 """,
                 "brewr.ai",
@@ -72,7 +76,6 @@ public class Launcher {
                 true,
                 true
         );
-
         var builder = new CoffeeCoreBuilder<>()
                 .setSettings(
                         new BotSettings(
@@ -101,7 +104,7 @@ public class Launcher {
                                 Boolean.parseBoolean(dotenv.get("RESET_ACKNOWLEDGEMENT_UPDATES"))
                         )
                 )
-                .setCommandsHandler(new CommandsHandler(CustomExecutors.newCachedThreadPool(2)))
+                .setCommandsHandler(new CommandsHandler(CustomExecutors.newCachedThreadPool(1)))
                 .enableSharding(true);
 
         core = builder.build(dotenv.get("DISCORD_BOT_TOKEN"));
@@ -119,6 +122,12 @@ public class Launcher {
                 new SummarizeContext(),
                 new Admin(Long.parseLong(dotenv.get("BOT_OWNER_GUILD_ID")))
         );
+        core.getCommandsHandler().setHandleInteractionError(
+                (throwable) -> {
+                    LOGGER.error(throwable.getMessage(), throwable);
+                    return null;
+                }
+        );
     }
 
     private static void initializeHandlers(@NonNull Dotenv dotenv) {
@@ -135,26 +144,26 @@ public class Launcher {
         TopGgHandler.init(dotenv.get("TOPGG_API_KEY"), core.getSelfUser().getId());
         AcknowledgementHandler.init(Path.of(dotenv.get("ACKNOWLEDGEMENTS_PATH")));
         AnalyticsHandler.init(Path.of(dotenv.get("ANALYTICS_PATH")));
+        AudioHandler.init(dotenv.get("YT_DLP_EXECUTABLE_PATH"), dotenv.get("FFMPEG_PATH"));
     }
 
     private static void setEnvAcknowledgementsBackToFalse() {
-        try {
-            var fileReader = new FileReader(".env");
-            var lines = getLines(fileReader);
+        List<String> lines;
 
-            fileReader.close();
+        try(var fileReader = new FileReader(".env")) {
+            lines = getLines(fileReader);
+        } catch(IOException e) {
+            throw new RuntimeException(e);
+        }
 
-            var fileWriter = new FileWriter(".env");
-            var bufferedWriter = new BufferedWriter(fileWriter);
-
+        try(
+                var fileWriter = new FileWriter(".env");
+                var bufferedWriter = new BufferedWriter(fileWriter)
+        ) {
             for(String outputLine : lines) {
                 bufferedWriter.write(outputLine);
                 bufferedWriter.newLine();
             }
-
-            bufferedWriter.flush();
-            fileWriter.close();
-
         } catch(IOException e) {
             throw new RuntimeException(e);
         }

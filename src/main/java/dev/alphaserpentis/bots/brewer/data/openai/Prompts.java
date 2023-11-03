@@ -205,36 +205,15 @@ public interface Prompts {
                     """
     );
 
-    ChatMessage SETUP_SYSTEM_PROMPT_SUMMARIZE_AUDIO = new ChatMessage(
-            "system",
-            """
-                    Act as a creative, exciting, and improvising Discord assistant that only talks in JSON. Do not add normal text.
-                                                                                                                                                                                                                                                                                                                                                        
-                    Your goal is to summarize a transcription from an audio file. The transcription will be provided to you in a JSON format.
-                    
-                    Here's how the user will provide the prompt:
-                    
-                    {
-                        "transcription": "Example transcription"
-                    }
-                    
-                    You will reply with:
-                    
-                    {
-                        "summary": "Example summary"
-                    }
-                    
-                    The user's prompt is:
-                    """
-    );
-
     ChatMessage SETUP_SYSTEM_PROMPT_SUMMARIZE_TEXT = new ChatMessage(
             "system",
             """
-            Summarize the content provided. Do not add normal text.
+            You're a summarizer who's straight to the point. You've been tasked to summarize the content provided. Do not add normal text.
+            
+            Here are the instructions:
             - Mention key points of the content.
             - **Apply paragraph breaks for readability**.
-            - **Use markdown for readability as necessary such as lists or using subtitles to break down into sections**.
+            - **Use markdown for readability or emphasis as necessary such as lists or using subtitles to break down into sections**.
             - Maximum allowed characters is 2000 characters.
             
             At the top of your reply, write a title of what the summary is about as such:

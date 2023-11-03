@@ -68,11 +68,7 @@ public class OpenAIHandler {
         OpenAIHandler.transcriptionCacheFile = transcriptionCacheFile;
         OpenAIHandler.translationCacheFile = translationCacheFile;
 
-        try {
-            readAndSetCaches();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        }
+        readAndSetCaches();
 
         executorService.scheduleAtFixedRate(
                 () -> {
@@ -143,7 +139,6 @@ public class OpenAIHandler {
     }
 
     public static AudioTranscriptionResponse getAudioTranscription(@NonNull String audioUrl) {
-        var fileName = audioUrl.substring(audioUrl.lastIndexOf('/') + 1);
         byte[] audioBytes;
         String hash;
 
@@ -162,7 +157,7 @@ public class OpenAIHandler {
             AudioTranscriptionResponse response = service.createAudioTranscription(
                     new AudioTranscriptionRequest(
                             "whisper-1",
-                            fileName,
+                            "audio.mp3",
                             audioUrl,
                             audioBytes
                     )
@@ -228,13 +223,18 @@ public class OpenAIHandler {
         );
     }
 
-    private static void readAndSetCaches() throws IOException {
-        transcriptionCache = new Gson().fromJson(
-                Files.newBufferedReader(transcriptionCacheFile), new TypeToken<Map<String, CachedAudio>>(){}.getType()
-        );
-        translationCache = new Gson().fromJson(
-                Files.newBufferedReader(translationCacheFile), new TypeToken<Map<String, CachedAudio>>(){}.getType()
-        );
+    private static void readAndSetCaches() {
+        try(var transcriptReader = Files.newBufferedReader(transcriptionCacheFile);
+            var translationReader = Files.newBufferedReader(translationCacheFile)) {
+            transcriptionCache = new Gson().fromJson(
+                    transcriptReader, new TypeToken<Map<String, CachedAudio>>(){}.getType()
+            );
+            translationCache = new Gson().fromJson(
+                    translationReader, new TypeToken<Map<String, CachedAudio>>(){}.getType()
+            );
+        } catch(IOException e) {
+            logger.error(e.getMessage(), e);
+        }
 
         if(transcriptionCache == null)
             transcriptionCache = new HashMap<>();

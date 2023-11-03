@@ -1,10 +1,8 @@
 package dev.alphaserpentis.bots.brewer.commands.admin;
 
 import dev.alphaserpentis.bots.brewer.handler.bot.ModerationHandler;
-import dev.alphaserpentis.bots.brewer.launcher.Launcher;
 import dev.alphaserpentis.coffeecore.commands.BotCommand;
 import dev.alphaserpentis.coffeecore.data.bot.CommandResponse;
-import io.github.cdimascio.dotenv.Dotenv;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -48,8 +46,7 @@ public class Admin extends BotCommand<MessageEmbed, SlashCommandInteractionEvent
         } else {
             eb
                     .setTitle("Error")
-                    .setDescription("You do not have permission to use this command")
-                    .build();
+                    .setDescription("You do not have permission to use this command");
         }
 
         return new CommandResponse<>(isOnlyEphemeral(), eb.build());
@@ -59,7 +56,7 @@ public class Admin extends BotCommand<MessageEmbed, SlashCommandInteractionEvent
     public void updateCommand(@NonNull Guild guild) {
 //        var premium = new SubcommandGroupData("premium", "Premium commands");
         var id = new OptionData(
-                OptionType.INTEGER, "id", "The ID of the user/guild", true
+                OptionType.STRING, "id", "The ID of the user/guild", true
         );
 //        var time = new OptionData(
 //                OptionType.INTEGER, "time", "The amount of days", true

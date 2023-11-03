@@ -17,15 +17,13 @@ import dev.alphaserpentis.bots.brewer.launcher.Launcher;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.channel.attribute.IAgeRestrictedChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.internal.entities.channel.concrete.CategoryImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.ForumChannelImpl;
-import net.dv8tion.jda.internal.entities.channel.concrete.MediaChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.StageChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.TextChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.VoiceChannelImpl;
-import net.dv8tion.jda.internal.entities.channel.concrete.NewsChannelImpl;
-import net.dv8tion.jda.internal.entities.channel.middleman.AbstractStandardGuildMessageChannelImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +55,6 @@ public class BrewHandler {
         ArrayList<ParseActions.ExecutableAction> actions;
         UserSession session;
 
-        AnalyticsHandler.addUsage(event.getGuild(), ServiceType.CREATE);
-
         try {
             actions = generateActions(
                     Prompts.SETUP_SYSTEM_PROMPT_CREATE,
@@ -86,6 +82,8 @@ public class BrewHandler {
                     GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(),
                     e.getCause()
             );
+        } finally {
+            AnalyticsHandler.addUsage(event.getGuild(), ServiceType.CREATE);
         }
 
         previewChangesPage(eb, actions);
@@ -94,11 +92,13 @@ public class BrewHandler {
                 UserSession.UserSessionType.NEW_BREW,
                 ParseActions.ValidAction.CREATE,
                 actions
+        ).setJDA(
+                event.getJDA()
+        ).setInteractionToken(
+                event.getInteraction().getToken()
+        ).setGuildId(
+                event.getGuild().getIdLong()
         );
-        session
-                .setJDA(event.getJDA())
-                .setInteractionToken(event.getInteraction().getToken())
-                .setGuildId(event.getGuild().getIdLong());
         userSessions.put(event.getUser().getIdLong(), session);
     }
 
@@ -154,11 +154,13 @@ public class BrewHandler {
                 UserSession.UserSessionType.RENAME,
                 ParseActions.ValidAction.EDIT,
                 actions
+        ).setJDA(
+                event.getJDA()
+        ).setInteractionToken(
+                event.getInteraction().getToken()
+        ).setGuildId(
+                event.getGuild().getIdLong()
         );
-        session
-                .setJDA(event.getJDA())
-                .setInteractionToken(event.getInteraction().getToken())
-                .setGuildId(event.getGuild().getIdLong());
         userSessions.put(event.getUser().getIdLong(), session);
     }
 
@@ -200,8 +202,7 @@ public class BrewHandler {
 
                 If you want to regenerate with the same prompt, click on the "☕ New Brew" button.
                 
-                **Notice**: Permissions are omitted from this preview. If Brew(r) doesn't have sufficient permissions to make the changes, it will not set permissions!
-                """);
+                **Notice**: Permissions are omitted from this preview. If Brew(r) doesn't have sufficient permissions to make the changes, it will not set permissions!""");
         eb.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
         eb.setColor(Color.GREEN);
 
@@ -337,21 +338,16 @@ public class BrewHandler {
             String type;
 
             if(
-                    channel instanceof CategoryImpl
-                            || channel instanceof AbstractStandardGuildMessageChannelImpl<?> chn && chn.isNSFW()
+                    channel instanceof IAgeRestrictedChannel chn && chn.isNSFW()
                             && !getNsfwChannels && OpenAIHandler.isContentFlagged(channel.getName(), -1, -1, false)
             ) return;
 
-            if(channel instanceof TextChannelImpl || channel instanceof NewsChannelImpl) {
-                type = "txt";
-            } else if(channel instanceof VoiceChannelImpl) {
-                type = "vc";
-            } else if(channel instanceof ForumChannelImpl || channel instanceof MediaChannelImpl) {
-                type = "forum";
-            } else if(channel instanceof StageChannelImpl) {
-                type = "stage";
-            } else {
-                return;
+            switch(channel) {
+                case StandardGuildMessageChannel ignore -> type = "txt";
+                case VoiceChannelImpl ignore -> type = "vc";
+                case ForumChannelImpl ignore -> type = "forum";
+                case StageChannelImpl ignore -> type = "stage";
+                default -> {return;}
             }
 
             channels.put(channel.getName(), new DiscordConfig.ConfigItem(
@@ -387,16 +383,10 @@ public class BrewHandler {
 
     @NonNull
     private static String tryToFixJSON(@NonNull String json) {
-        // Remove extra commas
-        json = json.replaceAll(",\\s*}", "}");
-        json = json.replaceAll(",\\s*]", "]");
-
-        // Remove any text before the beginning of the JSON
-        json = json.substring(json.indexOf("{"));
-
-        // Remove any text after the end of the JSON
-        json = json.substring(0, json.lastIndexOf("}") + 1);
-
-        return json;
+        return json
+                .replaceAll(",\\s*}", "}") // Remove extra commas
+                .replaceAll(",\\s*]", "]") // Remove extra commas
+                .substring(json.indexOf("{")) // Remove any text before the beginning of the JSON
+                .substring(0, json.lastIndexOf("}") + 1); // Remove any text after the end of the JSON
     }
 }

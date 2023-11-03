@@ -102,13 +102,14 @@ public class AnalyticsHandler {
      * Dumps analytics to the analytics directory.
      */
     public static void dumpAnalytics() throws IOException {
-        var writer = new BufferedWriter(new FileWriter(analyticsDirectory.toFile()));
-        var gson = new GsonBuilder().setPrettyPrinting().create();
-        var anonymizedAnalytics = new ArrayList<>(serverAnalytics.values());
+        try (var writer = new BufferedWriter(new FileWriter(analyticsDirectory.toFile()))) {
+            var gson = new GsonBuilder().setPrettyPrinting().create();
+            var anonymizedAnalytics = new ArrayList<>(serverAnalytics.values());
 
-        gson.toJson(anonymizedAnalytics, writer);
-
-        writer.close();
+            gson.toJson(anonymizedAnalytics, writer);
+        } catch (Exception e) {
+            logger.error("Failed to dump analytics", e);
+        }
     }
 
     public static void stopTrackingGuild(long guildId) {

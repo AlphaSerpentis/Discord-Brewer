@@ -1,8 +1,8 @@
 # Terms of Service for the Brewer Bot
 
-*Last Updated: July 28, 2023*
+*Last Updated: November 1, 2023*
 
-*Effective On: September 13, 2023*
+*Effective On: TBD*
 
 ---
 
@@ -30,9 +30,10 @@ However, you must abide by Discord's [Terms of Service](https://discord.com/term
 The bot provides the following services:
 - Generating new channels, categories, and roles to the best of its ability with the information provided by you
 - Renaming channels, categories, and roles names, descriptions, and colors to the best of its ability with the information provided by you
-- Transcribing audio to text from attachments/files/voice channels
-- Translating audio to text from attachments/files/voice channels
-- Summarizing text from transcriptions or translations
+- Transcribing audio to text from attachments/files/voice channels/urls
+- Translating audio to text from attachments/files/voice channels/urls
+- Summarizing text from transcriptions, translations, messages, and attachments/files
+- Chatbot functionality
 
 ## Use of Services
 You may use the bot for any purpose, commercial or non-commercial, as long as you abide by the terms outlined in this document.
@@ -55,6 +56,7 @@ For example, the bot's abilities may be limited if:
 - The bot/server is experiencing technical difficulties
 - The bot/server is experiencing high load
 - The bot/server is affected by bugs or errors
+- The specific service is not available to you or your server(s)
 
 We reserve the right to modify, suspend, or discontinue, temporarily or permanently, the bot or any service to which it connects, with or without notice and without liability to you.
 

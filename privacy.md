@@ -1,8 +1,8 @@
 # Privacy Policy
 
-*Last Updated: July 18, 2023*
+*Last Updated: November 1, 2023*
 
-*Effective On: September 13, 2023*
+*Effective On: TBD, 2023*
 
 ---
 
@@ -15,7 +15,7 @@ When you use Brew(r), we may collect, but not limited to, the following informat
 - Server ID
 - Settings you choose for your server
 - Pre-existing server roles, categories, and channels
-- Audio from files/attachments/voice channels
+- Audio from files/attachments/voice channels/urls
 
 We may collect analytical data to help us improve Brew(r). This may include, but not limited to, the following information:
 - Error logs
@@ -31,9 +31,9 @@ We use the information we collect in various ways, including to:
 - Better understand how users interact with the Brew(r)
 
 ## How do we store, share and disclose your information?
-The primary storage of your information resides within a cache, ensuring temporary hold and it is not generally disclosed to any third parties, with the notable exceptions of Discord and OpenAI, as this is integral to our operation. Essential information, such as your server ID, is securely stored on our servers in order to effectively deliver our services and to retain your chosen settings. Upon your consent, we may store additional data on our servers, such as ratings submissions or error reports.
+The primary storage of your information resides within a cache, ensuring temporary hold and it is not generally disclosed to any third parties, with the notable exceptions of Discord and OpenAI, as this is integral to our operation. Essential information, such as your server ID, is securely stored on our servers in order to effectively deliver our services and to retain your chosen settings. Upon your consent, we may store additional data on our servers, such as ratings submissions.
 
-For audio data derived from voice channels, we implement a stringent policy of maintaining this information solely within a temporary cache. In addition, data indicating who is speaking for transcription purposes is also included. This information is exclusively shared with OpenAI to facilitate the delivery of our services.
+For audio data, we implement a stringent policy of maintaining this information solely within a temporary cache. In addition, data indicating who is speaking for voice channel transcription purposes is also included. This information is exclusively shared with OpenAI to facilitate the delivery of our services.
 
 We may disseminate aggregated analytical data for the purpose of demonstrating usage trends; however, this data is carefully compiled to ensure that no personally identifiable information is included.
 

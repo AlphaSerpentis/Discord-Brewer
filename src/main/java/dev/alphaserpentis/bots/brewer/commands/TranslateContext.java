@@ -15,13 +15,11 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInteractionEvent>
         implements AcknowledgeableCommand<MessageContextInteractionEvent> {
@@ -30,6 +28,7 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
         super(
                 new BotCommandOptions()
                         .setName("Translate Attachments")
+                        .setHelpDescription("Translate audio files to text")
                         .setCommandType(Command.Type.MESSAGE)
                         .setOnlyEmbed(true)
                         .setDeferReplies(true)
@@ -52,7 +51,7 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
         long guildId;
 
         try {
-            embedsArray = checkAndHandleAcknowledgement(event);
+            embedsArray = checkAndHandleAcknowledgement(event, false);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -107,10 +106,8 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
 
     @Override
     public void updateCommand(@NonNull JDA jda) {
-        CommandData cmdData = getJDACommandData(getCommandType(), getName(), getDescription());
-
         jda
-                .upsertCommand(cmdData)
+                .upsertCommand(getJDACommandData(getCommandType(), getName(), getDescription()))
                 .queue(r -> setGlobalCommandId(r.getIdLong()));
     }
 
@@ -119,8 +116,9 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
         ArrayList<Message.Attachment> attachments = new ArrayList<>(event.getTarget().getAttachments());
 
         attachments.removeIf(
-                attachment -> attachment.getDuration() == 0 && CustomOpenAiService.SUPPORTED_EXTENSIONS.stream().noneMatch(
-                        extension -> attachment.getFileName().endsWith(extension)
+                attachment -> attachment.getDuration() == 0
+                        && CustomOpenAiService.SUPPORTED_EXTENSIONS.stream().noneMatch(
+                                extension -> attachment.getFileName().endsWith(extension)
                 )
         );
 
