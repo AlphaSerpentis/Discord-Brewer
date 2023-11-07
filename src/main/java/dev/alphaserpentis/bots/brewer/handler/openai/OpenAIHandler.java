@@ -53,7 +53,7 @@ public class OpenAIHandler {
      */
     private static Map<String, CachedAudio> translationCache = new HashMap<>();
     public static CustomOpenAiService service;
-    public static final String DEFAULT_COMPLETION_MODEL = ChatCompletionModels.GPT_3_5_TURBO.getName();
+    public static final String DEFAULT_COMPLETION_MODEL = ChatCompletionModels.GPT_3_5_TURBO_1106.getName();
 
     public static void init(
             @NonNull String apiKey,

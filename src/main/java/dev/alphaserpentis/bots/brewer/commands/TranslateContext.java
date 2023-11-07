@@ -113,7 +113,7 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
 
     @NonNull
     private List<Message.Attachment> tryToGetAudioFiles(@NonNull MessageContextInteractionEvent event) {
-        ArrayList<Message.Attachment> attachments = new ArrayList<>(event.getTarget().getAttachments());
+        var attachments = new ArrayList<>(event.getTarget().getAttachments());
 
         attachments.removeIf(
                 attachment -> attachment.getDuration() == 0

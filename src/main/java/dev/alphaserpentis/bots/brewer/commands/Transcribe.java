@@ -115,7 +115,6 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
             return new CommandResponse<>(isOnlyEphemeral(), userCheckEmbed.build());
 
         workingEmbed = new EmbedBuilder();
-        workingEmbed.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
 
         if(Objects.requireNonNull(event.getSubcommandName()).equalsIgnoreCase("vc")) {
             try {
@@ -131,6 +130,9 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
         } else {
             workingEmbed.setDescription("Invalid subcommand!");
         }
+
+        workingEmbed.setColor(Color.GREEN);
+        workingEmbed.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
 
         return new CommandResponse<>(isOnlyEphemeral(), workingEmbed.build());
     }

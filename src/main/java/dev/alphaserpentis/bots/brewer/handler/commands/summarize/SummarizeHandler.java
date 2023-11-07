@@ -8,7 +8,7 @@ import io.reactivex.rxjava3.annotations.NonNull;
 public class SummarizeHandler {
     public static String generateSummarization(@NonNull String input) {
         return cleanOutput(OpenAIHandler.getCompletion(
-                ChatCompletionModels.GPT_3_5_TURBO.getName(),
+                ChatCompletionModels.GPT_3_5_TURBO_1106.getName(),
                 Prompts.SETUP_SYSTEM_PROMPT_SUMMARIZE_TEXT,
                 input,
                 0.25,

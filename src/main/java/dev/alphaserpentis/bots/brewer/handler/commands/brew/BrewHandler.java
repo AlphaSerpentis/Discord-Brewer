@@ -383,10 +383,13 @@ public class BrewHandler {
 
     @NonNull
     private static String tryToFixJSON(@NonNull String json) {
-        return json
-                .replaceAll(",\\s*}", "}") // Remove extra commas
-                .replaceAll(",\\s*]", "]") // Remove extra commas
-                .substring(json.indexOf("{")) // Remove any text before the beginning of the JSON
-                .substring(0, json.lastIndexOf("}") + 1); // Remove any text after the end of the JSON
+        String result = json;
+
+        result = result.replaceAll(",\\s*}", "}"); // Remove extra commas
+        result = result.replaceAll(",\\s*]", "]"); // Remove extra commas
+        result = result.substring(result.indexOf("{")); // Remove any text before the beginning of the JSON
+        result = result.substring(0, result.lastIndexOf("}") + 1); // Remove any text after the end of the JSON
+
+        return result;
     }
 }

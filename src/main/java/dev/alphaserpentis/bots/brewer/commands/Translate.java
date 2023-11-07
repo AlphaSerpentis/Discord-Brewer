@@ -110,11 +110,13 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
             return new CommandResponse<>(isOnlyEphemeral(), userCheckEmbed.build());
 
         workingEmbed = new EmbedBuilder();
-        workingEmbed.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
 
         if(Objects.requireNonNull(event.getSubcommandName()).equalsIgnoreCase("url")) {
             handleTranslateUrl(workingEmbed, event);
         }
+
+        workingEmbed.setColor(Color.GREEN);
+        workingEmbed.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
 
         return new CommandResponse<>(isOnlyEphemeral(), workingEmbed.build());
     }

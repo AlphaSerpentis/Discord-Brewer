@@ -104,10 +104,7 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
         workingEmbed.setDescription(description.toString());
         workingEmbed.setFooter("Have questions or feedback? Join our Discord @ brewr.ai/discord");
 
-        AnalyticsHandler.addUsage(
-                event.getGuild(),
-                ServiceType.TRANSCRIBE_ATTACHMENT
-        );
+        AnalyticsHandler.addUsage(event.getGuild(), ServiceType.TRANSCRIBE_ATTACHMENT);
 
         return new CommandResponse<>(isOnlyEphemeral(), workingEmbed.build());
     }
