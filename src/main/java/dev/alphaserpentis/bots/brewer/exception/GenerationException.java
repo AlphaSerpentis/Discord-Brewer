@@ -5,9 +5,10 @@ package dev.alphaserpentis.bots.brewer.exception;
  */
 public class GenerationException extends RuntimeException {
     public enum Type {
+        UNCLASSIFIED_EXCEPTION ("Unclassified Exception (Unknown error)"),
         JSON_EXCEPTION ("JSON Exception (Potentially bad JSON by ChatGPT)"),
         TIMEOUT_EXCEPTION ("Timeout Exception (OpenAI API timed out)"),
-        OVERLOADED_EXCEPTION ("Overloaded Exception (OpenAI API is overloaded)"),
+        OVERLOADED_EXCEPTION ("Potentially Overloaded Exception (OpenAI API is potentially overloaded)"),
         FILE_TOO_LARGE_OPENAI_MAX("File too large! Please upload something smaller"),
         FILE_TOO_LARGE_NON_PREMIUM("File too large! Please upload something smaller or upgrade to our Mercury tier!"),
         FILE_EMPTY("Brew(r) was unable to find a video/audio file! Make sure there's a video or audio present in the webpage!");

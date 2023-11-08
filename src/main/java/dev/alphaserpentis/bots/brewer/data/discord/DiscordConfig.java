@@ -1,5 +1,6 @@
 package dev.alphaserpentis.bots.brewer.data.discord;
 
+import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -19,6 +20,17 @@ public record DiscordConfig(
             @Nullable ArrayList<Permission> perm,
             @Nullable String color
     ) {
+        public ConfigItem(@NonNull String name) { // For categories
+            this(name, null, null, null, null, null);
+        }
+
+        public ConfigItem(@NonNull String name, @NonNull String type, @Nullable String desc) { // For channels
+            this(name, type, null, desc, null, null);
+        }
+
+        public ConfigItem(@NonNull String name, @NonNull String color) { // For roles
+            this(name, null, null, null, null, color);
+        }
 
         public record Permission(
                 @Nullable String role,

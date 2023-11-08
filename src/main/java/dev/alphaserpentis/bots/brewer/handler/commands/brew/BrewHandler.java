@@ -61,27 +61,8 @@ public class BrewHandler {
                     prompt,
                     ParseActions.ValidAction.CREATE
             );
-        } catch(JsonSyntaxException e) {
-            logger.error("JSONSyntaxException thrown in generateCreatePrompt", e);
-
-            throw new GenerationException(
-                    GenerationException.Type.JSON_EXCEPTION.getDescriptions(),
-                    e.getCause()
-            );
-        } catch(OpenAiHttpException e) {
-            logger.error("OpenAiHttpException thrown in generateCreatePrompt", e);
-
-            throw new GenerationException(
-                    GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(),
-                    e.getCause()
-            );
-        } catch(SocketTimeoutException e) {
-            logger.error("SocketTimeoutException thrown in generateCreatePrompt", e);
-
-            throw new GenerationException(
-                    GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(),
-                    e.getCause()
-            );
+        } catch(Exception e) {
+            throw catchGenerationException(e);
         } finally {
             AnalyticsHandler.addUsage(event.getGuild(), ServiceType.CREATE);
         }
@@ -123,27 +104,8 @@ public class BrewHandler {
             );
 
             optimizeRenameActions(actions);
-        } catch(JsonSyntaxException e) {
-            logger.error("JSONSyntaxException thrown in generateRenamePrompt", e);
-
-            throw new GenerationException(
-                    GenerationException.Type.JSON_EXCEPTION.getDescriptions(),
-                    e.getCause()
-            );
-        } catch(OpenAiHttpException e) {
-            logger.error("OpenAiHttpException thrown in generateRenamePrompt", e);
-
-            throw new GenerationException(
-                    GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(),
-                    e.getCause()
-            );
-        } catch(SocketTimeoutException e) {
-            logger.error("SocketTimeoutException thrown in generateRenamePrompt", e);
-
-            throw new GenerationException(
-                    GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(),
-                    e.getCause()
-            );
+        } catch(Exception e) {
+            throw catchGenerationException(e);
         } finally {
             AnalyticsHandler.addUsage(event.getGuild(), ServiceType.RENAME);
         }
@@ -294,7 +256,7 @@ public class BrewHandler {
     private static StringBuilder getData(@NonNull ParseActions.ExecutableAction action) {
         var readableData = new StringBuilder();
 
-        for(Map.Entry<ParseActions.ValidDataNames, ?> entry : action.data().entrySet()) {
+        for(var entry : action.data().entrySet()) {
             if(
                     entry.getKey() == ParseActions.ValidDataNames.NAME
                             || entry.getKey() == ParseActions.ValidDataNames.PERMISSIONS
@@ -325,14 +287,7 @@ public class BrewHandler {
             if(OpenAIHandler.isContentFlagged(category.getName(), -1, -1, false))
                 return;
 
-            categories.put(category.getName(), new DiscordConfig.ConfigItem(
-                    category.getName(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-            ));
+            categories.put(category.getName(), new DiscordConfig.ConfigItem(category.getName()));
         });
         guild.getChannels(false).forEach(channel -> {
             String type;
@@ -353,22 +308,16 @@ public class BrewHandler {
             channels.put(channel.getName(), new DiscordConfig.ConfigItem(
                     channel.getName(),
                     type,
-                    null,
-                    (channel instanceof TextChannelImpl txt) ? txt.getTopic() : null,
-                    null,
-                    null
+                    (channel instanceof TextChannelImpl txt) ? txt.getTopic() : null
             ));
         });
         guild.getRoles().forEach(role -> {
-            if(role.isPublicRole() || role.isManaged() && OpenAIHandler.isContentFlagged(role.getName(), -1, -1, false))
-                return;
+            if(role.isPublicRole() || role.isManaged()
+                    && OpenAIHandler.isContentFlagged(role.getName(), -1, -1, false)
+            ) return;
 
             roles.put(role.getName(), new DiscordConfig.ConfigItem(
                     role.getName(),
-                    null,
-                    null,
-                    null,
-                    null,
                     String.format("#%06x", role.getColorRaw())
             ));
         });
@@ -391,5 +340,45 @@ public class BrewHandler {
         result = result.substring(0, result.lastIndexOf("}") + 1); // Remove any text after the end of the JSON
 
         return result;
+    }
+
+    @NonNull
+    private static GenerationException catchGenerationException(@NonNull Exception e) {
+        final String LOGGER_MESSAGE = "Generation exception caught (%s)";
+
+        switch(e) {
+            case JsonSyntaxException jsonE -> {
+                logger.error(LOGGER_MESSAGE.formatted("JSON Syntax"), jsonE);
+
+                return new GenerationException(
+                        GenerationException.Type.JSON_EXCEPTION.getDescriptions(),
+                        jsonE.getCause()
+                );
+            }
+            case OpenAiHttpException openAiE -> {
+                logger.error(LOGGER_MESSAGE.formatted("OpenAI"), openAiE);
+
+                return new GenerationException(
+                        GenerationException.Type.OVERLOADED_EXCEPTION.getDescriptions(),
+                        openAiE.getCause()
+                );
+            }
+            case SocketTimeoutException timeoutE -> {
+                logger.error(LOGGER_MESSAGE.formatted("Timeout"), timeoutE);
+
+                return new GenerationException(
+                        GenerationException.Type.TIMEOUT_EXCEPTION.getDescriptions(),
+                        timeoutE.getCause()
+                );
+            }
+            default -> {
+                logger.error(LOGGER_MESSAGE.formatted("UNKNOWN"), e);
+
+                return new GenerationException(
+                        GenerationException.Type.UNCLASSIFIED_EXCEPTION.getDescriptions(),
+                        e.getCause()
+                );
+            }
+        }
     }
 }
