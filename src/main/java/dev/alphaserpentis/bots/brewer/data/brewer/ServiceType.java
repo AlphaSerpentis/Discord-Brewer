@@ -6,12 +6,15 @@ package dev.alphaserpentis.bots.brewer.data.brewer;
  * <p>Transcribe and translate are measured in seconds per hour.
  */
 public enum ServiceType {
-    CREATE(3, 10),
-    RENAME(3, 10),
-    TRANSCRIBE_ATTACHMENT(600, 6000),
-    TRANSCRIBE_VC(300, 3000),
-    TRANSLATE_ATTACHMENT(600, 6000),
-    TRANSLATE_VC(300, 3000);
+    CREATE(5, 10),
+    RENAME(5, 10),
+    SUMMARIZE(10, 25),
+    SUMMARIZE_CONTEXT(10, 25),
+    SUMMARIZE_ATTACHMENT(10, 25),
+    TRANSCRIBE_ATTACHMENT(1800, 6000),
+    TRANSCRIBE_VC(1000, 3000),
+    TRANSLATE_ATTACHMENT(1800, 6000),
+    TRANSLATE_VC(1000, 3000);
 
     private final int defaultRunsPerHour;
     private final int paidRunsPerHour;

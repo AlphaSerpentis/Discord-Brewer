@@ -7,9 +7,9 @@ import dev.alphaserpentis.bots.brewer.data.brewer.PaidTier;
  */
 public enum ChatCompletionModels {
     GPT_3_5_TURBO("gpt-3.5-turbo", PaidTier.NONE),
-    GPT_3_5_TURBO_0613("gpt-3.5-turbo-0613", PaidTier.NONE),
+    GPT_3_5_TURBO_1106("gpt-3.5-turbo-1106", PaidTier.NONE),
     GPT_3_5_TURBO_16K("gpt-3.5-turbo-16k", PaidTier.MERCURY),
-    GPT_3_5_TURBO_16K_0613("gpt-3.5-turbo-16k-0613", PaidTier.MERCURY),
+//    GPT_3_5_TURBO_16K_1106("gpt-3.5-turbo-16k-1106", PaidTier.MERCURY),
     GPT_4("gpt-4", PaidTier.VENUS),
     GPT_4_0613("gpt-4-0613", PaidTier.VENUS),
     GPT_4_32K("gpt-4-32k", PaidTier.EARTH),

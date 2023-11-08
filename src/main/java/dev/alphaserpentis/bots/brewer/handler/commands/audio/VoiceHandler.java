@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class VoiceHandler implements AudioReceiveHandler {
@@ -24,7 +23,7 @@ public class VoiceHandler implements AudioReceiveHandler {
     private final ByteArrayOutputStream combinedAudioStream = new ByteArrayOutputStream();
 
     public VoiceHandler(int seconds) {
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+        var executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.schedule(() -> {
             receiving = false;
         }, seconds, TimeUnit.SECONDS);
@@ -39,8 +38,8 @@ public class VoiceHandler implements AudioReceiveHandler {
     public void handleEncodedAudio(OpusPacket packet) {
         ByteArrayOutputStream stream = audioStreams.computeIfAbsent(
                 packet.getUserId(), id -> new ByteArrayOutputStream());
-
         byte[] audioData = packet.getAudioData(1.0);
+
         try {
             stream.write(audioData);
             combinedAudioStream.write(audioData);
@@ -51,7 +50,7 @@ public class VoiceHandler implements AudioReceiveHandler {
 
     @NonNull
     public Map<Long, byte[]> getAudioData() throws IOException {
-        Map<Long, byte[]> audioDataMap = new HashMap<>();
+        Map<Long, byte[]> audioDataMap = new HashMap<>(audioStreams.size());
 
         for (Map.Entry<Long, ByteArrayOutputStream> entry : audioStreams.entrySet()) {
             long userId = entry.getKey();
@@ -71,16 +70,16 @@ public class VoiceHandler implements AudioReceiveHandler {
     @NonNull
     private byte[] transcodeToWav(@NonNull byte[] pcmData) throws IOException {
         try(
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            AudioInputStream audioInputStream = new AudioInputStream(
-                    new ByteArrayInputStream(pcmData),
-                    OUTPUT_FORMAT,
-                    pcmData.length / 2 / OUTPUT_FORMAT.getChannels()
-            );
-            AudioInputStream waveStream = AudioSystem.getAudioInputStream(
-                    AudioFormat.Encoding.PCM_SIGNED,
-                    audioInputStream
-            )
+                var outputStream = new ByteArrayOutputStream();
+                var audioInputStream = new AudioInputStream(
+                        new ByteArrayInputStream(pcmData),
+                        OUTPUT_FORMAT,
+                        pcmData.length / 2 / OUTPUT_FORMAT.getChannels()
+                );
+                AudioInputStream waveStream = AudioSystem.getAudioInputStream(
+                        AudioFormat.Encoding.PCM_SIGNED,
+                        audioInputStream
+                )
         ) {
             AudioSystem.write(waveStream, AudioFileFormat.Type.WAVE, outputStream);
             return outputStream.toByteArray();

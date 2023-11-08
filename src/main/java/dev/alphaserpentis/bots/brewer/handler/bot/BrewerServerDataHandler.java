@@ -30,22 +30,17 @@ public class BrewerServerDataHandler extends ServerDataHandler<BrewerServerData>
             @NonNull Path path,
             @NonNull TypeToken<Map<Long, BrewerServerData>> typeToken,
             @NonNull JsonDeserializer<Map<Long, BrewerServerData>> jsonDeserializer,
-            boolean resetAcknowledgementsForToS,
-            boolean resetAcknowledgementsForPrivacyPolicy,
-            boolean resetAcknowledgementsForNewUpdates
+            boolean resetTosAcknowledgement,
+            boolean resetPrivacyPolicyAcknowledgement,
+            boolean resetUpdateAcknowledgement
     ) throws IOException {
         super(path, typeToken, jsonDeserializer);
-        boolean updateFile = resetAcknowledgementsForToS || resetAcknowledgementsForPrivacyPolicy || resetAcknowledgementsForNewUpdates;
 
         resetAcknowledgements(
-                resetAcknowledgementsForToS,
-                resetAcknowledgementsForPrivacyPolicy,
-                resetAcknowledgementsForNewUpdates
+                resetTosAcknowledgement,
+                resetPrivacyPolicyAcknowledgement,
+                resetUpdateAcknowledgement
         );
-
-        if(updateFile) {
-            updateServerData();
-        }
     }
 
     @Override
@@ -54,41 +49,31 @@ public class BrewerServerDataHandler extends ServerDataHandler<BrewerServerData>
     }
 
     @Override
+    protected void handleServerDataException(@NonNull Exception e) {
+        logger.error("Failed to update server data file.", e);
+    }
+
+    @Override
     public void onGuildJoin(@NonNull GuildJoinEvent event) {
         serverDataHashMap.put(event.getGuild().getIdLong(), createNewServerData());
-        try {
-            updateServerData();
-        } catch (IOException e) {
-            logger.error("Failed to update server data file.", e);
-        }
+        updateServerData();
     }
 
     @Override
     public void onGuildLeave(@NonNull GuildLeaveEvent event) {
         serverDataHashMap.remove(event.getGuild().getIdLong());
         AnalyticsHandler.stopTrackingGuild(event.getGuild().getIdLong());
-        try {
-            updateServerData();
-        } catch (IOException e) {
-            logger.error("Failed to update server data file.", e);
-        }
+        updateServerData();
     }
 
-    public void resetAcknowledgements(
-            boolean tos,
-            boolean privacyPolicy,
-            boolean newUpdates
-    ) {
-        for(BrewerServerData serverData: serverDataHashMap.values()) {
-            if(tos) {
+    public void resetAcknowledgements(boolean tos, boolean privacyPolicy, boolean newUpdates) {
+        serverDataHashMap.values().forEach(serverData -> {
+            if(tos)
                 serverData.setAcknowledgedNewTos(false);
-            }
-            if(privacyPolicy) {
+            if(privacyPolicy)
                 serverData.setAcknowledgedNewPrivacyPolicy(false);
-            }
-            if(newUpdates) {
+            if(newUpdates)
                 serverData.setAcknowledgedNewUpdates(false);
-            }
-        }
+        });
     }
 }

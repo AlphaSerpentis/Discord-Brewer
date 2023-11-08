@@ -5,8 +5,8 @@
 
     <groupId>dev.alphaserpentis.bots</groupId>
     <artifactId>Brewer</artifactId>
-    <version>1.3.1</version>
-    <name>Discord Brewer</name>
+    <version>1.4.0</version>
+    <name>Brew(r)</name>
     <description>A Discord bot for automatically configuring a Discord server using ChatGPT</description>
 
     <developers>
@@ -18,8 +18,8 @@
     </developers>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.mainClass>dev.alphaserpentis.bots.brewer.launcher.Launcher</project.mainClass>
     </properties>
@@ -35,22 +35,17 @@
         <dependency>
             <groupId>dev.alphaserpentis</groupId>
             <artifactId>CoffeeCore</artifactId>
-            <version>0.5.1-alpha-SNAPSHOT</version>
+            <version>0.6.0-alpha-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.theokanning.openai-gpt3-java</groupId>
             <artifactId>service</artifactId>
-            <version>0.16.0</version>
+            <version>0.16.1</version>
         </dependency>
         <dependency>
-            <groupId>org.discordbots</groupId>
-            <artifactId>DBL-Java-Library</artifactId>
-            <version>2.1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20230618</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.7</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
@@ -63,14 +58,19 @@
             <version>2.15.1</version>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.7</version>
+            <groupId>org.discordbots</groupId>
+            <artifactId>DBL-Java-Library</artifactId>
+            <version>2.1.2</version>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>2.0.7</version>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20230618</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.0.0</version>
         </dependency>
     </dependencies>
 

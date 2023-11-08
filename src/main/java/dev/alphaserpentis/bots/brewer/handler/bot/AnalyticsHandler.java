@@ -1,6 +1,5 @@
 package dev.alphaserpentis.bots.brewer.handler.bot;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.alphaserpentis.bots.brewer.data.brewer.Analytics;
 import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
@@ -19,6 +18,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -44,16 +44,11 @@ public class AnalyticsHandler {
     }
 
     public static void addUsage(@Nullable Guild guild, @NonNull ServiceType type) {
-        if(guild == null) {
+        if(guild == null || (serverAnalytics.get(guild.getIdLong()) == null && !generateAnalytics(guild.getIdLong()))) {
             return;
         }
 
-        if(serverAnalytics.get(guild.getIdLong()) == null) {
-            if(!generateAnalytics(guild.getIdLong()))
-                return;
-        }
-
-        Analytics analytics = serverAnalytics.get(guild.getIdLong());
+        var analytics = serverAnalytics.get(guild.getIdLong());
 
         analytics.getUsagePerServiceType().putIfAbsent(type, 0);
         analytics.getUsagePerServiceType().put(type, analytics.getUsagePerServiceType().get(type) + 1);
@@ -62,13 +57,14 @@ public class AnalyticsHandler {
     /**
      * Generates analytics for a guild
      * @param guildId ID of the guild to generate analytics for
-     * @return true if analytics were generated, false if the guild opted out of analytics
+     * @return true if analytics were generated, false if the guild opted out of analytics or guild was not found
      */
     public static boolean generateAnalytics(long guildId) {
-        BrewerServerData serverData = (BrewerServerData) Launcher.core.getServerDataHandler().getServerData(guildId);
+        var serverData = (BrewerServerData) Launcher.core.getServerDataHandler().getServerData(guildId);
         Guild guild;
         Analytics analytics;
         int snapshotUserCount;
+        long epochSecond;
         long snapshotAgeOfServer;
         long snapshotBotAgeInServer;
 
@@ -76,12 +72,18 @@ public class AnalyticsHandler {
             return false;
         }
 
-        guild = Launcher.core.getShardManager().getGuildById(guildId);
+        try {
+            guild = Objects.requireNonNull(Launcher.core.getShardManager().getGuildById(guildId));
+        } catch(NullPointerException e) {
+            logger.error("Failed to get guild with ID " + guildId, e);
+            return false;
+        }
 
         // Take snapshot of the server
+        epochSecond = Instant.now().getEpochSecond();
         snapshotUserCount = guild.retrieveMetaData().complete().getApproximateMembers();
-        snapshotAgeOfServer = (Instant.now().getEpochSecond() - guild.getTimeCreated().toInstant().getEpochSecond());
-        snapshotBotAgeInServer = Instant.now().getEpochSecond() - guild.getSelfMember().getTimeJoined().toInstant().getEpochSecond();
+        snapshotAgeOfServer = epochSecond - guild.getTimeCreated().toInstant().getEpochSecond();
+        snapshotBotAgeInServer = epochSecond  - guild.getSelfMember().getTimeJoined().toInstant().getEpochSecond();
 
         // Set analytics
         analytics = new Analytics(
@@ -100,13 +102,14 @@ public class AnalyticsHandler {
      * Dumps analytics to the analytics directory.
      */
     public static void dumpAnalytics() throws IOException {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        ArrayList<Analytics> anonymizedAnalytics = new ArrayList<>(serverAnalytics.values());
-        BufferedWriter writer = new BufferedWriter(new FileWriter(analyticsDirectory.toFile()));
+        try (var writer = new BufferedWriter(new FileWriter(analyticsDirectory.toFile()))) {
+            var gson = new GsonBuilder().setPrettyPrinting().create();
+            var anonymizedAnalytics = new ArrayList<>(serverAnalytics.values());
 
-        gson.toJson(anonymizedAnalytics, writer);
-
-        writer.close();
+            gson.toJson(anonymizedAnalytics, writer);
+        } catch (Exception e) {
+            logger.error("Failed to dump analytics", e);
+        }
     }
 
     public static void stopTrackingGuild(long guildId) {

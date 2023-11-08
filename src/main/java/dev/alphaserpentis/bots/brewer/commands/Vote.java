@@ -25,8 +25,8 @@ public class Vote extends BotCommand<MessageEmbed, SlashCommandInteractionEvent>
     @Override
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
-        EmbedBuilder eb = new EmbedBuilder();
-        String description = """
+        var eb = new EmbedBuilder();
+        var description = """
         By voting for Brewer, you can help share the power of Brewer with others! Your vote is greatly appreciated!
         
         ### [Top.gg](https://top.gg/bot/1097362340468502548/vote)
@@ -46,6 +46,6 @@ public class Vote extends BotCommand<MessageEmbed, SlashCommandInteractionEvent>
         eb.setColor(Color.CYAN);
         eb.setFooter("Thank you for voting for Brewer!", event.getUser().getAvatarUrl());
 
-        return new CommandResponse<>(eb.build(), isOnlyEphemeral());
+        return new CommandResponse<>(isOnlyEphemeral(), eb.build());
     }
 }

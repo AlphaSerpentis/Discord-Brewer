@@ -60,7 +60,7 @@ public class ParseActions {
         NAME ("name", "Name"),
         DESCRIPTION ("desc", "Desc."),
         CATEGORY ("cat", "Category"),
-        PERMISSIONS ("perms", "Perms."),
+        PERMISSIONS ("perm", "Perms."),
         COLOR ("color", "Color");
 
         public final String role;
@@ -73,96 +73,93 @@ public class ParseActions {
     }
 
     @NonNull
-    public static ArrayList<ExecutableAction> parseActions(
-            @NonNull DiscordConfig config,
-            @NonNull ValidAction action
-    ) {
+    public static ArrayList<ExecutableAction> parseActions(@NonNull DiscordConfig config, @NonNull ValidAction action) {
         ArrayList<ExecutableAction> actions = new ArrayList<>();
 
         if(config.roles() != null)
-            for (Map.Entry<String, DiscordConfig.ConfigItem> entry : config.roles().entrySet()) {
-                String roleName = config.roles().get(entry.getKey()).name();
+            for(Map.Entry<String, DiscordConfig.ConfigItem> entry : config.roles().entrySet()) {
+                DiscordConfig.ConfigItem item = entry.getValue();
 
                 actions.add(new ExecutableAction(
                         ValidTarget.ROLE,
-                        action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
+                        action == ValidAction.CREATE ? item.name() : entry.getKey(),
                         action,
                         Map.of(
-                                ValidDataNames.NAME, Objects.requireNonNullElse(roleName, ""),
-                                ValidDataNames.COLOR, Objects.requireNonNullElse(entry.getValue().color(), ""),
-                                ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
+                                ValidDataNames.NAME, Objects.requireNonNullElse(item.name(), ""),
+                                ValidDataNames.COLOR, Objects.requireNonNullElse(item.color(), ""),
+                                ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(item.perm(), "")
                         )
                 ));
             }
-        if(config.categories() != null)
-            for (Map.Entry<String, DiscordConfig.ConfigItem> entry : config.categories().entrySet()) {
+        if(config.cats() != null)
+            for(Map.Entry<String, DiscordConfig.ConfigItem> entry : config.cats().entrySet()) {
+                DiscordConfig.ConfigItem item = entry.getValue();
+
                 actions.add(new ExecutableAction(
                         ValidTarget.CATEGORY,
-                        action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
+                        action == ValidAction.CREATE ? item.name() : entry.getKey(),
                         action,
                         Map.of(
-                                ValidDataNames.NAME, Objects.requireNonNullElse(entry.getValue().name(), ""),
-                                ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
+                                ValidDataNames.NAME, Objects.requireNonNullElse(item.name(), ""),
+                                ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(item.perm(), "")
                         )
                 ));
             }
         if(config.channels() != null)
-            for (Map.Entry<String, DiscordConfig.ConfigItem> entry : config.channels().entrySet()) {
+            for(Map.Entry<String, DiscordConfig.ConfigItem> entry : config.channels().entrySet()) {
+                DiscordConfig.ConfigItem item = entry.getValue();
                 String catName = config.channels().get(entry.getKey()).cat();
 
-                if (config.categories() != null)
-                    for (Map.Entry<String, DiscordConfig.ConfigItem> catEntry : config.categories().entrySet()) {
-                        if (catEntry.getKey().equals(catName) || catEntry.getValue().name().equals(catName)) {
+                if(config.cats() != null)
+                    for(Map.Entry<String, DiscordConfig.ConfigItem> catEntry : config.cats().entrySet()) {
+                        if(catEntry.getKey().equals(catName) || catEntry.getValue().name().equals(catName)) {
                             catName = catEntry.getValue().name();
                             break;
                         }
                     }
 
 
-                if (entry.getValue().type() != null) {
-                    if (entry.getValue().type().equalsIgnoreCase("vc")) {
-                        actions.add(new ExecutableAction(
+                if(item.type() != null) {
+                    switch(item.type().toLowerCase()) {
+                        case "vc" -> actions.add(new ExecutableAction(
                                 ValidTarget.VOICE_CHANNEL,
-                                action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
+                                action == ValidAction.CREATE ? item.name() : entry.getKey(),
                                 action,
                                 Map.of(
-                                        ValidDataNames.NAME, Objects.requireNonNullElse(entry.getValue().name(), ""),
+                                        ValidDataNames.NAME, Objects.requireNonNullElse(item.name(), ""),
                                         ValidDataNames.CATEGORY, Objects.requireNonNullElse(catName, ""),
-                                        ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
+                                        ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(item.perm(), "")
                                 )
                         ));
-                    } else if (entry.getValue().type().equalsIgnoreCase("txt")) {
-                        actions.add(new ExecutableAction(
+                        case "txt" -> actions.add(new ExecutableAction(
                                 ValidTarget.TEXT_CHANNEL,
-                                action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
+                                action == ValidAction.CREATE ? item.name() : entry.getKey(),
                                 action,
                                 Map.of(
-                                        ValidDataNames.NAME, Objects.requireNonNullElse(entry.getValue().name(), ""),
-                                        ValidDataNames.DESCRIPTION, Objects.requireNonNullElse(entry.getValue().desc(), ""),
+                                        ValidDataNames.NAME, Objects.requireNonNullElse(item.name(), ""),
+                                        ValidDataNames.DESCRIPTION, Objects.requireNonNullElse(item.desc(), ""),
                                         ValidDataNames.CATEGORY, Objects.requireNonNullElse(catName, ""),
-                                        ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
+                                        ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(item.perm(), "")
                                 )
                         ));
-                    } else if (entry.getValue().type().equalsIgnoreCase("forum")) {
-                        actions.add(new ExecutableAction(
+                        case "forum" -> actions.add(new ExecutableAction(
                                 ValidTarget.FORUM_CHANNEL,
-                                action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
+                                action == ValidAction.CREATE ? item.name() : entry.getKey(),
                                 action,
                                 Map.of(
-                                        ValidDataNames.NAME, Objects.requireNonNullElse(entry.getValue().name(), ""),
+                                        ValidDataNames.NAME, Objects.requireNonNullElse(item.name(), ""),
                                         ValidDataNames.CATEGORY, Objects.requireNonNullElse(catName, ""),
-                                        ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
+                                        ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(item.perm(), "")
                                 )
                         ));
-                    } else if (entry.getValue().type().equalsIgnoreCase("stage")) {
-                        actions.add(new ExecutableAction(
+                        case "stage" -> actions.add(new ExecutableAction(
                                 ValidTarget.STAGE_CHANNEL,
-                                action == ValidAction.CREATE ? entry.getValue().name() : entry.getKey(),
+                                action == ValidAction.CREATE ? item.name() : entry.getKey(),
                                 action,
                                 Map.of(
-                                        ValidDataNames.NAME, Objects.requireNonNullElse(entry.getValue().name(), ""),
+                                        ValidDataNames.NAME, Objects.requireNonNullElse(item.name(), ""),
                                         ValidDataNames.CATEGORY, Objects.requireNonNullElse(catName, ""),
-                                        ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(entry.getValue().perms(), "")
+                                        ValidDataNames.PERMISSIONS, Objects.requireNonNullElse(item.perm(), "")
                                 )
                         ));
                     }

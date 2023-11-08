@@ -22,7 +22,8 @@ public class CustomExecutors {
                 Integer.MAX_VALUE,
                 60L,
                 TimeUnit.SECONDS,
-                new SynchronousQueue<>()
+                new SynchronousQueue<>(),
+                Thread.ofVirtual().factory()
         );
     }
 }

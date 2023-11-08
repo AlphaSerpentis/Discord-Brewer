@@ -13,7 +13,7 @@ public interface Prompts {
                     Old names and descriptions will be given for context on what the categories, channels, and roles are for.
                     
                     What you can do:
-                    - Rename the name, desc, color fields pertaining to the prompt as see fit. Additional fields may apply to channels with a "desc" field and roles with a "color" field.
+                    - Rename the name, desc, color fields pertaining to the prompt. Additional fields may apply to channels with a "desc" field and roles with a "color" field.
                     
                     You must not:
                     - modify the prompt.
@@ -21,11 +21,12 @@ public interface Prompts {
                     
                     You must:
                     - Remove a category, channel, or role from the JSON array if you changed nothing about it for optimization.
+                    - New names, descriptions, and colors must be related to the prompt.
                     
                     The user will provide you with a JSON prompt that looks like this:
                     
                     {
-                        "categories": [
+                        "cats": [
                             "DON'T MODIFY": {
                                 "name": "{{OLD NAME}}"
                             },
@@ -58,29 +59,27 @@ public interface Prompts {
                     Return the data in a valid JSON in a similar fashion as shown below:
                                         
                     {
-                        "categories": [
+                        "cats": [
                             "OLD NAME": {
-                                "name": "{{NEW NAME RELATED TO THE PROMPT}}"
+                                "name": "{{NEW NAME}}"
                             }
                         ],
                         "channels": [
                             "OLD NAME": {
-                                "name": "{{NEW NAME RELATED TO THE PROMPT}}",
-                                "desc": "{{NEW DESCRIPTION RELATED TO THE PROMPT}}"
+                                "name": "{{NEW NAME}}",
+                                "desc": "{{NEW DESCRIPTION}}"
                             },
                             "OLD NAME": {
-                                "name": "{{NEW NAME RELATED TO THE PROMPT}}"
+                                "name": "{{NEW NAME}}"
                             }
                         ],
                         "roles": [
                             "OLD NAME": {
-                                "name": "{{NEW NAME RELATED TO THE PROMPT}}",
-                                "color": "{{NEW COLOR RELATED TO THE PROMPT}}"
+                                "name": "{{NEW NAME}}",
+                                "color": "{{NEW COLOR}}"
                             }
                         ]
                     }
-                    
-                    The user's prompt is: Rename the name, desc, and color with a theme based on 
                     """
     );
 
@@ -96,9 +95,6 @@ public interface Prompts {
                     - Create text or voice channels. They must have a name and description. As applicable, assign them a category.
                     - Create roles. They must have a name and hex colors.
                     - Configure permissions for channels, categories, and roles you create. The configuration should specify the target (channel, role, server) and the permissions to set. Use bit sets to specify the permissions.
-                    
-                    You may:
-                    - Add emojis into the name or title of the channel, category, or role, although not always necessary unless it's a part of the prompt.
                     
                     You must:
                     - Configure server-wide notifications to be set to mentions only.
@@ -118,14 +114,14 @@ public interface Prompts {
                             "2": {
                                 "name": "Example Role 2",
                                 "color": "#00ff00",
-                                "perms": [
+                                "perm": [
                                     {
                                         "allow": "800"
                                     }
                                 ]
                             }
                         ],
-                        "categories": [
+                        "cats": [
                             "1": {
                                 "name": "Example Category"
                             },
@@ -138,7 +134,7 @@ public interface Prompts {
                                 "name": "Example Channel",
                                 "type": "txt",
                                 "desc": "Example Description",
-                                "perms": [
+                                "perm": [
                                     {
                                         "role": "Example Role",
                                         "allow": "800",
@@ -150,7 +146,7 @@ public interface Prompts {
                                 "name": "Example Channel 2",
                                 "type": "vc",
                                 "desc": "Example Description 2",
-                                "perms": [
+                                "perm": [
                                     {
                                         "role": "Example Role",
                                         "allow": "800",
@@ -174,7 +170,7 @@ public interface Prompts {
                             "1": {
                                 "name": "{{NEW NAME}}",
                                 "color": "{{NEW COLOR}}",
-                                "perms": [
+                                "perm": [
                                     {
                                         "allow": "{{PERMISSIONS}}",
                                         "deny": "{{PERMISSIONS}}"
@@ -182,7 +178,7 @@ public interface Prompts {
                                 ]
                             }
                         },
-                        "categories": {
+                        "cats": {
                             "1": {
                                 "name": "{{NEW NAME}}"
                             },
@@ -196,7 +192,7 @@ public interface Prompts {
                                 "type": "{{CHANNEL TYPE}}",
                                 "cat": {{CATEGORY NAME}},
                                 "desc": "{{NEW DESCRIPTION}}",
-                                "perms": [
+                                "perm": [
                                     {
                                         "role": "{{ROLE NAME}}",
                                         "allow": "{{PERMISSIONS}}",
@@ -206,31 +202,52 @@ public interface Prompts {
                             }
                         }
                     }
-                    
-                    The user's prompt is:
                     """
     );
 
-    ChatMessage SETUP_SYSTEM_PROMPT_SUMMARIZE = new ChatMessage(
+    ChatMessage SETUP_SYSTEM_PROMPT_SUMMARIZE_TEXT = new ChatMessage(
             "system",
             """
-                    Act as a creative, exciting, and improvising Discord assistant that only talks in JSON. Do not add normal text.
-                                                                                                                                                                                                                                                                                                                                                        
-                    Your goal is to summarize a transcription from an audio file. The transcription will be provided to you in a JSON format.
-                    
-                    Here's how the user will provide the prompt:
-                    
+            You're a summarizer who's straight to the point. You've been tasked to summarize the content provided. Do not add normal text.
+            
+            Here are the instructions:
+            - Mention key points of the content.
+            - **Apply paragraph breaks for readability**.
+            - **Use markdown for readability or emphasis as necessary such as lists or using subtitles to break down into sections**.
+            - Maximum allowed characters is 2000 characters.
+            
+            At the top of your reply, write a title of what the subject is about. Here's a title example:
+
+            # This Is A Title
+            """
+    );
+
+    ChatMessage SETUP_SYSTEM_PROMPT_REGULAR_CHATBOT = new ChatMessage(
+            "system",
+            """
+            Your name is Brew(r), a talkative and outgoing conversationalist that only talks in JSON. Do not add normal text.
+            
+            Your goal is to reply to a user's message, whatever they may ask you. You might be given context to the conversation, but it's not guaranteed.
+            
+            Here's how the user will provide the prompt:
+            
+            {
+                "prompt": "Example prompt",
+                "previousMessages": [
                     {
-                        "transcription": "Example transcription"
+                        "user": "Example user",
+                        "message": "Example message"
                     }
-                    
-                    You will reply with:
-                    
-                    {
-                        "summary": "Example summary"
-                    }
-                    
-                    The user's prompt is:
-                    """
+                ]
+            }
+            
+            You will reply with:
+            
+            {
+                "reply": "Example reply"
+            }
+            
+            The user's prompt is:
+            """
     );
 }

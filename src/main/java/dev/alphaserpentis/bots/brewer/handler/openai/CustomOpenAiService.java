@@ -33,9 +33,8 @@ public class CustomOpenAiService extends OpenAiService {
 
     @NonNull
     public AudioTranscriptionResponse createAudioTranscription(@NonNull AudioTranscriptionRequest request) {
-        String extension = request.name().substring(request.name().lastIndexOf('.') + 1);
-        RequestBody audio = RequestBody.create(MediaType.parse("audio/" + extension), request.audioBytes());
-        MultipartBody.Builder builder = new MultipartBody.Builder()
+        var audio = RequestBody.create(MediaType.parse("audio/mp3"), request.audioBytes());
+        var builder = new MultipartBody.Builder()
                 .setType(MediaType.get("multipart/form-data"))
                 .addFormDataPart("model", request.model())
                 .addFormDataPart("file", request.name(), audio);
@@ -57,12 +56,13 @@ public class CustomOpenAiService extends OpenAiService {
 
     @NonNull
     public AudioTranslationResponse createAudioTranslation(@NonNull AudioTranslationRequest request) {
-        String extension = request.name().substring(request.name().lastIndexOf('.') + 1);
-        RequestBody audio = RequestBody.create(MediaType.parse("audio/" + extension), request.audioBytes());
-        MultipartBody.Builder builder = new MultipartBody.Builder()
+        var name = fixName(request.name());
+        var extension = name.substring(name.lastIndexOf('.') + 1);
+        var audio = RequestBody.create(MediaType.parse("audio/" + extension), request.audioBytes());
+        var builder = new MultipartBody.Builder()
                 .setType(MediaType.get("multipart/form-data"))
                 .addFormDataPart("model", request.model())
-                .addFormDataPart("file", request.name(), audio);
+                .addFormDataPart("file", name, audio);
 
         if(request.prompt() != null) {
             builder.addFormDataPart("prompt", request.prompt());
@@ -74,5 +74,17 @@ public class CustomOpenAiService extends OpenAiService {
         builder.addFormDataPart("temperature", String.valueOf(request.temperature()));
 
         return execute(api.createAudioTranslation(builder.build()));
+    }
+
+    public String fixName(@NonNull String name) {
+        String nameToReturn = name;
+        int questionMarkIndex = name.indexOf('?');
+
+        // Check if a question mark is present
+        if(questionMarkIndex != -1) {
+            nameToReturn = name.substring(0, questionMarkIndex);
+        }
+
+        return nameToReturn;
     }
 }

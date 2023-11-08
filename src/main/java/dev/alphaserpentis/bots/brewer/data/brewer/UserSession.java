@@ -7,11 +7,11 @@ import net.dv8tion.jda.api.JDA;
 
 import java.util.ArrayList;
 
+@SuppressWarnings("UnusedReturnValue")
 public class UserSession {
     public enum UserSessionType {
         NEW_BREW,
-        RENAME,
-        NAME_SUGGESTIONS
+        RENAME
     }
 
     private final String prompt;

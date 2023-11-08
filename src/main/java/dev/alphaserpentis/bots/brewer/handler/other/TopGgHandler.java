@@ -8,6 +8,7 @@ import org.discordbots.api.client.DiscordBotListAPI;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class TopGgHandler {
     private static DiscordBotListAPI dblApi;
@@ -23,7 +24,7 @@ public class TopGgHandler {
                 TopGgHandler::update,
                 0,
                 60,
-                java.util.concurrent.TimeUnit.MINUTES
+                TimeUnit.MINUTES
         );
     }
 
@@ -32,7 +33,7 @@ public class TopGgHandler {
     }
 
     public static void setServerCount() {
-        final ContainerHelper container = new ContainerHelper(Launcher.core.getActiveContainer());
+        final var container = new ContainerHelper(Launcher.core.getActiveContainer());
         dblApi.setStats(container.getGuilds().size());
     }
 
