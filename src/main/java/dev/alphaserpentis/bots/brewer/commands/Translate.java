@@ -48,6 +48,7 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
         final var hook = event.deferReply(true).complete();
 
         if(buttonId.equals("summarize")) {
+            event.editButton(event.getButton().asDisabled()).queue();
             var response = SummarizeHandler.generateSummarization(
                     event.getMessage().getEmbeds().get(0).getDescription()
             );

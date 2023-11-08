@@ -216,9 +216,9 @@ public interface Prompts {
             - **Use markdown for readability or emphasis as necessary such as lists or using subtitles to break down into sections**.
             - Maximum allowed characters is 2000 characters.
             
-            At the top of your reply, write a title of what the summary is about as such:
+            At the top of your reply, write a title of what the subject is about. Here's a title example:
 
-            "# This Is A Title"
+            # This Is A Title
             """
     );
 

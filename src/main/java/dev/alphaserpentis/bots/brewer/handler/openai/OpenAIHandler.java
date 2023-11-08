@@ -133,9 +133,7 @@ public class OpenAIHandler {
                 .presencePenalty(presencePenalty)
                 .frequencyPenalty(frequencyPenalty);
 
-        return service.createChatCompletion(
-                builder.build()
-        );
+        return service.createChatCompletion(builder.build());
     }
 
     public static AudioTranscriptionResponse getAudioTranscription(@NonNull String audioUrl) {
