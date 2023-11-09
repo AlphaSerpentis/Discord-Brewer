@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static dev.alphaserpentis.bots.brewer.handler.openai.CustomOpenAiService.OPENAI_MAX_FILE_SIZE;
 
@@ -26,37 +27,52 @@ public class AudioHandler {
         return readUrlStream(url, null, null);
     }
 
+    @SuppressWarnings("UnusedParameters")
     @NonNull
     public static byte[] readUrlStream(
             @NonNull String url,
-            @Nullable Long startTime,
-            @Nullable Long endTime
+            @Nullable Long startTime, // TODO: Implement
+            @Nullable Long endTime // TODO: Implement
     ) throws IOException {
-        ArrayList<String> command = generateCommands(url, startTime, endTime);
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
-        Process process = processBuilder.start();
-        byte[] bytes;
+        ProcessBuilder directLinkProcessBuilder = new ProcessBuilder(obtainDirectLink(url));
+        Process directLinkProcess = directLinkProcessBuilder.start();
+        String[] directLinks;
 
-        try(var in = process.getInputStream()) {
-            var buffer = new ByteArrayOutputStream();
-            var data = new byte[16384];
-            int nRead;
-
-            while((nRead = in.read(data, 0, data.length)) != -1) {
-                buffer.write(data, 0, nRead);
-
-                if(buffer.size() > OPENAI_MAX_FILE_SIZE)
-                    throw new GenerationException(GenerationException.Type.FILE_TOO_LARGE_OPENAI_MAX);
-            }
-
-            buffer.flush();
-            bytes = buffer.toByteArray();
-
-            if(bytes.length == 0)
-                throw new GenerationException(GenerationException.Type.FILE_EMPTY);
-
-            return bytes;
+        try(var in = directLinkProcess.getInputStream()) {
+            directLinks = new String(in.readAllBytes()).split("\n");
         }
+
+        // Remove .m3u8 links
+        directLinks = Arrays.stream(directLinks).filter(s -> !s.contains(".m3u8")).toArray(String[]::new);
+
+        for(var directLink: directLinks) {
+            ProcessBuilder ffmpegProcessBuilder = new ProcessBuilder(generateCommands(directLink));
+            Process ffmpegProcess = ffmpegProcessBuilder.start();
+            byte[] bytes;
+
+            try(var in = ffmpegProcess.getInputStream()) {
+                var buffer = new ByteArrayOutputStream();
+                var data = new byte[16384];
+                int nRead;
+
+                while((nRead = in.read(data, 0, data.length)) != -1) {
+                    buffer.write(data, 0, nRead);
+
+                    if(buffer.size() > OPENAI_MAX_FILE_SIZE)
+                        throw new GenerationException(GenerationException.Type.FILE_TOO_LARGE_OPENAI_MAX);
+                }
+
+                buffer.flush();
+                bytes = buffer.toByteArray();
+
+                if(bytes.length == 0)
+                    continue;
+
+                return bytes;
+            }
+        }
+
+        throw new GenerationException((GenerationException.Type.FILE_EMPTY));
     }
 
     /**
@@ -76,28 +92,34 @@ public class AudioHandler {
         return sb.toString();
     }
 
-    @NonNull
-    private static ArrayList<String> generateCommands(
-            @NonNull String url,
-            @Nullable Long startTime,
-            @Nullable Long endTime
-    ) {
-        var command = new ArrayList<String>(12);
+    private static ArrayList<String> obtainDirectLink(@NonNull String url) {
+        var command = new ArrayList<String>(5);
 
         command.add(ytdlCommand);
-        if(startTime != null) {
-            command.add("--download-sections");
-            command.add("*%s-%s".formatted(startTime, endTime));
-        }
-        command.add("--ffmpeg-location");
-        command.add(ffmpegCommand);
+        command.add("--get-url");
         command.add("--no-warnings");
-        command.add("--extract-audio");
-        command.add("--audio-format");
-        command.add("mp3");
-        command.add("--output");
-        command.add("-");
         command.add(url);
+
+        return command;
+    }
+
+    @NonNull
+    private static ArrayList<String> generateCommands(@NonNull String url) {
+        var command = new ArrayList<String>(12);
+
+        command.add(ffmpegCommand);
+        command.add("-i");
+        command.add(url);
+        command.add("-vn");
+        command.add("-acodec");
+        command.add("libmp3lame");
+        command.add("-q:a");
+        command.add("5.0");
+        command.add("-movflags");
+        command.add("+faststart");
+        command.add("-f");
+        command.add("mp3");
+        command.add("-");
 
         return command;
     }

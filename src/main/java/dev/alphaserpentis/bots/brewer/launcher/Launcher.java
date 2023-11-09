@@ -108,7 +108,18 @@ public class Launcher {
                 .enableSharding(true);
 
         core = builder.build(dotenv.get("DISCORD_BOT_TOKEN"));
-
+        core.getCommandsHandler().setHandleInteractionError(
+                (throwable) -> {
+                    LOGGER.error(throwable.getMessage(), throwable);
+                    return null;
+                }
+        );
+        core.getCommandsHandler().setHandleRegistrationError(
+                (throwable) -> {
+                    LOGGER.error(throwable.getMessage(), throwable);
+                    return null;
+                }
+        );
         core.registerCommands(
                 new CustomSettings(),
                 new Help(),
@@ -121,12 +132,6 @@ public class Launcher {
                 new TranslateContext(),
                 new SummarizeContext(),
                 new Admin(Long.parseLong(dotenv.get("BOT_OWNER_GUILD_ID")))
-        );
-        core.getCommandsHandler().setHandleInteractionError(
-                (throwable) -> {
-                    LOGGER.error(throwable.getMessage(), throwable);
-                    return null;
-                }
         );
     }
 

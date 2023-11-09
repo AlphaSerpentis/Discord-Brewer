@@ -56,13 +56,11 @@ public class CustomOpenAiService extends OpenAiService {
 
     @NonNull
     public AudioTranslationResponse createAudioTranslation(@NonNull AudioTranslationRequest request) {
-        var name = fixName(request.name());
-        var extension = name.substring(name.lastIndexOf('.') + 1);
-        var audio = RequestBody.create(MediaType.parse("audio/" + extension), request.audioBytes());
+        var audio = RequestBody.create(MediaType.parse("audio/wav"), request.audioBytes());
         var builder = new MultipartBody.Builder()
                 .setType(MediaType.get("multipart/form-data"))
                 .addFormDataPart("model", request.model())
-                .addFormDataPart("file", name, audio);
+                .addFormDataPart("file", request.name(), audio);
 
         if(request.prompt() != null) {
             builder.addFormDataPart("prompt", request.prompt());
