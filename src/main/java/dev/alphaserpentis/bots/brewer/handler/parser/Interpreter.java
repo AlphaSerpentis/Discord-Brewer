@@ -27,6 +27,8 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static dev.alphaserpentis.bots.brewer.handler.parser.ParseActions.ValidDataNames.CATEGORY;
@@ -118,9 +120,8 @@ public class Interpreter {
                             case CREATE -> channels.add(createCategory(action, guild));
                             case EDIT -> originalState.categoryData.putAll(editCategory(
                                     action,
-                                    guild.getCategoriesByName(action.target(), true).get(0)
+                                    guild.getCategoriesByName(action.target(), true).getFirst()
                             ));
-                            default -> throw new IllegalArgumentException("Invalid action type");
                         }
                     }
                     case TEXT_CHANNEL -> {
@@ -128,9 +129,8 @@ public class Interpreter {
                             case CREATE -> channels.add(createTextChannel(action, guild));
                             case EDIT -> originalState.textChannelData.putAll(editTextChannel(
                                     action,
-                                    guild.getTextChannelsByName(action.target(), true).get(0)
+                                    guild.getTextChannelsByName(action.target(), true).getFirst()
                             ));
-                            default -> throw new IllegalArgumentException("Invalid action type");
                         }
                     }
                     case VOICE_CHANNEL -> {
@@ -138,9 +138,8 @@ public class Interpreter {
                             case CREATE -> channels.add(createVoiceChannel(action, guild));
                             case EDIT -> originalState.voiceChannelData.putAll(editVoiceChannel(
                                     action,
-                                    guild.getVoiceChannelsByName(action.target(), true).get(0)
+                                    guild.getVoiceChannelsByName(action.target(), true).getFirst()
                             ));
-                            default -> throw new IllegalArgumentException("Invalid action type");
                         }
                     }
                     case FORUM_CHANNEL -> {
@@ -148,9 +147,8 @@ public class Interpreter {
                             case CREATE -> channels.add(createForumChannel(action, guild));
                             case EDIT -> originalState.forumChannelData.putAll(editForumChannel(
                                     action,
-                                    guild.getForumChannelsByName(action.target(), true).get(0)
+                                    guild.getForumChannelsByName(action.target(), true).getFirst()
                             ));
-                            default -> throw new IllegalArgumentException("Invalid action type");
                         }
                     }
                     case STAGE_CHANNEL -> {
@@ -158,9 +156,8 @@ public class Interpreter {
                             case CREATE -> channels.add(createStageChannel(action, guild));
                             case EDIT -> originalState.stageChannelData.putAll(editStageChannel(
                                     action,
-                                    guild.getStageChannelsByName(action.target(), true).get(0)
+                                    guild.getStageChannelsByName(action.target(), true).getFirst()
                             ));
-                            default -> throw new IllegalArgumentException("Invalid action type");
                         }
                     }
                     case ROLE -> {
@@ -168,12 +165,10 @@ public class Interpreter {
                             case CREATE -> roles.add(createRole(action, guild));
                             case EDIT -> originalState.roleData.putAll(editRole(
                                     action,
-                                    guild.getRolesByName(action.target(), true).get(0)
+                                    guild.getRolesByName(action.target(), true).getFirst()
                             ));
-                            default -> throw new IllegalArgumentException("Invalid action type");
                         }
                     }
-                    default -> throw new IllegalArgumentException("Invalid target type");
                 }
             } catch(Exception e) {
                 captureError(e, messages);
@@ -181,15 +176,10 @@ public class Interpreter {
             }
         }
 
-        switch(validAction) {
-            case CREATE -> {
-                return new InterpreterResult(messages, channels, roles);
-            }
-            case EDIT -> {
-                return new InterpreterResult(messages, originalState);
-            }
-            default -> throw new IllegalArgumentException("Invalid action type");
-        }
+        return switch(validAction) {
+            case CREATE -> new InterpreterResult(messages, channels, roles);
+            case EDIT -> new InterpreterResult(messages, originalState);
+        };
     }
 
     @NonNull
@@ -197,10 +187,10 @@ public class Interpreter {
         var messages = new ArrayList<String>();
         var action = session.getAction();
 
-        switch(action) {
+        return switch(action) {
             case CREATE -> {
-                var channels = session.getInterpreterResult().channels();
-                var roles = session.getInterpreterResult().roles();
+                var channels = Objects.requireNonNull(session.getInterpreterResult().channels());
+                var roles = Objects.requireNonNull(session.getInterpreterResult().roles());
                 var restActions = new ArrayList<RestAction<?>>();
 
                 for(var channel: channels)
@@ -211,7 +201,7 @@ public class Interpreter {
                 if(!restActions.isEmpty())
                     RestAction.allOf(restActions).complete();
 
-                return new InterpreterResult(messages, null, null, null);
+                yield new InterpreterResult(messages, null, null, null);
             }
             case EDIT -> {
                 var guild = session.getJDA().getGuildById(session.getGuildId());
@@ -219,7 +209,7 @@ public class Interpreter {
                 var restActions = new ArrayList<RestAction<?>>();
 
                 if(guild == null) {
-                    return new InterpreterResult(
+                    yield new InterpreterResult(
                             new ArrayList<>(List.of("Guild not found. Guild ID: " + session.getGuildId()))
                     );
                 }
@@ -290,10 +280,9 @@ public class Interpreter {
                 if(!restActions.isEmpty())
                     RestAction.allOf(restActions).complete();
 
-                return new InterpreterResult(messages);
+                yield new InterpreterResult(messages);
             }
-            default -> throw new IllegalArgumentException("Invalid action type");
-        }
+        };
     }
 
     @SuppressWarnings("unchecked")
@@ -326,62 +315,38 @@ public class Interpreter {
         return channel;
     }
 
-    @SuppressWarnings("unchecked")
     private static VoiceChannel createVoiceChannel(
             @NonNull ParseActions.ExecutableAction action,
             @NonNull Guild guild
     ) {
         var data = action.data();
         var channel = guild.createVoiceChannel(data.get(NAME).toString()).completeAfter(1, TimeUnit.SECONDS);
-        var permsData = data.get(PERMISSIONS);
-
-        if(permsData != null && !permsData.equals(""))
-            assignRolesPermissions((ArrayList<DiscordConfig.ConfigItem.Permission>) permsData, guild, channel);
-
-        assignCategory((String) data.get(CATEGORY), guild, channel);
-
-        return channel;
+        return assignPermsAndReturnChannel(guild, data, channel);
     }
 
-    @SuppressWarnings("unchecked")
     private static ForumChannel createForumChannel(
             @NonNull ParseActions.ExecutableAction action,
             @NonNull Guild guild
     ) {
         var data = action.data();
         var channel = guild.createForumChannel(data.get(NAME).toString()).completeAfter(1, TimeUnit.SECONDS);
-        var permsData = data.get(PERMISSIONS);
-
-        if(permsData != null && !permsData.equals(""))
-            assignRolesPermissions((ArrayList<DiscordConfig.ConfigItem.Permission>) permsData, guild, channel);
-
-        assignCategory((String) data.get(CATEGORY), guild, channel);
-
-        return channel;
+        return assignPermsAndReturnChannel(guild, data, channel);
     }
 
-    @SuppressWarnings("unchecked")
     private static StageChannel createStageChannel(
             @NonNull ParseActions.ExecutableAction action,
             @NonNull Guild guild
     ) {
         var data = action.data();
         var channel = guild.createStageChannel(data.get(NAME).toString()).completeAfter(1, TimeUnit.SECONDS);
-        var permsData = data.get(PERMISSIONS);
-
-        if(permsData != null && !permsData.equals(""))
-            assignRolesPermissions((ArrayList<DiscordConfig.ConfigItem.Permission>) permsData, guild, channel);
-
-        assignCategory((String) data.get(CATEGORY), guild, channel);
-
-        return channel;
+        return assignPermsAndReturnChannel(guild, data, channel);
     }
 
     @SuppressWarnings("unchecked")
     private static Role createRole(@NonNull ParseActions.ExecutableAction action, @NonNull Guild guild) {
         var data = action.data();
         var roleColor = (String) data.get(COLOR);
-        var allowedPerms = ((ArrayList<DiscordConfig.ConfigItem.Permission>) data.get(PERMISSIONS)).get(0).allow();
+        var allowedPerms = ((ArrayList<DiscordConfig.ConfigItem.Permission>) data.get(PERMISSIONS)).getFirst().allow();
         Role role;
 
         try {
@@ -534,6 +499,22 @@ public class Interpreter {
         return roleName.equalsIgnoreCase("@everyone") || roleName.equalsIgnoreCase("everyone");
     }
 
+    @SuppressWarnings("unchecked")
+    private static <T extends StandardGuildChannel> T assignPermsAndReturnChannel(
+            @NonNull Guild guild,
+            @NonNull Map<ParseActions.ValidDataNames, Object> data,
+            @NonNull T channel
+    ) {
+        var permsData = data.get(PERMISSIONS);
+
+        if(permsData != null && !permsData.equals(""))
+            assignRolesPermissions((ArrayList<DiscordConfig.ConfigItem.Permission>) permsData, guild, channel);
+
+        assignCategory((String) data.get(CATEGORY), guild, channel);
+
+        return channel;
+    }
+
     private static void assignRolesPermissions(
             @NonNull ArrayList<DiscordConfig.ConfigItem.Permission> data,
             @NonNull Guild guild,
@@ -555,7 +536,7 @@ public class Interpreter {
                 );
             } else if(!roles.isEmpty()) {
                 executableActions.add(
-                        channel.upsertPermissionOverride(roles.get(0))
+                        channel.upsertPermissionOverride(roles.getFirst())
                                 .setAllowed(allowed)
                                 .setDenied(denied)
                                 .onErrorMap(e -> ignoreError())
@@ -576,7 +557,7 @@ public class Interpreter {
             List<Category> categories = guild.getCategoriesByName(catName, true);
 
             if(!categories.isEmpty()) {
-                Category category = categories.get(0);
+                Category category = categories.getFirst();
 
                 channel.getManager().setParent(category).completeAfter(1, TimeUnit.SECONDS);
             }

@@ -5,8 +5,6 @@ import dev.alphaserpentis.bots.brewer.handler.bot.AnalyticsHandler;
 import dev.alphaserpentis.bots.brewer.handler.bot.BrewerServerDataHandler;
 import dev.alphaserpentis.coffeecore.commands.defaultcommands.Settings;
 import dev.alphaserpentis.coffeecore.data.bot.CommandResponse;
-import dev.alphaserpentis.coffeecore.data.server.ServerData;
-import dev.alphaserpentis.coffeecore.handler.api.discord.servers.ServerDataHandler;
 import io.reactivex.rxjava3.annotations.NonNull;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -64,7 +62,7 @@ public class CustomSettings extends Settings {
                         eb.setDescription(NO_PERMISSIONS);
                     }
                 }
-                default -> eb.setDescription("Invalid subcommand.");
+                case null, default -> eb.setDescription("Invalid subcommand.");
             }
         }
 
@@ -90,11 +88,13 @@ public class CustomSettings extends Settings {
                 "Toggle whether the bot should try to rename NSFW channels"
         );
 
-        jda.upsertCommand(name, description).addSubcommands(
-                ephemeral, optOutOfAnalytics, optOutOfTranscriptions, tryRenamingNsfwChannels
-        ).queue(
-                (cmd) -> setGlobalCommandId(cmd.getIdLong())
-        );
+        jda
+                .upsertCommand(name, description)
+                .addSubcommands(
+                        ephemeral, optOutOfAnalytics, optOutOfTranscriptions, tryRenamingNsfwChannels
+                ).queue(
+                        (cmd) -> setGlobalCommandId(cmd.getIdLong())
+                );
     }
 
     @Override
@@ -102,9 +102,10 @@ public class CustomSettings extends Settings {
         return member.hasPermission(Permission.ADMINISTRATOR);
     }
 
-    private void setServerEphemeral(long guildId, @NonNull EmbedBuilder eb) {
-        ServerDataHandler<?> sdh = (ServerDataHandler<?>) core.getServerDataHandler();
-        ServerData sd = sdh.getServerData(guildId);
+    @Override
+    protected void setServerEphemeral(long guildId, @NonNull EmbedBuilder eb) {
+        BrewerServerDataHandler<?> sdh = (BrewerServerDataHandler<?>) core.getDataHandler();
+        BrewerServerData sd = (BrewerServerData) sdh.getEntityData("guild", guildId);
 
         if(sd.getOnlyEphemeral()) {
             sd.setOnlyEphemeral(false);
@@ -114,30 +115,30 @@ public class CustomSettings extends Settings {
             eb.setDescription("The bot's responses are now ephemeral.");
         }
 
-        sdh.updateServerData();
+        sdh.updateEntityData();
     }
 
     private void setServerWideOptOutOfAnalytics(long guildId, @NonNull EmbedBuilder eb) {
-        BrewerServerDataHandler sdh = (BrewerServerDataHandler) core.getServerDataHandler();
-        BrewerServerData sd = sdh.getServerData(guildId);
+        BrewerServerDataHandler<?> sdh = (BrewerServerDataHandler<?>) core.getDataHandler();
+        BrewerServerData sd = (BrewerServerData) sdh.getEntityData("guild", guildId);
         boolean currentSetting = sd.getServerWideOptOutOfAnalytics();
 
         sd.setServerWideOptOutOfAnalytics(!currentSetting);
         AnalyticsHandler.stopTrackingGuild(guildId);
 
-        sdh.updateServerData();
+        sdh.updateEntityData();
 
         eb.setDescription("Server-wide opt-out of analytics is now " + (!currentSetting ? "enabled" : "disabled"));
     }
 
     private void setTryRenamingNsfwChannels(long guildId, @NonNull EmbedBuilder eb) {
-        BrewerServerDataHandler sdh = (BrewerServerDataHandler) core.getServerDataHandler();
-        BrewerServerData sd = sdh.getServerData(guildId);
+        BrewerServerDataHandler<?> sdh = (BrewerServerDataHandler<?>) core.getDataHandler();
+        BrewerServerData sd = (BrewerServerData) sdh.getEntityData("guild", guildId);
         boolean currentSetting = sd.getTryRenamingNsfwChannels();
 
         sd.setTryRenamingNsfwChannels(!currentSetting);
 
-        sdh.updateServerData();
+        sdh.updateEntityData();
 
         eb.setDescription(
         """
@@ -148,8 +149,8 @@ public class CustomSettings extends Settings {
     }
 
     private void setUserDisallowVCListening(long guildId, long userId, @NonNull EmbedBuilder eb) {
-        BrewerServerDataHandler sdh = (BrewerServerDataHandler) core.getServerDataHandler();
-        BrewerServerData sd = sdh.getServerData(guildId);
+        BrewerServerDataHandler<?> sdh = (BrewerServerDataHandler<?>) core.getDataHandler();
+        BrewerServerData sd = (BrewerServerData) sdh.getEntityData("guild", guildId);
         boolean isUserOptedOut = sd.isUserOptedOutOfVCTranscription(userId);
 
         if(isUserOptedOut)
@@ -157,7 +158,7 @@ public class CustomSettings extends Settings {
         else
             sd.addUserIntoVCTranscriptionOptOut(userId);
 
-        sdh.updateServerData();
+        sdh.updateEntityData();
 
         eb.setDescription("User opt-out of VC transcriptions is now " + (!isUserOptedOut ? "enabled" : "disabled"));
     }

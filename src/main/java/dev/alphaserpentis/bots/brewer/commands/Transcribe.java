@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent>
         implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
@@ -43,14 +44,14 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
     }
 
     @Override
-    public void runButtonInteraction(@NonNull ButtonInteractionEvent event) {
+    public Optional<Void> runButtonInteraction(@NonNull ButtonInteractionEvent event) {
         final var buttonId = event.getComponentId().substring(getName().length() + 1);
         final var hook = event.deferReply(true).complete();
 
         if(buttonId.equals("summarize")) {
             event.editButton(event.getButton().asDisabled()).queue();
             var response = SummarizeHandler.generateSummarization(
-                    event.getMessage().getEmbeds().get(0).getDescription()
+                    event.getMessage().getEmbeds().getFirst().getDescription()
             );
 
             hook.sendMessageEmbeds(
@@ -64,6 +65,8 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
         } else {
             throw new IllegalStateException("Unknown button ID: " + buttonId);
         }
+
+        return Optional.empty();
     }
 
     @Override
@@ -78,13 +81,11 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
         return checkAndRemoveUser(event.getUser().getIdLong()) ? List.of() : List.of(getButton("summarize"));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
         EmbedBuilder workingEmbed;
         EmbedBuilder serverCheckEmbed;
         EmbedBuilder userCheckEmbed;
-        CommandResponse<MessageEmbed> rateLimitResponse;
         MessageEmbed[] embedsArray;
         long guildId;
 
@@ -95,14 +96,8 @@ public class Transcribe extends ButtonCommand<MessageEmbed, SlashCommandInteract
         }
 
         if(embedsArray != null) {
-            return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
+            return new CommandResponse<>(isOnlyEphemeral(), true, null, embedsArray);
         }
-
-        // Check rate limit
-        rateLimitResponse = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
-
-        if(rateLimitResponse != null)
-            return rateLimitResponse;
 
         // Check if user/guild is restricted
         guildId = event.getGuild() == null ? 0 : event.getGuild().getIdLong();

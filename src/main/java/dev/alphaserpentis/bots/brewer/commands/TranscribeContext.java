@@ -41,14 +41,12 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
         );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull MessageContextInteractionEvent event) {
         EmbedBuilder workingEmbed;
         EmbedBuilder serverCheckEmbed;
         EmbedBuilder userCheckEmbed;
-        CommandResponse<MessageEmbed> rateLimitResponse;
         var description = new StringBuilder();
         MessageEmbed[] embedsArray;
         long guildId;
@@ -62,14 +60,8 @@ public class TranscribeContext extends BotCommand<MessageEmbed, MessageContextIn
         }
 
         if(embedsArray != null) {
-            return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
+            return new CommandResponse<>(isOnlyEphemeral(), true, null, embedsArray);
         }
-
-        // Check rate limit
-        rateLimitResponse = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
-
-        if(rateLimitResponse != null)
-            return rateLimitResponse;
 
         // Check if user/guild is restricted
         guildId = event.getGuild() == null ? 0 : event.getGuild().getIdLong();

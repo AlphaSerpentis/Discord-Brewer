@@ -94,8 +94,8 @@ public class Launcher {
                 .setMemberCachePolicy(MemberCachePolicy.DEFAULT)
 //                .setEnabledCacheFlags(List.of(CacheFlag.VOICE_STATE))
                 .setDisabledCacheFlags(List.of())
-                .setServerDataHandler(
-                        new BrewerServerDataHandler(
+                .setDataHandler(
+                        new BrewerServerDataHandler<>(
                                 Path.of(dotenv.get("SERVER_DATA_PATH")),
                                 new TypeToken<>() {},
                                 new BrewerServerDataDeserializer(),

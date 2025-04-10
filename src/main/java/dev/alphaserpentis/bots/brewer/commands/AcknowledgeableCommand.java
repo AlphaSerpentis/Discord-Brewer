@@ -38,7 +38,7 @@ public interface AcknowledgeableCommand<E extends GenericCommandInteractionEvent
         if(typesToAcknowledge.isEmpty())
             return null;
 
-        Launcher.core.getServerDataHandler().updateServerData();
+        Launcher.core.getDataHandler().updateEntityData();
 
         if(addBlocking)
             blockAddingButtonsToUser.add(event.getUser().getIdLong());
@@ -53,7 +53,9 @@ public interface AcknowledgeableCommand<E extends GenericCommandInteractionEvent
      * @return The BrewerServerData for the guild, or null if not found.
      */
     default BrewerServerData getServerData(long guildId) {
-        return ((BrewerServerDataHandler) Launcher.core.getServerDataHandler()).getServerData(guildId);
+        BrewerServerDataHandler<?> handler = (BrewerServerDataHandler<?>) Launcher.core.getDataHandler();
+
+        return (BrewerServerData) handler.getEntityData("guild", guildId);
     }
 
     /**

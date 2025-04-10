@@ -14,7 +14,7 @@ public class SummarizeHandler {
                 0.25,
                 0.1,
                 0.1
-        ).getChoices().get(0).getMessage().getContent());
+        ).getChoices().getFirst().getMessage().getContent());
     }
 
     public static String cleanOutput(@NonNull String input) {

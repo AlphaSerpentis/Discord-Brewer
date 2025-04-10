@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent>
         implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
@@ -43,14 +44,14 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
     }
 
     @Override
-    public void runButtonInteraction(@NonNull ButtonInteractionEvent event) {
+    public Optional<Void> runButtonInteraction(@NonNull ButtonInteractionEvent event) {
         final var buttonId = event.getComponentId().substring(getName().length() + 1);
         final var hook = event.deferReply(true).complete();
 
         if(buttonId.equals("summarize")) {
             event.editButton(event.getButton().asDisabled()).queue();
             var response = SummarizeHandler.generateSummarization(
-                    event.getMessage().getEmbeds().get(0).getDescription()
+                    event.getMessage().getEmbeds().getFirst().getDescription()
             );
 
             hook.sendMessageEmbeds(
@@ -64,6 +65,8 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
         } else {
             throw new IllegalStateException("Unknown button ID: " + buttonId);
         }
+
+        return Optional.empty();
     }
 
     @Override
@@ -72,7 +75,6 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
         return checkAndRemoveUser(event.getUser().getIdLong()) ? List.of() : List.of(getButton("summarize"));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
@@ -80,7 +82,6 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
         EmbedBuilder workingEmbed;
         EmbedBuilder serverCheckEmbed;
         EmbedBuilder userCheckEmbed;
-        CommandResponse<MessageEmbed> response;
         long guildId;
 
         try {
@@ -90,14 +91,8 @@ public class Translate extends ButtonCommand<MessageEmbed, SlashCommandInteracti
         }
 
         if(embedsArray != null) {
-            return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
+            return new CommandResponse<>(isOnlyEphemeral(), true, null, embedsArray);
         }
-
-        // Check rate limit
-        response = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
-
-        if(response != null)
-            return response;
 
         // Check if user/guild is restricted
         guildId = event.getGuild() == null ? 0 : event.getGuild().getIdLong();

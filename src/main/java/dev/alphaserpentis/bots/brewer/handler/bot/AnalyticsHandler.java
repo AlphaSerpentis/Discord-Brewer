@@ -40,7 +40,9 @@ public class AnalyticsHandler {
             }
         }, 1, 60, TimeUnit.MINUTES);
 
-        Launcher.core.getShardManager().getGuilds().forEach(guild -> generateAnalytics(guild.getIdLong()));
+        Thread.ofVirtual().start(
+                () -> Launcher.core.getShardManager().getGuilds().forEach(guild -> generateAnalytics(guild.getIdLong()))
+        );
     }
 
     public static void addUsage(@Nullable Guild guild, @NonNull ServiceType type) {

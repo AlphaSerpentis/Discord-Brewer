@@ -1,6 +1,6 @@
 package dev.alphaserpentis.bots.brewer.data.brewer;
 
-import dev.alphaserpentis.coffeecore.data.server.ServerData;
+import dev.alphaserpentis.coffeecore.data.entity.ServerData;
 
 import java.util.HashMap;
 import java.util.Map;

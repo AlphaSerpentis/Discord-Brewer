@@ -89,7 +89,10 @@ public class BrewHandler {
             @NonNull SlashCommandInteractionEvent event
     ) {
         boolean allowNsfwChannelRenames = (
-                (BrewerServerData) Launcher.core.getServerDataHandler().getServerData(event.getGuild().getIdLong())
+                (BrewerServerData) Launcher.core.getDataHandler().getEntityData(
+                        "guild",
+                        event.getGuild().getIdLong()
+                )
         ).getTryRenamingNsfwChannels();
         ArrayList<ParseActions.ExecutableAction> actions;
         UserSession session;
@@ -136,7 +139,7 @@ public class BrewHandler {
         String result = OpenAIHandler.getCompletion(
                 system,
                 prompt
-        ).getChoices().get(0).getMessage().getContent();
+        ).getChoices().getFirst().getMessage().getContent();
         DiscordConfig config;
         ArrayList<ParseActions.ExecutableAction> actions;
 

@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEvent>
         implements AcknowledgeableCommand<SlashCommandInteractionEvent> {
@@ -146,7 +147,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
     }
 
     @Override
-    public void runButtonInteraction(@NonNull ButtonInteractionEvent event) {
+    public Optional<Void> runButtonInteraction(@NonNull ButtonInteractionEvent event) {
         final var userSession = BrewHandler.getUserSession(event.getUser().getIdLong());
         final var buttonId = event.getComponentId().substring(getName().length() + 1);
         var hook = event.deferEdit().complete();
@@ -164,7 +165,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             );
 
             hook.editOriginalComponents().setEmbeds(eb.build()).queue();
-            return;
+            return Optional.empty();
         }
 
         switch(buttonId) {
@@ -174,6 +175,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             case "revert" -> onRevertButtonClick(userSession, hook, event);
             default -> throw new IllegalStateException("Unexpected value: " + buttonId);
         }
+        return Optional.empty();
     }
 
     @Override
@@ -190,7 +192,6 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
                 : List.of();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull SlashCommandInteractionEvent event) {
@@ -198,7 +199,6 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         EmbedBuilder serverCheckEmbed;
         EmbedBuilder userCheckEmbed;
         String prompt;
-        CommandResponse<MessageEmbed> rateLimitResponse;
         MessageEmbed[] embedsArray;
         long guildId;
 
@@ -209,13 +209,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
         }
 
         if(embedsArray != null)
-            return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
-
-        // Check rate limit
-        rateLimitResponse = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
-
-        if(rateLimitResponse != null)
-            return rateLimitResponse;
+            return new CommandResponse<>(isOnlyEphemeral(), true, null, embedsArray);
 
         // Check if user/guild is restricted
         guildId = Objects.requireNonNull(event.getGuild()).getIdLong();
@@ -250,7 +244,7 @@ public class Brew extends ButtonCommand<MessageEmbed, SlashCommandInteractionEve
             switch(event.getSubcommandName()) {
                 case "create" -> BrewHandler.generateCreatePrompt(workingEmbed, prompt, event);
                 case "rename" -> BrewHandler.generateRenamePrompt(workingEmbed, prompt, event);
-                default -> throw new IllegalStateException("Unexpected value: " + event.getSubcommandName());
+                case null, default -> throw new IllegalStateException("Unexpected value: " + event.getSubcommandName());
             }
         } catch(GenerationException e) {
             workingEmbed = new EmbedBuilder(GENERATING_ERROR);

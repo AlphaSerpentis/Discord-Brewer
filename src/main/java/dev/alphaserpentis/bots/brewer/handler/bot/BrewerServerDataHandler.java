@@ -3,9 +3,10 @@ package dev.alphaserpentis.bots.brewer.handler.bot;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.reflect.TypeToken;
 import dev.alphaserpentis.bots.brewer.data.brewer.BrewerServerData;
-import dev.alphaserpentis.coffeecore.handler.api.discord.servers.ServerDataHandler;
+import dev.alphaserpentis.coffeecore.data.entity.EntityData;
+import dev.alphaserpentis.coffeecore.handler.api.discord.entities.DataHandler;
+import dev.alphaserpentis.coffeecore.serialization.EntityDataDeserializer;
 import io.reactivex.rxjava3.annotations.NonNull;
-import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class BrewerServerDataHandler extends ServerDataHandler<BrewerServerData> {
+public class BrewerServerDataHandler<T extends EntityData> extends DataHandler<T> {
 
     final Logger logger = LoggerFactory.getLogger(BrewerServerDataHandler.class);
 
@@ -28,8 +29,8 @@ public class BrewerServerDataHandler extends ServerDataHandler<BrewerServerData>
      */
     public BrewerServerDataHandler(
             @NonNull Path path,
-            @NonNull TypeToken<Map<Long, BrewerServerData>> typeToken,
-            @NonNull JsonDeserializer<Map<Long, BrewerServerData>> jsonDeserializer,
+            @NonNull TypeToken<Map<String, Map<Long, T>>> typeToken,
+            @NonNull EntityDataDeserializer<T> jsonDeserializer,
             boolean resetTosAcknowledgement,
             boolean resetPrivacyPolicyAcknowledgement,
             boolean resetUpdateAcknowledgement
@@ -44,36 +45,28 @@ public class BrewerServerDataHandler extends ServerDataHandler<BrewerServerData>
     }
 
     @Override
-    protected BrewerServerData createNewServerData() {
-        return new BrewerServerData();
-    }
-
-    @Override
-    protected void handleServerDataException(@NonNull Exception e) {
+    protected void handleEntityDataException(@NonNull Exception e) {
         logger.error("Failed to update server data file.", e);
     }
 
     @Override
-    public void onGuildJoin(@NonNull GuildJoinEvent event) {
-        serverDataHashMap.put(event.getGuild().getIdLong(), createNewServerData());
-        updateServerData();
-    }
-
-    @Override
     public void onGuildLeave(@NonNull GuildLeaveEvent event) {
-        serverDataHashMap.remove(event.getGuild().getIdLong());
+        super.onGuildLeave(event);
         AnalyticsHandler.stopTrackingGuild(event.getGuild().getIdLong());
-        updateServerData();
     }
 
     public void resetAcknowledgements(boolean tos, boolean privacyPolicy, boolean newUpdates) {
-        serverDataHashMap.values().forEach(serverData -> {
-            if(tos)
-                serverData.setAcknowledgedNewTos(false);
-            if(privacyPolicy)
-                serverData.setAcknowledgedNewPrivacyPolicy(false);
-            if(newUpdates)
-                serverData.setAcknowledgedNewUpdates(false);
-        });
+        entityDataHashMap
+                .get("guild")
+                .forEach((id, serverData) -> {
+                    BrewerServerData castedData = (BrewerServerData) serverData;
+
+                    if(tos)
+                        castedData.setAcknowledgedNewTos(false);
+                    if(privacyPolicy)
+                        castedData.setAcknowledgedNewPrivacyPolicy(false);
+                    if(newUpdates)
+                        castedData.setAcknowledgedNewUpdates(false);
+                });
     }
 }

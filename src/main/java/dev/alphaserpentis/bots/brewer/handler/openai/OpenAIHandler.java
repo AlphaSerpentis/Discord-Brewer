@@ -97,7 +97,7 @@ public class OpenAIHandler {
                         "text-moderation-stable"
                 )
         );
-        var isFlagged = req.getResults().get(0).isFlagged();
+        var isFlagged = req.getResults().getFirst().isFlagged();
 
         if(isFlagged && logIfFlagged)
             ModerationHandler.writeFlaggedContentToDirectory(new FlaggedContent(userId, guildId, content));
@@ -170,7 +170,7 @@ public class OpenAIHandler {
         }
     }
 
-    public static AudioTranscriptionResponse getVoiceTranscription(@NonNull byte[] audioBytes, @NonNull String name) {
+    public static AudioTranscriptionResponse getVoiceTranscription(byte[] audioBytes, @NonNull String name) {
         return service.createAudioTranscription(
                 new AudioTranscriptionRequest(
                         "whisper-1",
@@ -215,7 +215,7 @@ public class OpenAIHandler {
         }
     }
 
-    public static AudioTranslationResponse getAudioTranslation(@NonNull byte[] audioBytes, @NonNull String name) {
+    public static AudioTranslationResponse getAudioTranslation(byte[] audioBytes, @NonNull String name) {
         return service.createAudioTranslation(
                 new AudioTranslationRequest("whisper-1", name + ".wav", audioBytes)
         );

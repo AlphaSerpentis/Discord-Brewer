@@ -37,7 +37,6 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
         );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     @NonNull
     public CommandResponse<MessageEmbed> runCommand(long userId, @NonNull MessageContextInteractionEvent event) {
@@ -46,7 +45,6 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
         EmbedBuilder userCheckEmbed;
         List<Message.Attachment> attachments = tryToGetAudioFiles(event);
         var description = new StringBuilder();
-        CommandResponse<MessageEmbed> rateLimitResponse;
         MessageEmbed[] embedsArray;
         long guildId;
 
@@ -57,14 +55,8 @@ public class TranslateContext extends BotCommand<MessageEmbed, MessageContextInt
         }
 
         if(embedsArray != null) {
-            return new CommandResponse<>(isOnlyEphemeral(), true, embedsArray);
+            return new CommandResponse<>(isOnlyEphemeral(), true, null, embedsArray);
         }
-
-        // Check rate limit
-        rateLimitResponse = (CommandResponse<MessageEmbed>) checkAndHandleRateLimitedUser(userId);
-
-        if(rateLimitResponse != null)
-            return rateLimitResponse;
 
         // Check if user/guild is restricted
         guildId = event.getGuild() == null ? 0 : event.getGuild().getIdLong();

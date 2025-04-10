@@ -4,6 +4,8 @@
 
 ---
 
+**THE LAST COMMIT HAS NOT BEEN TESTED FOR YEARS. THIS IS ONLY FOR ARCHIVAL PURPOSES**
+
 ## About Brew(r) ☕️
 
 Revolutionize your Discord server with Brew(r), a dynamic bot leveraging the power of OpenAI's ChatGPT to breathe new life into your roles, categories, and channels!
